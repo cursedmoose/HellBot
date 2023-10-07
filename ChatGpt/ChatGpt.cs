@@ -79,7 +79,7 @@ namespace TwitchBot.ChatGpt
 
             return responseText;
         }
-
+        [Obsolete("Use (persona, chatPrompt). Add limits in manually.")]
         public async Task<string> getResponseText(string chatPrompt, int maxResponseLength = 25)
         {
             if (!isEnabled) { return ""; }

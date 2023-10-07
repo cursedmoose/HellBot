@@ -1,4 +1,5 @@
-﻿using TwitchBot.Assistant.Polls;
+﻿using System.Text;
+using TwitchBot.Assistant.Polls;
 using TwitchBot.ElevenLabs;
 
 namespace TwitchBot.Assistant
@@ -27,7 +28,9 @@ namespace TwitchBot.Assistant
         public abstract void WelcomeFollower(string username);
         public abstract void WelcomeSubscriber(string username, int length);
 
+        public abstract Task<bool> ChangeTitle();
         public abstract Task<bool> CreatePoll();
+
         public abstract Task<bool> AnnouncePoll(string title, List<string> options);
 
         public abstract Task<bool> ConcludePoll(string title, string winner);
@@ -37,6 +40,14 @@ namespace TwitchBot.Assistant
         public void PlayTts(string message)
         {
             Server.Instance.elevenlabs.playTts(message, Voice);
+        }
+
+        public async void ReactToGameState(string gameState)
+        {
+            await Server.Instance.chatgpt.getResponse(
+                chatPrompt: $"react to me {gameState}",
+                persona: Persona
+            );
         }
 
     }

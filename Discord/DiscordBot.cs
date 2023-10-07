@@ -1,6 +1,7 @@
 ﻿using Discord.WebSocket;
 using Discord;
 using static TwitchBot.Config.DiscordConfig;
+using TwitchBot.Discord.Game;
 
 namespace TwitchBot.Discord
 {
@@ -31,7 +32,7 @@ namespace TwitchBot.Discord
         {
             isEnabled = enabled;
             DiscordSocketConfig config = new DiscordSocketConfig();
-            config.GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildPresences;
+            config.GatewayIntents = GatewayIntents.AllUnprivileged; // | GatewayIntents.GuildPresences;
             config.AlwaysDownloadUsers = true;
             client = new DiscordSocketClient(config);
             client.Log += DiscordBotLog;
@@ -70,24 +71,6 @@ namespace TwitchBot.Discord
             return "";
         }
 
-        public SkyrimActivity parsePresence(RichGame game)
-        {
-            var flavorTokens = game.State.Split(",");
-            if (flavorTokens.Length == 3)
-            {
-                return new SkyrimActivity(flavour: flavorTokens[0].Trim(), location: flavorTokens[1].Trim(), worldspace: flavorTokens[2].Trim());
-            } else if (flavorTokens.Length == 2)
-            {
-                return new SkyrimActivity(flavour: flavorTokens[0].Trim(), location: flavorTokens[1].Trim());
-            } else if (flavorTokens.Length == 1)
-            {
-                return new SkyrimActivity(flavour: flavorTokens[0].Trim(), "");
-            } else
-            {
-                return new SkyrimActivity("", "");
-            }
-        }
-
         public async void PostMessage(ulong channel, string message)
         {
             if (isEnabled)
@@ -118,18 +101,10 @@ namespace TwitchBot.Discord
             }
         }
 
-        private void playWelcomeBackTts()
-        {
-            Log($"Oh, welcome back to Skyrim...");
-            var welcomeBack = $"welcome me back to Skyrim. limit 25 words.";
-            Server.Instance.chatgpt.getResponse("Shegorath", welcomeBack);
-        }
-
-        private void playWelcomeBackTts(string game, string persona)
+        private void playWelcomeBackTts(string game)
         {
             Log($"Oh, welcome back to {game}...");
-            var welcomeBack = $"welcome me back to {game}.";
-            Server.Instance.chatgpt.getResponse(persona, welcomeBack, 25);
+            Server.Instance.Assistant.WelcomeBack(game);
         }
 
         private void recordTtsPlayed(long playedAt)
@@ -163,10 +138,10 @@ namespace TwitchBot.Discord
                     if (lastTtsTime == 0L)
                     {
                         recordTtsPlayed(currentTime);
-                        playWelcomeBackTts();
+                        playWelcomeBackTts(game.Name);
                     }
                     else if (game.State.Length > 0 
-                        && RichPresenceConstants.allowedFlavours.Contains(flavorPrefix)
+                        && Skyrim.AllowedFlavours.Contains(flavorPrefix)
                         && (currentTime - lastAllowListTime) >= (30L * SECONDS)
                         )
                     {
@@ -174,13 +149,13 @@ namespace TwitchBot.Discord
                         lastKnownState = game.State;
                         lastAllowListTime = currentTime;
                         recordTtsPlayed(currentTime);
-                        Server.Instance.chatgpt.getResponse(getReactRequestPrompt(game.State));
+                        Server.Instance.Assistant.ReactToGameState(game.State);
                     } 
                     else if ((currentTime - lastTtsTime) >= (ttsInterval * SECONDS))
                     {
                         Log($"Requested TTS for {game.State} because time interval lapsed.");
                         recordTtsPlayed(currentTime);
-                        Server.Instance.chatgpt.getResponse(getReactRequestPrompt(game.State));
+                        Server.Instance.Assistant.ReactToGameState(game.State);
                     }
                     else
                     {
@@ -193,11 +168,6 @@ namespace TwitchBot.Discord
                     Server.Instance.Assistant.WelcomeBack(game.Name);
                 }
             }
-        }
-
-        private string getReactRequestPrompt(string gameState)
-        {
-            return $"{ChatGpt.ChatGpt.getRandomPrompt(Server.Instance.Assistant.Name)} react to me {gameState}. limit 25 words.";
         }
 
         private long resetInterval()

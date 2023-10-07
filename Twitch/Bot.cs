@@ -27,6 +27,7 @@ using TwitchLib.Api.Helix.Models.Channels.ModifyChannelInformation;
 using TwitchBot.Config;
 using static TwitchBot.Config.TwitchConfig;
 using System.Runtime.Caching;
+using TwitchLib.Api.Helix.Models.Channels.GetChannelInformation;
 
 public class TwitchIrcBot
 {
@@ -177,7 +178,9 @@ public class TwitchIrcBot
         var resp = await Auth.GetAccessTokenFromCodeAsync(auth.Code, AccountInfo.API_CLIENT_SECRET, AccountInfo.API_REDIRECT_URL);
         api.Settings.AccessToken = resp.AccessToken;
         var user = (await API.Users.GetUsersAsync()).Users[0];
-        Console.WriteLine($"Authorization success!\n\nUser: {user.DisplayName} (id: {user.Id})\nAccess token: {resp.AccessToken}\nRefresh token: {resp.RefreshToken}\nExpires in: {resp.ExpiresIn}\nScopes: {string.Join(", ", resp.Scopes)}");
+        // Console.WriteLine($"Authorization success!\n\nUser: {user.DisplayName} (id: {user.Id})\nAccess token: {resp.AccessToken}\nRefresh token: {resp.RefreshToken}\nExpires in: {resp.ExpiresIn}\nScopes: {string.Join(", ", resp.Scopes)}");
+        Console.WriteLine($"Authorization success!\n\nUser: {user.DisplayName}\nScopes: {string.Join(", ", resp.Scopes)}");
+
     }
 
     public void RespondTo(ChatMessage message, string withMessage)
@@ -206,7 +209,7 @@ public class TwitchIrcBot
     private void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
     {
         Log("Bot has joined channel.");
-        client.SendMessage(e.Channel, "beep boop. bot online.");
+        // client.SendMessage(e.Channel, "beep boop. bot online.");
     }
 
     private void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
@@ -350,10 +353,27 @@ public class TwitchIrcBot
     public async void ChangeTitle(string newTitle)
     {
         ModifyChannelInformationRequest request = new();
-        request.Title = newTitle;
+        request.Title = newTitle + " | !hellbot";
         await API.Channels.ModifyChannelInformationAsync(broadcasterId: AccountInfo.USER_ID, request: request);
     }
 
+    public async Task<ChannelInformation> GetStreamInfo()
+    {
+        var info = await API.Channels.GetChannelInformationAsync(AccountInfo.CHANNEL_ID);
+        return info.Data[0];
+    }
+
+    public async Task<string> GetCurrentGame()
+    {
+        var info = await GetStreamInfo();
+        return info.GameName;
+    }
+
+    public async Task<string> GetCurrentTitle()
+    {
+        var info = await GetStreamInfo();
+        return info.Title;
+    }
     #endregion API Hooks
 
     #region EventSub Handlers

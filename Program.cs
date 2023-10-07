@@ -99,7 +99,8 @@ while (true)
     }
     else if(next.Contains("make"))
     {
-        await server.Assistant.CreatePoll();
+        await server.Assistant.ChangeTitle();
+        //await server.Assistant.CreatePoll();
         /*
         await Server.Instance.twitch.CreatePoll(
             title: "this is an automatic test",

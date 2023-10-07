@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using TwitchBot.Assistant.Polls;
 using TwitchBot.ElevenLabs;
+using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 using static TwitchBot.ChatGpt.ChatGpt;
 
 namespace TwitchBot.Assistant
@@ -85,6 +86,18 @@ namespace TwitchBot.Assistant
         {
             var prompt = $"react to \"{byUsername}\" redeeming channel reward \"{rewardTitle}\"";
             return await Server.Instance.chatgpt.getResponse(Persona, prompt);
+        }
+
+        public override async Task<bool> ChangeTitle()
+        {
+            //PlayTts("How about a new stream title? Maybe...");
+            var currentGame = await Server.Instance.twitch.GetCurrentGame();
+            var prompt = $"new title for my \"{currentGame}\" stream. limit 5 words.";
+            var newTitle = await Server.Instance.chatgpt.getResponseText(Persona, prompt);
+            PlayTts($"How about a new stream title? Maybe... {newTitle}!");
+            Server.Instance.twitch.ChangeTitle(newTitle);
+
+            return true;
         }
 
     }
