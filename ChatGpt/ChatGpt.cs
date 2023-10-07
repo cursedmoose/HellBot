@@ -142,7 +142,7 @@ namespace TwitchBot.ChatGpt
             await requestResponses(chatPrompts);
         }
 
-        public async Task<string> getImage(string imagePrompt, ChatMessage message = null)
+        public async Task<string> getImage(string imagePrompt, ChatMessage? message = null)
         {
             var results = await openAI.ImagesEndPoint.GenerateImageAsync(imagePrompt, 1, ImageSize.Medium);
             var result = results.First();

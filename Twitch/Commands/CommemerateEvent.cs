@@ -1,10 +1,4 @@
-﻿using OpenAI.Images;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TwitchBot.ElevenLabs;
+﻿using TwitchBot.ElevenLabs;
 using TwitchLib.Client;
 using TwitchLib.Client.Models;
 
@@ -25,7 +19,7 @@ namespace TwitchBot.Twitch.Commands
             if (imageRequest.Length > 0)
             {
                 Console.WriteLine($"Calling getImage with param {imageRequest}");
-                Server.Instance.chatgpt.getImage(imageRequest, message);
+                Server.Instance.chatgpt.getImage(imageRequest, message).GetAwaiter().GetResult();
 
                 var author = message.Username;
             }

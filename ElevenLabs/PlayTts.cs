@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Media;
 using System.Net.Http.Json;
+using static TwitchBot.Config.ElevenLabsConfig;
 
 namespace TwitchBot.ElevenLabs
 {
@@ -41,7 +42,7 @@ namespace TwitchBot.ElevenLabs
             return cleanedString;
         }
 
-        public async static void Play(string ttsMessage, VoiceProfile voiceProfile)
+        public static void Play(string ttsMessage, VoiceProfile voiceProfile)
         {
             var cleanedMessage = cleanStringForTts(ttsMessage);
 
@@ -56,7 +57,7 @@ namespace TwitchBot.ElevenLabs
             var client = new HttpClient();
 
             client.DefaultRequestHeaders.Add("accept", "audio/mpeg");
-            client.DefaultRequestHeaders.Add("xi-api-key", ElevenLabs.API_KEY);
+            client.DefaultRequestHeaders.Add("xi-api-key", API_KEY);
             var ttsRequest = buildTtsRequest(cleanedMessage, voiceProfile);
             timer = Stopwatch.StartNew();
             var response2 = client.Send(ttsRequest);
@@ -95,7 +96,10 @@ namespace TwitchBot.ElevenLabs
                                 // WaveFileWriter.CreateWaveFile("test.wav", pcmStream);
                                 WaveFileWriter.WriteWavFileToStream(outStream, pcmStream);
                                 SoundPlayer soundPlayer = new SoundPlayer(outStream);
-                                soundPlayer.Stream.Position = 0;
+                                if (soundPlayer.Stream != null)
+                                {
+                                    soundPlayer.Stream.Position = 0;
+                                }
                                 soundPlayer.PlaySync();
                             }
                         }

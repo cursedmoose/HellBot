@@ -74,9 +74,9 @@ public class TwitchIrcBot
         if (enabled)
         {
             Task.Delay(1000);
-            client.Connect();
+            client?.Connect();
             StartApi(scopes).GetAwaiter().GetResult();
-            events.ConnectAsync();
+            events?.ConnectAsync();
         }
     }
 
@@ -105,7 +105,7 @@ public class TwitchIrcBot
     private void Init_API()
     {
         api = new();
-        api.Settings.ClientId = TwitchConfig.AccountInfo.API_CLIENT_ID;
+        api.Settings.ClientId = AccountInfo.API_CLIENT_ID;
         api.Settings.Scopes = new List<AuthScopes>() {
             AuthScopes.Helix_Moderator_Read_Chatters,
             AuthScopes.Helix_Moderator_Read_Followers,
@@ -116,8 +116,8 @@ public class TwitchIrcBot
     private void Init_IRC_Client()
     {
         ConnectionCredentials credentials = new ConnectionCredentials(
-            twitchUsername: TwitchConfig.AccountInfo.ACCOUNT_NAME, 
-            twitchOAuth: TwitchConfig.AccountInfo.OAUTH_PASSWORD);
+            twitchUsername: AccountInfo.ACCOUNT_NAME, 
+            twitchOAuth: AccountInfo.OAUTH_PASSWORD);
         var clientOptions = new ClientOptions
         {
             MessagesAllowedInPeriod = 750,
@@ -126,7 +126,7 @@ public class TwitchIrcBot
 
         WebSocketClient customClient = new WebSocketClient(clientOptions);
         client = new TwitchClient(customClient);
-        client.Initialize(credentials, TwitchConfig.AccountInfo.CHANNEL);
+        client.Initialize(credentials, AccountInfo.CHANNEL);
 
         client.OnLog += Client_OnLog;
         client.OnJoinedChannel += Client_OnJoinedChannel;
@@ -166,12 +166,12 @@ public class TwitchIrcBot
 
     private async Task StartApi(List<string> scopes)
     {
-        var server = new AuthServer(TwitchConfig.AccountInfo.API_REDIRECT_URL);
-        var codeUrl = AuthServer.getAuthorizationCodeUrl(TwitchConfig.AccountInfo.API_CLIENT_ID, TwitchConfig.AccountInfo.API_REDIRECT_URL, scopes);
+        var server = new AuthServer(AccountInfo.API_REDIRECT_URL);
+        var codeUrl = AuthServer.getAuthorizationCodeUrl(AccountInfo.API_CLIENT_ID, AccountInfo.API_REDIRECT_URL, scopes);
         Console.WriteLine($"Please authorize here:\n{codeUrl}");
         System.Diagnostics.Process.Start(@"C:\Program Files\Mozilla Firefox\firefox.exe", codeUrl);
         var auth = await server.Listen();
-        var resp = await Auth.GetAccessTokenFromCodeAsync(auth.Code, TwitchConfig.AccountInfo.API_CLIENT_SECRET, TwitchConfig.AccountInfo.API_REDIRECT_URL);
+        var resp = await Auth.GetAccessTokenFromCodeAsync(auth.Code, AccountInfo.API_CLIENT_SECRET, AccountInfo.API_REDIRECT_URL);
         api.Settings.AccessToken = resp.AccessToken;
         var user = (await API.Users.GetUsersAsync()).Users[0];
         Console.WriteLine($"Authorization success!\n\nUser: {user.DisplayName} (id: {user.Id})\nAccess token: {resp.AccessToken}\nRefresh token: {resp.RefreshToken}\nExpires in: {resp.ExpiresIn}\nScopes: {string.Join(", ", resp.Scopes)}");
@@ -190,23 +190,23 @@ public class TwitchIrcBot
     }
 
     #region TwitchClient Handlers
-    private void Client_OnLog(object sender, OnLogArgs e)
+    private void Client_OnLog(object? sender, OnLogArgs e)
     {
         Log($"{e.BotUsername} - {e.Data}");
     }
 
-    private void Client_OnConnected(object sender, OnConnectedArgs e)
+    private void Client_OnConnected(object? sender, OnConnectedArgs e)
     {
         Log($"Connected to {e.AutoJoinChannel}");
     }
 
-    private void Client_OnJoinedChannel(object sender, OnJoinedChannelArgs e)
+    private void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
     {
         Log("Bot has joined channel.");
         client.SendMessage(e.Channel, "beep boop. bot online.");
     }
 
-    private void Client_OnMessageReceived(object sender, OnMessageReceivedArgs e)
+    private void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         if (e.ChatMessage.Message.StartsWith('!'))
         {
@@ -217,7 +217,7 @@ public class TwitchIrcBot
 
         Log($"{e.ChatMessage.Username} sent message: ${e.ChatMessage.Message}");
 
-        if (TwitchConfig.Admins.isAdmin(e.ChatMessage.Username))
+        if (Admins.isAdmin(e.ChatMessage.Username))
         {
             playTts(sender, e);
         }
@@ -226,7 +226,7 @@ public class TwitchIrcBot
             playRumorTts(sender, e);
         }
 
-        if (!TwitchConfig.Admins.isAdmin(e.ChatMessage.Username)) // lol admins can't get banned 
+        if (!Admins.isAdmin(e.ChatMessage.Username)) // lol admins can't get banned 
         {
             if (e.ChatMessage.Message.Contains("dogehype") || e.ChatMessage.Message.Contains("dot com"))
             {
@@ -235,7 +235,7 @@ public class TwitchIrcBot
         }
     }
 
-    private void Client_OnWhisperReceived(object sender, OnWhisperReceivedArgs e)
+    private void Client_OnWhisperReceived(object? sender, OnWhisperReceivedArgs e)
     {
         if (e.WhisperMessage.Username == "my_friend")
         {
@@ -243,7 +243,7 @@ public class TwitchIrcBot
         }
     }
 
-    private void Client_OnNewSubscriber(object sender, OnNewSubscriberArgs e)
+    private void Client_OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
     {
         client.TimeoutUser(e.Channel, e.Subscriber.DisplayName, TimeSpan.FromMinutes(10), "sub??? in my channel???");
         var prompt = $"welcome new subscriber \"{e.Subscriber.DisplayName}\"";
@@ -251,7 +251,7 @@ public class TwitchIrcBot
     }
     #endregion TwitchClient Handlers
 
-    private void handleCommand(object sender, OnMessageReceivedArgs e)
+    private void handleCommand(object? sender, OnMessageReceivedArgs e)
     {
         foreach (CommandHandler handler in commands)
         {
@@ -267,19 +267,19 @@ public class TwitchIrcBot
     }
 
     #region Tts
-    private void playTts(object sender, OnMessageReceivedArgs e)
+    private void playTts(object? sender, OnMessageReceivedArgs e)
     {
         if (Enabled)
         {
-            tts.play(sender, e);
+            tts.play(e.ChatMessage);
         }
     }
 
-    private void playRumorTts(object sender, OnMessageReceivedArgs e)
+    private void playRumorTts(object? sender, OnMessageReceivedArgs e)
     {
         if (Enabled)
         {
-            tts.playRumor(sender, e);
+            tts.playRumor(e.ChatMessage);
         }
     }
     #endregion Tts
@@ -296,7 +296,7 @@ public class TwitchIrcBot
         List<string> allChatters = new();
         do
         {
-            var chatters = await API.Chat.GetChattersAsync(TwitchConfig.AccountInfo.USER_ID, TwitchConfig.AccountInfo.USER_ID, 1000, page);
+            var chatters = await API.Chat.GetChattersAsync(AccountInfo.USER_ID, AccountInfo.USER_ID, 1000, page);
             page = chatters.Pagination.Cursor;
 
             foreach (Chatter chatter in chatters.Data)
@@ -339,7 +339,7 @@ public class TwitchIrcBot
     {
         ModifyChannelInformationRequest request = new();
         request.Title = newTitle;
-        await API.Channels.ModifyChannelInformationAsync(broadcasterId: TwitchConfig.AccountInfo.USER_ID, request: request);
+        await API.Channels.ModifyChannelInformationAsync(broadcasterId: AccountInfo.USER_ID, request: request);
     }
 
     #endregion API Hooks
@@ -360,8 +360,8 @@ public class TwitchIrcBot
                 version: "2",
                 condition: new Dictionary<string, string>()
                 {
-                    { "broadcaster_user_id", TwitchConfig.AccountInfo.USER_ID },
-                    { "moderator_user_id", TwitchConfig.AccountInfo.USER_ID },
+                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                    { "moderator_user_id", AccountInfo.USER_ID },
                 },
                 method: EventSubTransportMethod.Websocket,
                 websocketSessionId: events.SessionId
@@ -372,7 +372,7 @@ public class TwitchIrcBot
                 version: "1",
                 condition: new Dictionary<string, string>()
                 {
-                    { "broadcaster_user_id", TwitchConfig.AccountInfo.USER_ID },
+                    { "broadcaster_user_id", AccountInfo.USER_ID },
                 },
                 method: EventSubTransportMethod.Websocket,
                 websocketSessionId: events.SessionId
@@ -383,7 +383,7 @@ public class TwitchIrcBot
                 version: "1",
                 condition: new Dictionary<string, string>()
                 {
-                    { "broadcaster_user_id", TwitchConfig.AccountInfo.USER_ID },
+                    { "broadcaster_user_id", AccountInfo.USER_ID },
                 },
                 method: EventSubTransportMethod.Websocket,
                 websocketSessionId: events.SessionId
@@ -394,7 +394,7 @@ public class TwitchIrcBot
                 version: "1",
                 condition: new Dictionary<string, string>()
                 {
-                    { "broadcaster_user_id", TwitchConfig.AccountInfo.USER_ID },
+                    { "broadcaster_user_id", AccountInfo.USER_ID },
                 },
                 method: EventSubTransportMethod.Websocket,
                 websocketSessionId: events.SessionId
@@ -412,7 +412,7 @@ public class TwitchIrcBot
         }
     }
 
-    private void EventSub_OnReconnect(object sender, EventArgs e)
+    private void EventSub_OnReconnect(object? sender, EventArgs e)
     {
         Log($"Websocket {events.SessionId} reconnected");
     }

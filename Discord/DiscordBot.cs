@@ -93,7 +93,10 @@ namespace TwitchBot.Discord
             if (isEnabled)
             {
                 var imageChannel = client.GetChannel(channel) as IMessageChannel;
-                await imageChannel.SendMessageAsync(message);
+                if (imageChannel != null)
+                {
+                    await imageChannel.SendMessageAsync(message);
+                }
             }
         }
 
@@ -104,8 +107,8 @@ namespace TwitchBot.Discord
             {
                 Console.WriteLine($"{game.Type} {game.Name}");
                 Console.WriteLine($"{game.State}");
-                Console.WriteLine($"Since {game.Timestamps.Start.Value.LocalDateTime.ToString()}");
-                Console.WriteLine($"{game.Details}");
+                Console.WriteLine($"Since {game?.Timestamps?.Start?.LocalDateTime.ToString()}");
+                Console.WriteLine($"{game?.Details}");
             }
             else
             {

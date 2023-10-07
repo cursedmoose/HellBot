@@ -33,8 +33,13 @@ namespace TwitchBot.ElevenLabs
             playTts(ttsMessage, voiceProfile);
         }
 
-        public void playTts(string ttsMessage, VoiceProfile voiceProfile)
+        public void playTts(string ttsMessage, VoiceProfile? voiceProfile)
         {
+            if (voiceProfile == null || string.IsNullOrWhiteSpace(ttsMessage))
+            {
+                return;
+            }
+
             try
             {
                 PlayTts.Play(ttsMessage, voiceProfile);

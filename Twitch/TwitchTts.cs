@@ -1,5 +1,6 @@
 ﻿using TwitchBot.ElevenLabs;
 using TwitchLib.Client.Events;
+using TwitchLib.Client.Models;
 
 namespace TwitchBot.Twitch
 {
@@ -11,17 +12,16 @@ namespace TwitchBot.Twitch
             Console.WriteLine($"{timestamp} [TTS] {message}");
         }
         public TwitchTts() { }
-        public void play(object sender, OnMessageReceivedArgs e)
+        public void play(ChatMessage chat)
         {
-            var voiceProfile = VoiceProfiles.getVoiceProfile(e.ChatMessage.Username);
-            if (voiceProfile != null && e.ChatMessage.Message.Length < 256)
+            var voiceProfile = VoiceProfiles.getVoiceProfile(chat.Username);
+            if (voiceProfile != null && chat.Message.Length < 256)
             {
                 Task.Factory.StartNew(() =>
                 {
                     try
                     {
-                        //PlaySound.Play(e.ChatMessage.Message, e.ChatMessage.Username);
-                        Server.Instance.elevenlabs.playTts(e.ChatMessage.Message, voiceProfile);
+                        Server.Instance.elevenlabs.playTts(chat.Message, voiceProfile);
                     }
                     catch (Exception ex)
                     {
@@ -31,21 +31,20 @@ namespace TwitchBot.Twitch
             }
             else
             {
-                Log($"Message length was too long for tts: {e.ChatMessage.Message.Length} / 255");
+                Log($"Message length was too long for tts: {chat.Message.Length} / 255");
             }
         }
 
-        public void playRumor(object sender, OnMessageReceivedArgs e)
+        public void playRumor(ChatMessage rumor)
         {
             var voiceProfile = VoiceProfiles.getRumorVoiceProfile();
-            if (voiceProfile != null && e.ChatMessage.Message.Length < 128)
+            if (voiceProfile != null && rumor.Message.Length < 128)
             {
                 Task.Factory.StartNew(() =>
                 {
                     try
                     {
-                        //PlaySound.Play(e.ChatMessage.Message, e.ChatMessage.Username);
-                        Server.Instance.elevenlabs.playTts(e.ChatMessage.Message, voiceProfile);
+                        Server.Instance.elevenlabs.playTts(rumor.Message, voiceProfile);
                     }
                     catch (Exception ex)
                     {
@@ -55,7 +54,7 @@ namespace TwitchBot.Twitch
             }
             else
             {
-                Log($"Message length was too long for tts: {e.ChatMessage.Message.Length} / 127");
+                Log($"Message length was too long for tts: {rumor.Message.Length} / 127");
             }
         }
 

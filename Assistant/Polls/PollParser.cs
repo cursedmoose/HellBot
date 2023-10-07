@@ -11,7 +11,7 @@ namespace TwitchBot.Assistant.Polls
 {
     internal class Poll
     {
-        public string Title;
+        public string Title = "";
         public List<string> Choices = new();
     }
     internal class PollParser
