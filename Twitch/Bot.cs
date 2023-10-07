@@ -26,6 +26,7 @@ using TwitchLib.EventSub.Websockets.Handler.Channel.Polls;
 using TwitchLib.Api.Helix.Models.Channels.ModifyChannelInformation;
 using TwitchBot.Config;
 using static TwitchBot.Config.TwitchConfig;
+using System.Runtime.Caching;
 
 public class TwitchIrcBot
 {
@@ -40,6 +41,7 @@ public class TwitchIrcBot
     Auth Auth { get { return api.Auth; } }
 
     List<CommandHandler> commands;
+    MemoryCache eventLog = new MemoryCache("Events");
 
     private void Log(string message)
     {
@@ -133,6 +135,7 @@ public class TwitchIrcBot
         client.OnMessageReceived += Client_OnMessageReceived;
         client.OnWhisperReceived += Client_OnWhisperReceived;
         client.OnNewSubscriber += Client_OnNewSubscriber;
+        client.OnReSubscriber += Client_OnReSubscriber;
         client.OnConnected += Client_OnConnected;
     }
 
@@ -245,10 +248,17 @@ public class TwitchIrcBot
 
     private void Client_OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
     {
-        client.TimeoutUser(e.Channel, e.Subscriber.DisplayName, TimeSpan.FromMinutes(10), "sub??? in my channel???");
-        var prompt = $"welcome new subscriber \"{e.Subscriber.DisplayName}\"";
-        Server.Instance.chatgpt.getResponse("Shegorath", prompt);
+        //client.TimeoutUser(e.Channel, e.Subscriber.DisplayName, TimeSpan.FromMinutes(5), "sub??? in my channel???");
+        // var prompt = $"welcome new subscriber \"{e.Subscriber.DisplayName}\"";
+        //Server.Instance.chatgpt.getResponse("Shegorath", prompt);
+        Server.Instance.Assistant.WelcomeSubscriber(e.Subscriber.DisplayName, 1);
     }
+
+    private void Client_OnReSubscriber(object? sender, OnReSubscriberArgs e)
+    {
+        Server.Instance.Assistant.WelcomeSubscriber(e.ReSubscriber.DisplayName, e.ReSubscriber.Months);
+    }
+
     #endregion TwitchClient Handlers
 
     private void handleCommand(object? sender, OnMessageReceivedArgs e)
@@ -312,6 +322,7 @@ public class TwitchIrcBot
     {
         if (!client.IsConnected || string.IsNullOrWhiteSpace(title) || choices.Count <= 0)
         {
+            Log($"Client: {client.IsConnected} | Title: {title} | Choices: {choices.Count}");
             return false;
         }
 
@@ -330,6 +341,7 @@ public class TwitchIrcBot
 
         request.Choices = realChoices.ToArray();
 
+        Log("Creating Poll...");
         await API.Polls.CreatePollAsync(request);
 
         return true;
@@ -420,29 +432,39 @@ public class TwitchIrcBot
     {
         var eventData = e.Notification.Payload.Event;
         Log($"{eventData.UserName} followed {eventData.BroadcasterUserName} at {eventData.FollowedAt}");
+        Server.Instance.Assistant.WelcomeFollower(eventData.UserName);
     }
+
 
     private void EventSub_OnPollBegin(object? sender, ChannelPollBeginArgs e)
     {
         var eventData = e.Notification.Payload.Event;
         Log($"Poll started: {eventData.Title}");
+        Log($"{eventData.Choices[0].Title}");
+        Server.Instance.Assistant.AnnouncePoll(eventData.Title, eventData.Choices.Select(choice => choice.Title).ToList());
     }
 
     private void EventSub_OnPollEnd(object? sender, ChannelPollEndArgs e)
     {
         var eventData = e.Notification.Payload.Event;
+
+        if (eventLog[eventData.Id] != null ) { return; }
+        eventLog.Add(eventData.Id, "end", DateTime.Now.AddMinutes(5));
+
         Log($"Poll ended: {eventData.Title}");
         Log("Results:");
         foreach (PollChoice choice in eventData.Choices.ToList())
         {
             Log($"{choice.Title}: {choice.Votes}");
         }
+        Server.Instance.Assistant.ConcludePoll(eventData.Title, eventData.Choices.MaxBy(it => it.Votes).Title);
     }
 
     private void EventSub_OnChannelPointsRedeemed(object? sender, ChannelPointsCustomRewardRedemptionArgs e)
     {
         var eventData = e.Notification.Payload.Event;
         Log($"{eventData.UserName} redeemed {eventData.Reward.Title}");
+        Server.Instance.Assistant.ChannelRewardClaimed(eventData.UserName, eventData.Reward.Title, eventData.Reward.Cost);
     }
 
     private void EventSub_Error(object? sender, ErrorOccuredArgs e)

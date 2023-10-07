@@ -190,14 +190,14 @@ namespace TwitchBot.Discord
                 }
                 else if (!String.IsNullOrEmpty(game.Name) && game.State != null)
                 {
-                    // playWelcomeBackTts(game.Name, "Sheogorath");
+                    Server.Instance.Assistant.WelcomeBack(game.Name);
                 }
             }
         }
 
         private string getReactRequestPrompt(string gameState)
         {
-            return $"{ChatGpt.ChatGpt.getRandomPrompt(Server.Instance.assistant.Name)} react to me {gameState}. limit 25 words.";
+            return $"{ChatGpt.ChatGpt.getRandomPrompt(Server.Instance.Assistant.Name)} react to me {gameState}. limit 25 words.";
         }
 
         private long resetInterval()

@@ -98,7 +98,9 @@ while (true)
         }
     }
     else if(next.Contains("make"))
-    { 
+    {
+        await server.Assistant.CreatePoll();
+        /*
         await Server.Instance.twitch.CreatePoll(
             title: "this is an automatic test",
             choices: new List<string>()
@@ -106,6 +108,7 @@ while (true)
                 "option 1",
                 "option 2"
             });
+        */
     }
     else
     {
@@ -127,10 +130,10 @@ public class Server
 
     static bool GLOBAL_ENABLE = true;
 
-    public Assistant assistant = new Sheogorath();
+    public Assistant Assistant = new Sheogorath();
 
     public TwitchIrcBot twitch = new(GLOBAL_ENABLE);
-    public ElevenLabs elevenlabs = new(false);
+    public ElevenLabs elevenlabs = new(GLOBAL_ENABLE);
     public DiscordBot discord = new(false);
     public ChatGpt chatgpt = new(GLOBAL_ENABLE);
     public HttpClient web = new();

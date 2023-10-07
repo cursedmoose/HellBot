@@ -28,6 +28,16 @@ namespace TwitchBot.ChatGpt
             return string.Format(personaPrompts[choice], forPersona);
         }
 
+        public static List<Message> convertToMessages(List<string> strings)
+        {
+            var chatPrompts = new List<Message>();
+            foreach(string message in strings)
+            {
+                chatPrompts.Add(new Message(Role.User, message));
+            }
+            return chatPrompts;
+        }
+
         private void Log(string message)
         {
             var timestamp = DateTime.Now.ToString(Server.LOG_FORMAT);
@@ -36,19 +46,15 @@ namespace TwitchBot.ChatGpt
 
         private async Task<bool> requestResponses(List<Message> messages)
         {
-            var chatRequest = new ChatRequest(
-                model: Model.GPT3_5_Turbo,
-                messages: messages, 
-                temperature: 1.5);
-
             try
             {
-                var result = await openAI.ChatEndpoint.GetCompletionAsync(chatRequest);
-                Server.Instance.elevenlabs.playTts(result.FirstChoice, VoiceProfiles.Sheogorath);
+                var result = await requestResponseText(messages);
+                Server.Instance.elevenlabs.playTts(result, Server.Instance.Assistant.Voice);
             }
             catch (Exception e)
             {
                 Log($"Got error: {e.Message}");
+                return false;
             }
 
             return true;
@@ -79,39 +85,50 @@ namespace TwitchBot.ChatGpt
             if (!isEnabled) { return ""; }
 
             Log($"Asking ChatGpt to respond to {chatPrompt}");
-            // string promptTemplate = $"{getRandomPrompt("Sheogorath")} react to me {chatPrompt}. limit {maxTokens} words.";
             string promptTemplate = generatePromptFromTemplate(chatPrompt, maxResponseLength);
 
             var chatPrompts = new List<Message>
             {
                 new(Role.User, promptTemplate)
             };
-            //var chatRequest = new ChatRequest(messages: chatPrompts, maxTokens: 50, temperature: 1.5);
 
             return await requestResponseText(chatPrompts);
         }
 
-        public async Task<string> getResponseText(string persona, string chatPrompt, int maxResponseLength = 25)
+        public async Task<string> getResponseText(string persona, string chatPrompt)
         {
             if (!isEnabled) { return ""; }
 
             Log($"Asking ChatGpt to respond to {chatPrompt}");
-            // string promptTemplate = $"{getRandomPrompt("Sheogorath")} react to me {chatPrompt}. limit {maxTokens} words.";
-            string promptTemplate = generatePromptFromTemplate(chatPrompt, maxResponseLength);
+            // string promptTemplate = generatePromptFromTemplate(chatPrompt, maxResponseLength);
 
             var chatPrompts = new List<Message>
             {
-                new(Role.System, getRandomPrompt(persona)),
-                new(Role.User, promptTemplate)
+                new(Role.System, persona),
+                new(Role.User, chatPrompt)
             };
-            //var chatRequest = new ChatRequest(messages: chatPrompts, maxTokens: 50, temperature: 1.5);
 
             return await requestResponseText(chatPrompts);
         }
 
-        public async void getResponse(string chatPrompt, int maxResponseLength = 25)
+        public async Task<string> getResponseText(string persona, List<Message> messages)
         {
-            if (!isEnabled) { return; }
+            if (!isEnabled) { return ""; }
+
+            Log($"Asking ChatGpt to respond to {messages.Count} messages.");
+
+            var chatPrompts = new List<Message>
+            {
+                new(Role.System, persona),
+            };
+            chatPrompts.AddRange(messages);
+
+            return await requestResponseText(chatPrompts);
+        }
+
+        public async Task<bool> getResponse(string chatPrompt, int maxResponseLength = 25)
+        {
+            if (!isEnabled) { return false; }
 
             Log($"Asking ChatGpt to respond to {chatPrompt}.");
             string promptTemplate = generatePromptFromTemplate(chatPrompt, maxResponseLength);
@@ -121,12 +138,12 @@ namespace TwitchBot.ChatGpt
                 new(Role.User, promptTemplate)
             };
 
-            await requestResponses(chatPrompts);
+            return await requestResponses(chatPrompts);
         }
 
-        public async void getResponse(string persona, string chatPrompt, int maxResponseLength = 25)
+        public async Task<bool> getResponse(string persona, string chatPrompt, int maxResponseLength = 25)
         {
-            if (!isEnabled) { return; }
+            if (!isEnabled) { return false; }
 
             Log($"Asking ChatGpt to respond to {chatPrompt}");
             string promptTemplate = generatePromptFromTemplate(chatPrompt, maxResponseLength);
@@ -139,7 +156,7 @@ namespace TwitchBot.ChatGpt
                 new(Role.User, promptTemplate)
             };
 
-            await requestResponses(chatPrompts);
+            return await requestResponses(chatPrompts);
         }
 
         public async Task<string> getImage(string imagePrompt, ChatMessage? message = null)

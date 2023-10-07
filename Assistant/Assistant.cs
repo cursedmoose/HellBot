@@ -1,4 +1,5 @@
-﻿using TwitchBot.ElevenLabs;
+﻿using TwitchBot.Assistant.Polls;
+using TwitchBot.ElevenLabs;
 
 namespace TwitchBot.Assistant
 {
@@ -17,9 +18,26 @@ namespace TwitchBot.Assistant
 
         public string Name { get; private set; }
         public VoiceProfile Voice { get; private set; }
+        public abstract string GetSystemPersona();
+
+        public string Persona { get { return GetSystemPersona(); } }
 
         public abstract void WelcomeBack(string gameTitle);
-        public abstract bool RunPoll(string pollContext);
+
+        public abstract void WelcomeFollower(string username);
+        public abstract void WelcomeSubscriber(string username, int length);
+
+        public abstract Task<bool> CreatePoll();
+        public abstract Task<bool> AnnouncePoll(string title, List<string> options);
+
+        public abstract Task<bool> ConcludePoll(string title, string winner);
+
+        public abstract Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost);
+
+        public void PlayTts(string message)
+        {
+            Server.Instance.elevenlabs.playTts(message, Voice);
+        }
 
     }
 }

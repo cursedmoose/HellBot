@@ -1,23 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using TwitchLib.Api.Helix.Models.Polls;
-using TwitchLib.PubSub.Models.Responses;
+﻿using System.Text.RegularExpressions;
 
 namespace TwitchBot.Assistant.Polls
 {
-    internal class Poll
+    public class Poll
     {
+        public const string PollPrompt = "fill out the following poll\r\nTitle:\r\nOption 1:\r\nOption 2:\r\nOption 3:";
+        public const string PollAnnounce = "announce the poll. limit 25 words";
+        public const string PollEndPrompt = "the poll \"{0}\" ended. \"{1}\" was the winner";
+
         public string Title = "";
         public List<string> Choices = new();
     }
     internal class PollParser
     {
-        const string PollPrompt = "fill out the following poll\r\nTitle:\r\nOption 1:\r\nOption 2:\r\nOption 3:";
-
         public static Poll parsePoll(string rawPoll)
         {
             Poll poll = new();

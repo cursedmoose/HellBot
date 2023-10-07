@@ -21,18 +21,6 @@ namespace TwitchBot.ElevenLabs
             Console.WriteLine($"{timestamp} [ElevenLabs] {message}");
         }
 
-        public void playTts(string ttsMessage, string voiceName = "dagoth")
-        {
-            VoiceProfile voiceProfile = VoiceProfiles.getVoiceProfile(voiceName);
-            if (voiceProfile == null)
-            {
-                Log($"No voice profile set for {voiceName}");
-                return;
-            }
-            
-            playTts(ttsMessage, voiceProfile);
-        }
-
         public void playTts(string ttsMessage, VoiceProfile? voiceProfile)
         {
             if (voiceProfile == null || string.IsNullOrWhiteSpace(ttsMessage))
