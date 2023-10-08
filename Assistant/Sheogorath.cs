@@ -17,10 +17,10 @@ namespace TwitchBot.Assistant
 
         List<Actions> AI_CAPABILITIES = new()
             {
-                // Actions.Ban,
+                Actions.Ban,
                 Actions.Chat,
-                // Actions.ChangeTitle,
-                // Actions.RunPoll
+                Actions.ChangeTitle,
+                Actions.RunPoll,
                 Actions.CreateReward
             };
 
@@ -36,52 +36,61 @@ namespace TwitchBot.Assistant
         {
             var time = DateTime.Now;
 
-            var actionToTake = AI_CAPABILITIES[new Random().Next(AI_CAPABILITIES.Count)];
-            Log($"Selecting an action: {actionToTake}");
-            switch (actionToTake)
+            var mischief = new Random().Next(1) == 0;
+            if (mischief)
             {
-                case Actions.Ban:
-                    await BanRandomUser();
-                    break;
-                case Actions.Chat:
-                    await Chatter();
-                    break;
-                case Actions.ChangeTitle:
-                    await ChangeTitle();
-                    break;
-                case Actions.RunPoll:
-                    if (LastPollTime.AddMinutes(5) < time)
-                    {
-                        LastPollTime = time;
-                        await CreatePoll();
-                    }
-                    else
-                    {
-                        Log("Poll is on cooldown!");
-                    }
-                    break;
-                case Actions.CreateReward:
-                    if (rewardsCreated.Count <= 0)
-                    {
-                        await CreateReward();
-                    } 
-                    else
-                    {
-                        if (new Random().Next(3) == 0)
+                var actionToTake = AI_CAPABILITIES[new Random().Next(AI_CAPABILITIES.Count)];
+                Log($"Mischief!: {actionToTake}");
+                switch (actionToTake)
+                {
+                    case Actions.Ban:
+                        await BanRandomUser();
+                        break;
+                    case Actions.Chat:
+                        await Chatter();
+                        break;
+                    case Actions.ChangeTitle:
+                        await ChangeTitle();
+                        break;
+                    case Actions.RunPoll:
+                        if (LastPollTime.AddMinutes(5) < time)
+                        {
+                            LastPollTime = time;
+                            await CreatePoll();
+                        }
+                        else
+                        {
+                            Log("Poll is on cooldown!");
+                        }
+                        break;
+                    case Actions.CreateReward:
+                        if (rewardsCreated.Count <= 0)
                         {
                             await CreateReward();
-                        } else
-                        {
-                            await DeleteReward();
                         }
-                    }
-                    break;
+                        else
+                        {
+                            if (new Random().Next(3) == 0)
+                            {
+                                await CreateReward();
+                            }
+                            else
+                            {
+                                await DeleteReward();
+                            }
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                await Chatter();
             }
 
             // Log($"Hello at {time}");
             // await ChangeTitle();
             // await BanRandomUser();
-            await Task.Delay(15_000);
+            await Task.Delay(150 * 1_000);
             return;
         }
 
