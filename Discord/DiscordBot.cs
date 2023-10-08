@@ -129,7 +129,8 @@ namespace TwitchBot.Discord
         {
             if (activity is RichGame game)
             {
-                if (game.Name == "Skyrim Special Edition" && game.State != null)
+                //if (game.Name == "Skyrim Special Edition" && game.State != null)
+                if (!string.IsNullOrEmpty(game.Name) && !string.IsNullOrEmpty(game.State))
                 {
                     recordStateSeenFromRichPresence(game.State);
                     var flavorPrefix = game.State.Split(',')[0]; // Catch that
@@ -162,10 +163,6 @@ namespace TwitchBot.Discord
                         // Log($"Only {(currentTime - lastTtsTime) / SECONDS} since last TTS. Rate limiting.");
                         return;
                     }
-                }
-                else if (!String.IsNullOrEmpty(game.Name) && game.State != null)
-                {
-                    Server.Instance.Assistant.WelcomeBack(game.Name);
                 }
             }
         }

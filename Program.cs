@@ -69,7 +69,7 @@ while (true)
         {
             var prompt = next.Substring(3).Trim();
             Log($"Generating words for : \"{prompt}\"");
-            Log(await server.chatgpt.getResponseText(prompt));
+            Log(await server.chatgpt.getResponseText(server.Assistant.Persona, prompt));
         }
         catch (Exception e)
         {
@@ -78,38 +78,24 @@ while (true)
     }
     else if (next.Contains("chat"))
     {
-        var chatters = await Server.Instance.twitch.GetChatters();
+        var chatters = await Server.Instance.twitch.GetChatterNames();
         chatters.ForEach(Log);
     }
-    else if (next.Contains("poll"))
+    else if (next.Contains("start"))
     {
-        var prompt1 = "make a 3 option poll with a title. limit the options to 5 words";
-        var prompt2 = "make a poll with 3 options and a title. limit the options to 5 words";
-        var prompt3 = "fill out the following poll\r\nTitle:\r\nOption 1:\r\nOption 2:\r\nOption 3:";
-        string response = await server.chatgpt.getResponseText(prompt3);
-        Log(response);
-
-        Poll poll = PollParser.parsePoll(response);
-
-        Log(poll.Title);
-        foreach (string option in poll.Choices)
-        {
-            Log($"x?: {option}");
-        }
+        server.Assistant.StartAI();
     }
-    else if(next.Contains("make"))
+    else if (next.Contains("stop"))
     {
-        await server.Assistant.ChangeTitle();
-        //await server.Assistant.CreatePoll();
-        /*
-        await Server.Instance.twitch.CreatePoll(
-            title: "this is an automatic test",
-            choices: new List<string>()
-            {
-                "option 1",
-                "option 2"
-            });
-        */
+        await server.Assistant.StopAI();
+    }
+    else if(next.Contains("create"))
+    {
+        await (server.Assistant as Sheogorath).CreateReward();
+    }
+    else if (next.Contains("delete"))
+    {
+        await (server.Assistant as Sheogorath).DeleteReward();
     }
     else
     {
@@ -135,7 +121,7 @@ public class Server
 
     public TwitchIrcBot twitch = new(GLOBAL_ENABLE);
     public ElevenLabs elevenlabs = new(GLOBAL_ENABLE);
-    public DiscordBot discord = new(false);
+    public DiscordBot discord = new(GLOBAL_ENABLE);
     public ChatGpt chatgpt = new(GLOBAL_ENABLE);
     public HttpClient web = new();
 
@@ -146,10 +132,15 @@ public class Server
     public async void saveAs(string webUrl, string filename, string fileExtension = "")
     {
         var response = await web.GetAsync(webUrl);
-        using (var fs = new FileStream(Path.Combine("images", filename + fileExtension), FileMode.Create))
+        using (var fs = new FileStream(Path.Combine("images", RemoveInvalidChars(filename) + fileExtension), FileMode.Create))
         {
             await response.Content.CopyToAsync(fs);
         }
+    }
+
+    private string RemoveInvalidChars(string filename)
+    {
+        return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
     }
 
     private Server()

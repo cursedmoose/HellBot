@@ -19,6 +19,7 @@ namespace TwitchBot.Assistant
 
         public string Name { get; private set; }
         public VoiceProfile Voice { get; private set; }
+        private static bool AI_Running = false;
         public abstract string GetSystemPersona();
 
         public string Persona { get { return GetSystemPersona(); } }
@@ -42,12 +43,46 @@ namespace TwitchBot.Assistant
             Server.Instance.elevenlabs.playTts(message, Voice);
         }
 
+        public async Task Chatter()
+        {
+            await Server.Instance.chatgpt.getResponse(Persona, "say anything");
+            return;
+        }
+
         public async void ReactToGameState(string gameState)
         {
             await Server.Instance.chatgpt.getResponse(
                 chatPrompt: $"react to me {gameState}",
                 persona: Persona
             );
+        }
+
+        protected abstract Task AI();
+
+        private async Task Run_AI()
+        {
+            do {
+                await AI();
+            } while (AI_Running);
+
+            return;
+        }
+
+        public async Task StartAI()
+        {
+            if (!AI_Running)
+            {
+                AI_Running = true;
+                await Task.Run(Run_AI);
+            }
+            return;
+        }
+
+        public Task StopAI()
+        {
+            Log($"Goodbye at {DateTime.Now}");
+            AI_Running = false;
+            return Task.CompletedTask;
         }
 
     }

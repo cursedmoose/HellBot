@@ -1,9 +1,7 @@
 ﻿using OpenAI;
 using OpenAI.Chat;
 using OpenAI.Images;
-using TwitchBot.ElevenLabs;
 using TwitchLib.Client.Models;
-using static TwitchBot.ChatGpt.Constants;
 using System.Globalization;
 using OpenAI.Models;
 using static TwitchBot.Config.ChatGptConfig;
@@ -20,12 +18,6 @@ namespace TwitchBot.ChatGpt
         {
             openAI = new(openAIAuthentication: new(API_KEY, ORGANIZATION_ID));
             isEnabled = enabled;
-        }
-
-        public static string getRandomPrompt(string forPersona)
-        {
-            var choice = new Random().Next(0, personaPrompts.Count);
-            return string.Format(personaPrompts[choice], forPersona);
         }
 
         public static List<Message> convertToMessages(List<string> strings)
@@ -65,7 +57,8 @@ namespace TwitchBot.ChatGpt
             var chatRequest = new ChatRequest(
                 model: Model.GPT3_5_Turbo,
                 messages: messages,
-                temperature: 1.5);
+                temperature: 1.5,
+                maxTokens: 75);
             var responseText = "";
             try
             {
@@ -78,21 +71,6 @@ namespace TwitchBot.ChatGpt
             }
 
             return responseText;
-        }
-        [Obsolete("Use (persona, chatPrompt). Add limits in manually.")]
-        public async Task<string> getResponseText(string chatPrompt, int maxResponseLength = 25)
-        {
-            if (!isEnabled) { return ""; }
-
-            Log($"Asking ChatGpt to respond to {chatPrompt}");
-            string promptTemplate = generatePromptFromTemplate(chatPrompt, maxResponseLength);
-
-            var chatPrompts = new List<Message>
-            {
-                new(Role.User, promptTemplate)
-            };
-
-            return await requestResponseText(chatPrompts);
         }
 
         public async Task<string> getResponseText(string persona, string chatPrompt)
@@ -126,21 +104,6 @@ namespace TwitchBot.ChatGpt
             return await requestResponseText(chatPrompts);
         }
 
-        public async Task<bool> getResponse(string chatPrompt, int maxResponseLength = 25)
-        {
-            if (!isEnabled) { return false; }
-
-            Log($"Asking ChatGpt to respond to {chatPrompt}.");
-            string promptTemplate = generatePromptFromTemplate(chatPrompt, maxResponseLength);
-
-            var chatPrompts = new List<Message>
-            {
-                new(Role.User, promptTemplate)
-            };
-
-            return await requestResponses(chatPrompts);
-        }
-
         public async Task<bool> getResponse(string persona, string chatPrompt, int maxResponseLength = 25)
         {
             if (!isEnabled) { return false; }
@@ -152,7 +115,7 @@ namespace TwitchBot.ChatGpt
 
             var chatPrompts = new List<Message>
             {
-                new(Role.System, getRandomPrompt(persona)),
+                new(Role.System, persona),
                 new(Role.User, promptTemplate)
             };
 

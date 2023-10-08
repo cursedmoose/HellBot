@@ -28,6 +28,9 @@ using TwitchBot.Config;
 using static TwitchBot.Config.TwitchConfig;
 using System.Runtime.Caching;
 using TwitchLib.Api.Helix.Models.Channels.GetChannelInformation;
+using System.Runtime.InteropServices;
+using TwitchLib.Api.Helix.Models.Moderation.BanUser;
+using TwitchLib.Api.Helix.Models.ChannelPoints.CreateCustomReward;
 
 public class TwitchIrcBot
 {
@@ -67,11 +70,13 @@ public class TwitchIrcBot
 
         var scopes = new List<string>()
         {
+            "moderator:manage:banned_users",
             "moderator:read:chatters",
             "moderator:read:followers",
             "channel:manage:polls",
             "channel:manage:redemptions",
-            "channel:manage:broadcast"
+            "channel:manage:broadcast",
+            "channel:manage:redemptions"
         };
 
         if (enabled)
@@ -97,11 +102,8 @@ public class TwitchIrcBot
             {
                 Log($"[Events]\t[{sub.Type}]: {condition.Key}={condition.Value}");
             }
-            Log($"[Events]\t[{sub.Type}]: {sub.Status}");
-            Log($"[Events]\t[{sub.Type}]: {sub.Cost}");
+            Log($"[Events]\t[{sub.Type}]: {sub.Status} ({sub.Cost})");
             Log($"[Events]\t[{sub.Type}]: {sub.CreatedAt}");
-            Log($"[Events]\t[{sub.Type}]: {sub.Transport.Callback}");
-
         }
     }
 
@@ -187,6 +189,12 @@ public class TwitchIrcBot
     {
         Log($"Sending {withMessage} to {message.Channel}");
         client.SendMessage(message.Channel, withMessage);
+    }
+
+    public void Respond(string withMessage)
+    {
+        Log($"Sending {withMessage} to {AccountInfo.CHANNEL}");
+        client.SendMessage(AccountInfo.CHANNEL, withMessage);
     }
     public void stop()
     {
@@ -298,7 +306,13 @@ public class TwitchIrcBot
     #endregion Tts
 
     #region API Hooks
-    public async Task<List<string>> GetChatters()
+    public async Task<List<string>> GetChatterNames()
+    {
+        var allChatters = await GetChatters();
+        return allChatters.Select(chatter => chatter.UserName).ToList();
+    }
+
+    public async Task<List<Chatter>> GetChatters()
     {
         if (!client.IsConnected)
         {
@@ -306,16 +320,12 @@ public class TwitchIrcBot
         }
 
         var page = "";
-        List<string> allChatters = new();
+        List<Chatter> allChatters = new();
         do
         {
             var chatters = await API.Chat.GetChattersAsync(AccountInfo.USER_ID, AccountInfo.USER_ID, 1000, page);
             page = chatters.Pagination.Cursor;
-
-            foreach (Chatter chatter in chatters.Data)
-            {
-                allChatters.Add(chatter.UserName);
-            }
+            allChatters.AddRange(chatters.Data);
         } while (page != null);
 
         return allChatters;
@@ -374,6 +384,62 @@ public class TwitchIrcBot
         var info = await GetStreamInfo();
         return info.Title;
     }
+
+    public async Task<bool> BanUser(string username, string reason, int timeoutSeconds)
+    {
+        var request = new BanUserRequest();
+        request.UserId = username;
+        request.Duration = timeoutSeconds;
+        request.Reason = reason;
+
+        var ban = await API.Moderation.BanUserAsync(
+            broadcasterId: AccountInfo.USER_ID,
+            moderatorId: AccountInfo.USER_ID,
+            banUserRequest: request
+        );
+
+        return true;
+    }
+
+    public async Task<string> CreateCustomReward(string rewardName, int rewardCost, string prompt = null)
+    {
+        var request = new CreateCustomRewardsRequest()
+        {
+            Title = rewardName,
+            Cost = rewardCost,
+            ShouldRedemptionsSkipRequestQueue = true,
+            Prompt = prompt,
+            IsEnabled = true,
+        };
+
+        var reward = await API.ChannelPoints.CreateCustomRewardsAsync(
+            broadcasterId: AccountInfo.USER_ID,
+            request: request
+        );
+
+        return reward.Data[0].Id;
+    }
+
+    public async Task<bool> DeleteCustomReward(string rewardId)
+    {
+        try
+        {
+            await API.ChannelPoints.DeleteCustomRewardAsync(
+                broadcasterId: AccountInfo.USER_ID,
+                rewardId: rewardId
+            );
+        }
+        catch ( Exception ex )
+        {
+            Log($"Couldn't delete reward {rewardId} due to {ex.Message}");
+            return false;
+        }
+
+        return true;
+
+
+    }
+
     #endregion API Hooks
 
     #region EventSub Handlers
@@ -480,11 +546,16 @@ public class TwitchIrcBot
         Server.Instance.Assistant.ConcludePoll(eventData.Title, eventData.Choices.MaxBy(it => it.Votes).Title);
     }
 
-    private void EventSub_OnChannelPointsRedeemed(object? sender, ChannelPointsCustomRewardRedemptionArgs e)
+    private async void EventSub_OnChannelPointsRedeemed(object? sender, ChannelPointsCustomRewardRedemptionArgs e)
     {
         var eventData = e.Notification.Payload.Event;
         Log($"{eventData.UserName} redeemed {eventData.Reward.Title}");
-        Server.Instance.Assistant.ChannelRewardClaimed(eventData.UserName, eventData.Reward.Title, eventData.Reward.Cost);
+        await Server.Instance.Assistant.ChannelRewardClaimed(eventData.UserName, eventData.Reward.Title, eventData.Reward.Cost);
+        var reward = await Server.Instance.chatgpt.getImage(eventData.Reward.Title);
+        if (reward != null)
+        {
+            Respond($"@{eventData.UserName}: {reward}");
+        }
     }
 
     private void EventSub_Error(object? sender, ErrorOccuredArgs e)

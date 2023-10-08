@@ -28,6 +28,7 @@ namespace TwitchBot.ElevenLabs
                 return;
             }
 
+
             try
             {
                 PlayTts.Play(ttsMessage, voiceProfile);
@@ -45,6 +46,5 @@ namespace TwitchBot.ElevenLabs
         {
             return SubscriptionInfo.call(client);
         }
-
     }
 }

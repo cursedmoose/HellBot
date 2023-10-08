@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TwitchBot.Assistant
+﻿namespace TwitchBot.Assistant
 {
-    internal class Prompts
+    internal class PersonaPrompts
     {
         internal static List<string> All = new()
         {
