@@ -6,7 +6,6 @@ using TwitchBot.ChatGpt;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using TwitchBot.Assistant;
-using TwitchBot.Assistant.Polls;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now.ToString("yyyy-MM-dd")}.txt");
 Console.SetOut(multiOut);
@@ -42,8 +41,10 @@ while (true)
     {
         var info = server.elevenlabs.getUserSubscriptionInfo();
         // Log(info.ToString());
-        Log($"Used {info.character_count} / {info.character_limit} characters.");
-        Log($"This instance has used {info.character_count - server.elevenlabs.charactersStartedAt} characters.");
+        Log($"[ElevenLabs] Used {info.character_count} / {info.character_limit} characters.");
+        Log($"[ElevenLabs] This instance has used {info.character_count - server.elevenlabs.charactersStartedAt} characters.");
+
+        server.chatgpt.getUsage();
     }
     else if (next == "okok")
     {
@@ -91,11 +92,18 @@ while (true)
     }
     else if(next.Contains("create"))
     {
-        await (server.Assistant as Sheogorath).CreateReward();
+        // Log(await server.shortenUrl("https://www.google.com"));
+        (server.Assistant as Sheogorath).CreateReward();
     }
     else if (next.Contains("delete"))
     {
-        await (server.Assistant as Sheogorath).DeleteReward();
+        // Log(await server.shortenUrl("https://www.google.com"));
+        (server.Assistant as Sheogorath).DeleteReward();
+    }
+    else if (next.Contains("clean"))
+    {
+        // Log(await server.shortenUrl("https://www.google.com"));
+        server.Assistant.CleanUp();
     }
     else
     {
@@ -136,6 +144,14 @@ public class Server
         {
             await response.Content.CopyToAsync(fs);
         }
+    }
+
+    public async Task<string> shortenUrl(string longUrl)
+    {
+        // "https://tinyurl.com/app/api/url/create"
+        var response = await web.GetAsync($"https://tinyurl.com/api-create.php?url={longUrl}");
+
+        return await response.Content.ReadAsStringAsync();
     }
 
     private string RemoveInvalidChars(string filename)

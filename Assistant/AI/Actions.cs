@@ -13,5 +13,6 @@
         DeleteReward,
         EnableSlowMode,
         EnableEmoteOnlyMode,
+        PaintPicture,
     }
 }

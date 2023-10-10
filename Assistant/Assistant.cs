@@ -38,6 +38,8 @@ namespace TwitchBot.Assistant
 
         public abstract Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost);
 
+        public abstract void CleanUp();
+
         public void PlayTts(string message)
         {
             Server.Instance.elevenlabs.playTts(message, Voice);

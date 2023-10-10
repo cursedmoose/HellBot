@@ -1,9 +1,8 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using TwitchBot.Assistant.AI;
 using TwitchBot.Assistant.Polls;
 using TwitchBot.ElevenLabs;
-using TwitchLib.Api.Helix.Models.Chat.GetChatters;
-using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 using static TwitchBot.ChatGpt.ChatGpt;
 
 namespace TwitchBot.Assistant
@@ -21,7 +20,8 @@ namespace TwitchBot.Assistant
                 Actions.Chat,
                 Actions.ChangeTitle,
                 Actions.RunPoll,
-                Actions.CreateReward
+                Actions.CreateReward,
+                Actions.PaintPicture
             };
 
         private static DateTime LastPollTime = DateTime.MinValue;
@@ -32,11 +32,16 @@ namespace TwitchBot.Assistant
             var choice = new Random().Next(0, PersonaPrompts.All.Count);
             return string.Format(PersonaPrompts.All[choice], Name);
         }
+
+        public override async void CleanUp()
+        {
+            await DeleteAllRewards();
+        }
         protected override async Task AI()
         {
             var time = DateTime.Now;
 
-            var mischief = new Random().Next(1) == 0;
+            var mischief = new Random().Next(3) == 0;
             if (mischief)
             {
                 var actionToTake = AI_CAPABILITIES[new Random().Next(AI_CAPABILITIES.Count)];
@@ -67,18 +72,24 @@ namespace TwitchBot.Assistant
                         if (rewardsCreated.Count <= 0)
                         {
                             await CreateReward();
+                            Log($"{rewardsCreated.Count} rewards available!");
                         }
                         else
                         {
-                            if (new Random().Next(3) == 0)
+                            if (new Random().Next(5) == 0)
                             {
                                 await CreateReward();
+                                Log($"{rewardsCreated.Count} rewards available!");
                             }
                             else
                             {
                                 await DeleteReward();
+                                Log($"{rewardsCreated.Count} rewards available!");
                             }
                         }
+                        break;
+                    case Actions.PaintPicture:
+                        await PaintPicture();
                         break;
                 }
             }
@@ -90,7 +101,7 @@ namespace TwitchBot.Assistant
             // Log($"Hello at {time}");
             // await ChangeTitle();
             // await BanRandomUser();
-            await Task.Delay(150 * 1_000);
+            await Task.Delay(300 * 1_000);
             return;
         }
 
@@ -200,11 +211,13 @@ namespace TwitchBot.Assistant
         public async Task<string> CreateReward()
         {
             var rewardTitle = await Server.Instance.chatgpt.getResponseText(Persona, "create a new point reward. limit 5 words");
-            var rewardCost = new Random().Next(10_000);
+            var rewardCost = new Random().Next(500, 10_000);
             var advertisementPrompt = $"advertise new reward \"{rewardTitle}\" for {rewardCost} points.";
             var newReward = await Server.Instance.twitch.CreateCustomReward(rewardTitle, rewardCost);
             await Server.Instance.chatgpt.getResponse(Persona, advertisementPrompt);
             rewardsCreated.Add(rewardTitle, newReward);
+
+            Log($"{rewardsCreated.Count} rewards available!");
 
             return newReward;
         }
@@ -217,6 +230,8 @@ namespace TwitchBot.Assistant
                 var revocationPrompt = $"announce the reward \"{rewardToDelete.Key}\" is being discontinued";
                 await Server.Instance.chatgpt.getResponse(Persona, revocationPrompt);
                 var deleted = await Server.Instance.twitch.DeleteCustomReward(rewardToDelete.Value);
+
+                Log($"{rewardsCreated.Count} rewards available!");
                 if (deleted)
                 {
                     rewardsCreated.Remove(rewardToDelete.Key);
@@ -242,6 +257,23 @@ namespace TwitchBot.Assistant
             }
 
             return true;
+        }
+
+        public async Task PaintPicture()
+        {
+            Server.Instance.elevenlabs.playTts("Let's paint a picture!", Voice);
+
+            var getPrompt = "make an image prompt. limit 5 words";
+            var imagePrompt = await Server.Instance.chatgpt.getResponseText(Persona, getPrompt);
+            var image = await Server.Instance.chatgpt.getImage(imagePrompt);
+
+            var announcePrompt = $"announce your new painting \"{imagePrompt}\"";
+            var announcement = await Server.Instance.chatgpt.getResponse(Persona, announcePrompt);
+            // var shortUrl = await Server.Instance.shortenUrl(image);
+            if (announcement)
+            {
+                Server.Instance.twitch.Respond($"\"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(imagePrompt)}\": {image}");
+            }
         }
 
     }
