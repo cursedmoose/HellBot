@@ -3,13 +3,18 @@ using System.Text;
 using TwitchBot.Assistant.AI;
 using TwitchBot.Assistant.Polls;
 using TwitchBot.ElevenLabs;
+using TwitchBot.OBS.Scene;
 using static TwitchBot.ChatGpt.ChatGpt;
 
 namespace TwitchBot.Assistant
 {
     internal class Sheogorath : Assistant
     {
-        public Sheogorath() : base("Sheogorath", VoiceProfiles.Sheogorath)
+        public Sheogorath() : base(
+                name: "Sheogorath",
+                voice: VoiceProfiles.Sheogorath,
+                sceneId: ObsScenes.Sheogorath
+            )
         {
 
         }
@@ -261,12 +266,14 @@ namespace TwitchBot.Assistant
 
         public async Task PaintPicture()
         {
-            Server.Instance.elevenlabs.playTts("Let's paint a picture!", Voice);
+            //Server.Instance.elevenlabs.playTts("Let's paint a picture!", Voice);
+            PlayTts("Let's paint a picture!");
 
             var getPrompt = "make an image prompt. limit 5 words";
             var imagePrompt = await Server.Instance.chatgpt.getResponseText(Persona, getPrompt);
             var image = await Server.Instance.chatgpt.getImage(imagePrompt);
 
+            ObsScenes.LastImage.Enable();
             var announcePrompt = $"announce your new painting \"{imagePrompt}\"";
             var announcement = await Server.Instance.chatgpt.getResponse(Persona, announcePrompt);
             // var shortUrl = await Server.Instance.shortenUrl(image);
@@ -274,6 +281,14 @@ namespace TwitchBot.Assistant
             {
                 Server.Instance.twitch.Respond($"\"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(imagePrompt)}\": {image}");
             }
+            ObsScenes.LastImage.Disable();
+
+        }
+
+        private void runAd()
+        {
+            var run = "apologize that it is time for an ad. limit 25 words.";
+            var end = "rejoice that the ad is over. limit 25 words.";
         }
 
     }

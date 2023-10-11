@@ -33,7 +33,7 @@ namespace TwitchBot.ElevenLabs
                 case TwitchConfig.Admins.Sas: return Maiq;
                 case TwitchConfig.Admins.Elise1: return Azura;
                 case TwitchConfig.Admins.Elise2: return AnnoyingFan;
-                case TwitchConfig.Admins.Dlique: return DrunkMale;
+                case TwitchConfig.Admins.Dlique: return Alduin;
             }
 
             return null;

@@ -6,6 +6,7 @@ using TwitchBot.ChatGpt;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using TwitchBot.Assistant;
+using TwitchBot.OBS;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now.ToString("yyyy-MM-dd")}.txt");
 Console.SetOut(multiOut);
@@ -31,6 +32,7 @@ while (true)
     {
         server.twitch.stop();
         server.web.Dispose();
+        server.obs.Disconnect();
         break;
     }
     else if (next == "health")
@@ -92,18 +94,28 @@ while (true)
     }
     else if(next.Contains("create"))
     {
-        // Log(await server.shortenUrl("https://www.google.com"));
-        (server.Assistant as Sheogorath).CreateReward();
+        // (server.Assistant as Sheogorath).CreateReward();
+        (server.Assistant as Sheogorath).PaintPicture();
     }
     else if (next.Contains("delete"))
     {
-        // Log(await server.shortenUrl("https://www.google.com"));
-        (server.Assistant as Sheogorath).DeleteReward();
+        // (server.Assistant as Sheogorath).DeleteReward();
     }
     else if (next.Contains("clean"))
     {
-        // Log(await server.shortenUrl("https://www.google.com"));
         server.Assistant.CleanUp();
+    }
+    else if (next.Contains("obs"))
+    {
+        server.obs.GetActiveSource();
+    }
+    else if (next.Contains("on"))
+    {
+        server.obs.EnableScene(sceneName: "Main Scene", itemId: 14);
+    }
+    else if (next.Contains("off"))
+    {
+        server.obs.DisableScene(sceneName: "Main Scene", itemId: 14);
     }
     else
     {
@@ -123,27 +135,31 @@ public class Server
     public static readonly Regex WEBSITE_REGEX = new Regex("[(http(s)?):\\/\\/(www\\.)?a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)", RegexOptions.IgnoreCase);
     public static readonly Regex EMOTE_REGEX = new Regex("cursed99");
 
-    static bool GLOBAL_ENABLE = true;
+    static bool GLOBAL_ENABLE = false;
 
     public Assistant Assistant = new Sheogorath();
 
-    public TwitchIrcBot twitch = new(GLOBAL_ENABLE);
+    public TwitchIrcBot twitch = new(true);
     public ElevenLabs elevenlabs = new(GLOBAL_ENABLE);
     public DiscordBot discord = new(GLOBAL_ENABLE);
-    public ChatGpt chatgpt = new(GLOBAL_ENABLE);
+    public ChatGpt chatgpt = new(true);
+    public ObsClient obs = new(true);
     public HttpClient web = new();
 
 
     private static readonly Lazy<Server> lazy = new Lazy<Server>(() => new Server());
     public static Server Instance { get { return lazy.Value; } }
 
-    public async void saveAs(string webUrl, string filename, string fileExtension = "")
+    public async void saveImageAs(string webUrl, string filename, string fileExtension = "")
     {
         var response = await web.GetAsync(webUrl);
-        using (var fs = new FileStream(Path.Combine("images", RemoveInvalidChars(filename) + fileExtension), FileMode.Create))
+        var sourceFile = Path.Combine("images", RemoveInvalidChars(filename) + fileExtension);
+        var latest = Path.Combine("images", $".latest{fileExtension}");
+        using (var fs = new FileStream(sourceFile, FileMode.Create))
         {
             await response.Content.CopyToAsync(fs);
         }
+        File.Copy(sourceFile, latest, true);
     }
 
     public async Task<string> shortenUrl(string longUrl)

@@ -193,8 +193,11 @@ public class TwitchIrcBot
 
     public void Respond(string withMessage)
     {
-        Log($"Sending {withMessage} to {AccountInfo.CHANNEL}");
-        client.SendMessage(AccountInfo.CHANNEL, withMessage);
+        if (Enabled)
+        {
+            Log($"Sending {withMessage} to {AccountInfo.CHANNEL}");
+            client.SendMessage(AccountInfo.CHANNEL, withMessage);
+        }
     }
     public void stop()
     {

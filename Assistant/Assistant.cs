@@ -1,15 +1,16 @@
-﻿using System.Text;
-using TwitchBot.Assistant.Polls;
-using TwitchBot.ElevenLabs;
+﻿using TwitchBot.ElevenLabs;
+using TwitchBot.OBS.Scene;
+using TwitchLib.Client.Models;
 
 namespace TwitchBot.Assistant
 {
     public abstract class Assistant
     {
-        public Assistant(string name, VoiceProfile voice)
+        public Assistant(string name, VoiceProfile voice, ObsSceneId sceneId)
         {
-            this.Name = name;
-            this.Voice = voice;
+            Name = name;
+            Voice = voice;
+            Obs = sceneId;
         }
         protected void Log(string message)
         {
@@ -19,6 +20,7 @@ namespace TwitchBot.Assistant
 
         public string Name { get; private set; }
         public VoiceProfile Voice { get; private set; }
+        public ObsSceneId Obs { get; private set; }
         private static bool AI_Running = false;
         public abstract string GetSystemPersona();
 
@@ -42,7 +44,9 @@ namespace TwitchBot.Assistant
 
         public void PlayTts(string message)
         {
+            Obs.Enable();
             Server.Instance.elevenlabs.playTts(message, Voice);
+            Obs.Disable();
         }
 
         public async Task Chatter()
@@ -85,6 +89,22 @@ namespace TwitchBot.Assistant
             Log($"Goodbye at {DateTime.Now}");
             AI_Running = false;
             return Task.CompletedTask;
+        }
+
+        public async Task Commemorate(string excitingEvent, ChatMessage? requester = null)
+        {
+            var image = await Server.Instance.chatgpt.getImage(excitingEvent, requester);
+            if (image != null)
+            {
+                ObsScenes.LastImage.Enable();
+            }
+            await Server.Instance.chatgpt.getResponse(
+                chatPrompt: $"commemorate  {excitingEvent}",
+                persona: Persona
+            );
+            ObsScenes.LastImage.Disable();
+
+            return;
         }
 
     }

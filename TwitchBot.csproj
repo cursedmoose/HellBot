@@ -12,6 +12,7 @@
     <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
     <PackageReference Include="NAudio" Version="2.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="obs-websocket-dotnet" Version="5.0.0.3" />
     <PackageReference Include="OpenAI-DotNet" Version="7.0.9" />
     <PackageReference Include="System.Runtime.Caching" Version="7.0.0" />
     <PackageReference Include="System.Windows.Extensions" Version="7.0.0" />

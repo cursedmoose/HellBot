@@ -18,10 +18,12 @@ namespace TwitchBot.Twitch.Commands
             var imageRequest = message.Message.Replace(COMMAND, string.Empty).Trim();
             if (imageRequest.Length > 0)
             {
-                Console.WriteLine($"Calling getImage with param {imageRequest}");
-                Server.Instance.chatgpt.getImage(imageRequest, message).GetAwaiter().GetResult();
+                Server.Instance.Assistant.Commemorate(imageRequest, message).GetAwaiter().GetResult();
 
-                var author = message.Username;
+                //Console.WriteLine($"Calling getImage with param {imageRequest}");
+                //Server.Instance.chatgpt.getImage(imageRequest, message).GetAwaiter().GetResult();
+
+                //var author = message.Username;
             }
         }
     }

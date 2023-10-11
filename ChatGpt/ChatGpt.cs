@@ -59,7 +59,8 @@ namespace TwitchBot.ChatGpt
             try
             {
                 var result = await requestResponseText(messages);
-                Server.Instance.elevenlabs.playTts(result, Server.Instance.Assistant.Voice);
+                Server.Instance.Assistant.PlayTts(result);
+                // Server.Instance.elevenlabs.playTts(result, Server.Instance.Assistant.Voice);
             }
             catch (Exception e)
             {
@@ -153,11 +154,11 @@ namespace TwitchBot.ChatGpt
             Server.Instance.discord.PostMessage(Channel.JustMe.IMAGES, $"{shortUrl}");
 
             if (message != null) {
-                Server.Instance.twitch.RespondTo(message, shortUrl);
+                Server.Instance.twitch.RespondTo(message, $"{title}: {shortUrl}");
             }
             var author = message == null ? Server.Instance.Assistant.Name : message.DisplayName;
             var fileName = $"[{author}] {title}";
-            Server.Instance.saveAs(result, fileName, ".png");
+            Server.Instance.saveImageAs(result, fileName, ".png");
 
             return shortUrl;
         }
