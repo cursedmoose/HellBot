@@ -28,7 +28,6 @@ using TwitchBot.Config;
 using static TwitchBot.Config.TwitchConfig;
 using System.Runtime.Caching;
 using TwitchLib.Api.Helix.Models.Channels.GetChannelInformation;
-using System.Runtime.InteropServices;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Helix.Models.ChannelPoints.CreateCustomReward;
 

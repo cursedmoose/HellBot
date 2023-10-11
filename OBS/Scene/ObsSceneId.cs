@@ -14,9 +14,11 @@
     }
     public static class ObsScenes
     {
-        const string MainScene = "Main Scene";
+        public const string MainScene = "Main Scene";
+        public const string Characters = "Characters";
 
         public static ObsSceneId LastImage = new ObsSceneId(MainScene, 18);
-        public static ObsSceneId Sheogorath = new ObsSceneId(MainScene, 15);
+        public static ObsSceneId Sheogorath = new ObsSceneId(Characters, 1);
+        public static ObsSceneId DagothUr = new ObsSceneId(Characters, 2);
     } 
 }

@@ -12,14 +12,13 @@ namespace TwitchBot.ChatGpt
     public class ChatGpt
     {
         OpenAIClient openAI;
-        static ChatGptUsage usage;
+        static ChatGptUsage usage = new ChatGptUsage();
         bool isEnabled;
 
         public ChatGpt(bool enabled = true)
         {
             openAI = new(openAIAuthentication: new(API_KEY, ORGANIZATION_ID));
             isEnabled = enabled;
-            usage = new ChatGptUsage();
         }
 
         public void getUsage()

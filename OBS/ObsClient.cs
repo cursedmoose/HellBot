@@ -49,7 +49,13 @@ namespace TwitchBot.OBS
 
         public void GetActiveSource()
         {
-            var sceneItems = obs.GetSceneItemList("Main Scene");
+            PrintSceneList(ObsScenes.MainScene);
+            PrintSceneList(ObsScenes.Characters);
+        }
+
+        private void PrintSceneList(string scene)
+        {
+            var sceneItems = obs.GetSceneItemList(scene);
             foreach (var sceneItem in sceneItems)
             {
                 log.info($"{sceneItem.SourceName} : {sceneItem.SourceType} : {sceneItem.ItemId}");

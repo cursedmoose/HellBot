@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using TwitchBot.Assistant;
 using TwitchBot.OBS;
+using TwitchBot.OBS.Scene;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now.ToString("yyyy-MM-dd")}.txt");
 Console.SetOut(multiOut);
@@ -111,11 +112,11 @@ while (true)
     }
     else if (next.Contains("on"))
     {
-        server.obs.EnableScene(sceneName: "Main Scene", itemId: 14);
+        server.obs.EnableScene(ObsScenes.Sheogorath);
     }
     else if (next.Contains("off"))
     {
-        server.obs.DisableScene(sceneName: "Main Scene", itemId: 14);
+        server.obs.DisableScene(ObsScenes.Sheogorath);
     }
     else
     {
@@ -135,15 +136,15 @@ public class Server
     public static readonly Regex WEBSITE_REGEX = new Regex("[(http(s)?):\\/\\/(www\\.)?a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)", RegexOptions.IgnoreCase);
     public static readonly Regex EMOTE_REGEX = new Regex("cursed99");
 
-    static bool GLOBAL_ENABLE = false;
+    static bool GLOBAL_ENABLE = true;
 
     public Assistant Assistant = new Sheogorath();
 
-    public TwitchIrcBot twitch = new(true);
+    public TwitchIrcBot twitch = new(GLOBAL_ENABLE);
     public ElevenLabs elevenlabs = new(GLOBAL_ENABLE);
     public DiscordBot discord = new(GLOBAL_ENABLE);
-    public ChatGpt chatgpt = new(true);
-    public ObsClient obs = new(true);
+    public ChatGpt chatgpt = new(GLOBAL_ENABLE);
+    public ObsClient obs = new(GLOBAL_ENABLE);
     public HttpClient web = new();
 
 
