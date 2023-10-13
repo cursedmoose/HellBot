@@ -23,7 +23,7 @@ namespace TwitchBot.Assistant
             {
                 Actions.Ban,
                 Actions.Chat,
-                Actions.ChangeTitle,
+                // Actions.ChangeTitle,
                 Actions.RunPoll,
                 Actions.CreateReward,
                 Actions.PaintPicture
@@ -103,9 +103,6 @@ namespace TwitchBot.Assistant
                 await Chatter();
             }
 
-            // Log($"Hello at {time}");
-            // await ChangeTitle();
-            // await BanRandomUser();
             await Task.Delay(300 * 1_000);
             return;
         }

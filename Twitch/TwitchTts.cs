@@ -1,4 +1,5 @@
 ﻿using TwitchBot.ElevenLabs;
+using TwitchBot.OBS.Scene;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 
@@ -15,13 +16,16 @@ namespace TwitchBot.Twitch
         public void play(ChatMessage chat)
         {
             var voiceProfile = VoiceProfiles.getVoiceProfile(chat.Username);
+            var obsImage = ObsScenes.getImageSource(chat.Username);
             if (voiceProfile != null && chat.Message.Length < 256)
             {
                 Task.Factory.StartNew(() =>
                 {
                     try
                     {
+                        obsImage?.Enable();
                         Server.Instance.elevenlabs.playTts(chat.Message, voiceProfile);
+                        obsImage?.Disable();
                     }
                     catch (Exception ex)
                     {

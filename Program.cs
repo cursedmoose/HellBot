@@ -80,7 +80,7 @@ while (true)
             Log($"Exceptioned out. Got {e.Message}");
         }
     }
-    else if (next.Contains("chat"))
+    else if (next.Contains("chatters"))
     {
         var chatters = await Server.Instance.twitch.GetChatterNames();
         chatters.ForEach(Log);
@@ -112,11 +112,29 @@ while (true)
     }
     else if (next.Contains("on"))
     {
-        server.obs.EnableScene(ObsScenes.Sheogorath);
+        var numOption = next.Split(" ");
+        if (numOption.Length > 1)
+        {
+            var num = numOption[1];
+            server.obs.EnableScene("Characters", int.Parse(num));
+        }
+        else
+        {
+            server.obs.EnableScene(ObsScenes.Sheogorath);
+        }
     }
     else if (next.Contains("off"))
     {
-        server.obs.DisableScene(ObsScenes.Sheogorath);
+        var numOption = next.Split(" ");
+        if (numOption.Length > 1)
+        {
+            var num = numOption[1];
+            server.obs.DisableScene("Characters", int.Parse(num));
+        }
+        else
+        {
+            server.obs.DisableScene(ObsScenes.Sheogorath);
+        }
     }
     else
     {
