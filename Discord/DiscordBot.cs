@@ -47,10 +47,8 @@ namespace TwitchBot.Discord
 
             client.PresenceUpdated += (SocketUser user, SocketPresence first, SocketPresence second) =>
             {
-                // Console.WriteLine($"Received presence updated event from {user.Username}.");
                 foreach (IActivity activity in second.Activities)
                 {
-                    // printActivity(activity);
                     PlayTtsForActivity(activity);
                 }
                 return Task.CompletedTask;
@@ -59,7 +57,7 @@ namespace TwitchBot.Discord
 
         public void GetPresence()
         {
-            var user = client.GetUser(Bot.DISCORD_USER_ID);
+            var user = client.GetUserAsync(Bot.DISCORD_USER_ID).GetAwaiter().GetResult();
 
             if (user != null)
             {
@@ -143,11 +141,10 @@ namespace TwitchBot.Discord
 
             if (activity is RichGame game)
             {
-                //if (game.Name == "Skyrim Special Edition" && game.State != null)
                 if (!string.IsNullOrEmpty(game.Name) && !string.IsNullOrEmpty(game.State))
                 {
                     RecordStateSeenFromRichPresence(game.Name, game.State);
-                    var flavorPrefix = game.State.Split(',')[0]; // Catch that
+                    var flavorPrefix = game.State.Split(',')[0];
 
                     if (game.State.Length > 0 
                         && Skyrim.AllowedFlavours.Contains(flavorPrefix)
@@ -172,7 +169,6 @@ namespace TwitchBot.Discord
                     }
                     else
                     {
-                        // Log($"Only {(currentTime - lastTtsTime) / SECONDS} since last TTS. Rate limiting.");
                         return;
                     }
                 }

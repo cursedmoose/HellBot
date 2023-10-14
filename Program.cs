@@ -1,5 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-using TwitchBot;
+﻿using TwitchBot;
 using TwitchBot.Twitch;
 using TwitchBot.ElevenLabs;
 using TwitchBot.Discord;
@@ -41,7 +40,6 @@ while (true)
     else if (next == "usage")
     {
         var info = server.elevenlabs.GetUserSubscriptionInfo();
-        // Log(info.ToString());
         log.Info($"[ElevenLabs] Used {info.character_count} / {info.character_limit} characters.");
         log.Info($"[ElevenLabs] This instance has used {info.character_count - server.elevenlabs.charactersStartedAt} characters.");
 
@@ -93,12 +91,11 @@ while (true)
     }
     else if(next.Contains("create"))
     {
-        // (server.Assistant as Sheogorath).CreateReward();
-        (server.Assistant as Sheogorath)?.PaintPicture();
+        (server.Assistant as Sheogorath)?.CreateReward();
     }
     else if (next.Contains("delete"))
     {
-        // (server.Assistant as Sheogorath).DeleteReward();
+        (server.Assistant as Sheogorath)?.DeleteReward();
     }
     else if (next.Contains("clean"))
     {

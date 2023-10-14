@@ -178,7 +178,6 @@ namespace TwitchBot.Assistant
 
         public override async Task<bool> ChangeTitle()
         {
-            //PlayTts("How about a new stream title? Maybe...");
             var currentGame = await Server.Instance.twitch.GetCurrentGame();
             var prompt = $"new title for my \"{currentGame}\" stream. limit 5 words.";
             var newTitle = await Server.Instance.chatgpt.GetResponseText(Persona, prompt);
@@ -207,7 +206,6 @@ namespace TwitchBot.Assistant
             } while (!banned);
 
             return;
-            // allChatters.Where(chatter => chatter.UserName != "CursedMoose" && chatter.UserName != "Nightbot");
         }
 
         public async Task<string> CreateReward()
@@ -263,7 +261,6 @@ namespace TwitchBot.Assistant
 
         public async Task PaintPicture()
         {
-            //Server.Instance.elevenlabs.playTts("Let's paint a picture!", Voice);
             PlayTts("Let's paint a picture!");
 
             var getPrompt = "make an image prompt. limit 5 words";
@@ -273,7 +270,6 @@ namespace TwitchBot.Assistant
             ObsScenes.LastImage.Enable();
             var announcePrompt = $"announce your new painting \"{imagePrompt}\"";
             var announcement = await Server.Instance.chatgpt.GetResponse(Persona, announcePrompt);
-            // var shortUrl = await Server.Instance.shortenUrl(image);
             if (announcement)
             {
                 Server.Instance.twitch.Respond($"\"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(imagePrompt)}\": {image}");

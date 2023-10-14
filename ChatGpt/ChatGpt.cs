@@ -54,7 +54,6 @@ namespace TwitchBot.ChatGpt
             {
                 var result = await RequestResponseText(messages);
                 Server.Instance.Assistant.PlayTts(result);
-                // Server.Instance.elevenlabs.playTts(result, Server.Instance.Assistant.Voice);
             }
             catch (Exception e)
             {
@@ -92,7 +91,6 @@ namespace TwitchBot.ChatGpt
             if (!isEnabled) { return ""; }
 
             log.Info($"Asking ChatGpt to respond to {chatPrompt}");
-            // string promptTemplate = generatePromptFromTemplate(chatPrompt, maxResponseLength);
 
             var chatPrompts = new List<Message>
             {

@@ -28,13 +28,11 @@ namespace TwitchBot.Discord
 
             client.OnReady += (sender, msg) =>
             {
-                //Create some events so we know things are happening
                 Console.WriteLine("Connected to discord with user {0}", msg.User.Username);
             };
 
             client.OnPresenceUpdate += (sender, msg) =>
             {
-                //The presence has updated
                 Console.WriteLine("Presence has been updated! ");
             };
 

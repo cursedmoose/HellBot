@@ -179,7 +179,6 @@ namespace TwitchBot.Twitch
             var resp = await Auth.GetAccessTokenFromCodeAsync(auth.Code, AccountInfo.API_CLIENT_SECRET, AccountInfo.API_REDIRECT_URL);
             api.Settings.AccessToken = resp.AccessToken;
             var user = (await API.Users.GetUsersAsync()).Users[0];
-            // Console.WriteLine($"Authorization success!\n\nUser: {user.DisplayName} (id: {user.Id})\nAccess token: {resp.AccessToken}\nRefresh token: {resp.RefreshToken}\nExpires in: {resp.ExpiresIn}\nScopes: {string.Join(", ", resp.Scopes)}");
             Console.WriteLine($"Authorization success!\n\nUser: {user.DisplayName}\nScopes: {string.Join(", ", resp.Scopes)}");
 
         }
@@ -260,9 +259,6 @@ namespace TwitchBot.Twitch
 
         private void Client_OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
         {
-            //client.TimeoutUser(e.Channel, e.Subscriber.DisplayName, TimeSpan.FromMinutes(5), "sub??? in my channel???");
-            // var prompt = $"welcome new subscriber \"{e.Subscriber.DisplayName}\"";
-            //Server.Instance.chatgpt.getResponse("Shegorath", prompt);
             Server.Instance.Assistant.WelcomeSubscriber(e.Subscriber.DisplayName, 1);
         }
 
