@@ -2,7 +2,6 @@
 using Discord;
 using static TwitchBot.Config.DiscordConfig;
 using TwitchBot.Discord.Game;
-using DiscordRPC;
 
 namespace TwitchBot.Discord
 {
@@ -11,6 +10,7 @@ namespace TwitchBot.Discord
         public record GamePresence(string game, string state);
         
         DiscordSocketClient client;
+        public static string LastKnownGame { get;  private set; } = "";
         static string lastKnownState = "";
         public static GamePresence CurrentPresence = new("", "");
         static long lastAllowListTime = 0L;
@@ -110,10 +110,12 @@ namespace TwitchBot.Discord
 
         private void printActivity(IActivity activity)
         {
-            Log("Activity: ");
+            Log($"Last Known Game: { LastKnownGame }");
+            Log("Current Activity: ");
             if (activity is RichGame game)
             {
-                Console.WriteLine($"{game.Type} {game.Name}");
+                Console.WriteLine("Rich Game!");
+                Console.WriteLine($"Type: {game.Type} | Name: {game.Name}");
                 Console.WriteLine($"{game.State}");
                 Console.WriteLine($"Since {game?.Timestamps?.Start?.LocalDateTime.ToString()}");
                 Console.WriteLine($"{game?.Details}");
@@ -124,12 +126,6 @@ namespace TwitchBot.Discord
                 Console.WriteLine($"{activity.Details}");
                 Console.WriteLine($"{activity.Type}");
             }
-        }
-
-        private void playWelcomeBackTts(string game)
-        {
-            Log($"Oh, welcome back to {game}...");
-            Server.Instance.Assistant.WelcomeBack(game);
         }
 
         private void recordTtsPlayed(long playedAt)
@@ -153,6 +149,22 @@ namespace TwitchBot.Discord
 
         private void playTtsForActivity(IActivity activity)
         {
+            var currentTime = DateTime.UtcNow.ToFileTimeUtc();
+
+            if (activity.Type == ActivityType.Playing)
+            {
+                if (lastTtsTime == 0L || (activity.Name != LastKnownGame && !string.IsNullOrEmpty(activity.Name)))
+                {
+                    Log($"Last known game: {LastKnownGame}");
+                    recordTtsPlayed(currentTime);
+                    LastKnownGame = activity.Name;
+                    Log($"Last known game: {LastKnownGame}");
+                    var sanitizedName = activity.Name.Replace("Demo", "").Trim();
+                    Server.Instance.twitch.ChangeGame(sanitizedName).GetAwaiter().GetResult();
+                    Server.Instance.Assistant.WelcomeBack(sanitizedName);
+                }
+            }
+
             if (activity is RichGame game)
             {
                 //if (game.Name == "Skyrim Special Edition" && game.State != null)
@@ -160,14 +172,8 @@ namespace TwitchBot.Discord
                 {
                     recordStateSeenFromRichPresence(game.Name, game.State);
                     var flavorPrefix = game.State.Split(',')[0]; // Catch that
-                    var currentTime = DateTime.UtcNow.ToFileTimeUtc();
 
-                    if (lastTtsTime == 0L)
-                    {
-                        recordTtsPlayed(currentTime);
-                        playWelcomeBackTts(game.Name);
-                    }
-                    else if (game.State.Length > 0 
+                    if (game.State.Length > 0 
                         && Skyrim.AllowedFlavours.Contains(flavorPrefix)
                         && (currentTime - lastAllowListTime) >= (30L * SECONDS)
                         )

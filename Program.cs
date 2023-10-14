@@ -34,6 +34,7 @@ while (true)
         server.twitch.stop();
         server.web.Dispose();
         server.obs.Disconnect();
+        server.Assistant.CleanUp();
         break;
     }
     else if (next == "health")
@@ -109,6 +110,27 @@ while (true)
     else if (next.Contains("obs"))
     {
         server.obs.GetActiveSource();
+    }
+    else if (next.Contains("ad"))
+    {
+        var timeString = next.Substring(2).Trim();
+        try
+        {
+            var time = int.Parse(timeString);
+            await server.Assistant.RunAd(time);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+    else if (next.Contains("id"))
+    {
+        var game = next.Substring(2).Trim();
+        if (game.Length > 1)
+        {
+            await server.twitch.ChangeGame(game);
+        }
     }
     else if (next.Contains("on"))
     {

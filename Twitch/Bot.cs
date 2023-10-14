@@ -30,6 +30,7 @@ using System.Runtime.Caching;
 using TwitchLib.Api.Helix.Models.Channels.GetChannelInformation;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Helix.Models.ChannelPoints.CreateCustomReward;
+using TwitchLib.Api.Helix.Models.Ads;
 
 public class TwitchIrcBot
 {
@@ -75,7 +76,8 @@ public class TwitchIrcBot
             "channel:manage:polls",
             "channel:manage:redemptions",
             "channel:manage:broadcast",
-            "channel:manage:redemptions"
+            "channel:manage:redemptions",
+            "channel:edit:commercial"
         };
 
         if (enabled)
@@ -335,6 +337,8 @@ public class TwitchIrcBot
 
     public async Task<bool> CreatePoll(string title, List<string> choices)
     {
+        if (!Enabled) { return false; }
+
         if (!client.IsConnected || string.IsNullOrWhiteSpace(title) || choices.Count <= 0)
         {
             Log($"Client: {client.IsConnected} | Title: {title} | Choices: {choices.Count}");
@@ -364,9 +368,28 @@ public class TwitchIrcBot
 
     public async void ChangeTitle(string newTitle)
     {
+        if (!Enabled) { return; }
         ModifyChannelInformationRequest request = new();
         request.Title = newTitle + " | !hellbot";
         await API.Channels.ModifyChannelInformationAsync(broadcasterId: AccountInfo.USER_ID, request: request);
+    }
+
+    public async Task<bool> ChangeGame(string newGame)
+    {
+        if (!Enabled) { return false; }
+        var sanitizedName = newGame.Replace("Demo", "").Trim();
+
+        ModifyChannelInformationRequest request = new();
+        var gameInfo = await API.Games.GetGamesAsync(gameNames: new List<string>() { sanitizedName });
+        if (gameInfo?.Games == null || gameInfo.Games.Length <= 0) {
+            Log($"Couldn't find ID for game: {sanitizedName}");
+            return false; 
+        }
+        var gameId = gameInfo.Games[0].Id;
+        Log(gameId);
+        request.GameId = gameId;
+        await API.Channels.ModifyChannelInformationAsync(broadcasterId: AccountInfo.USER_ID, request: request);
+        return true;
     }
 
     public async Task<ChannelInformation> GetStreamInfo()
@@ -440,6 +463,29 @@ public class TwitchIrcBot
         return true;
 
 
+    }
+
+    public async Task<bool> RunAd(int adLength = 5)
+    {
+        if (Enabled)
+        {
+            StartCommercialRequest request = new()
+            {
+                BroadcasterId = AccountInfo.USER_ID,
+                Length = adLength
+            };
+
+            try
+            {
+                var response = await API.Ads.StartCommercialAsync(request);
+                return true;
+            } catch (Exception e)
+            {
+                Log($"Could not play ad: {e.Message}");
+                return false;
+            }
+        }
+        return false;
     }
 
     #endregion API Hooks

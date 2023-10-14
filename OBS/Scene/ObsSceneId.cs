@@ -20,7 +20,9 @@ namespace TwitchBot.OBS.Scene
         public const string MainScene = "Main Scene";
         public const string Characters = "Characters";
 
+        public static ObsSceneId Ads = new ObsSceneId(MainScene, 10);
         public static ObsSceneId LastImage = new ObsSceneId(MainScene, 18);
+
         public static ObsSceneId Sheogorath = new ObsSceneId(Characters, 1);
         public static ObsSceneId DagothUr = new ObsSceneId(Characters, 2);
         public static ObsSceneId AnnoyingFan = new ObsSceneId(Characters, 3);

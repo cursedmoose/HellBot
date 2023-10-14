@@ -35,10 +35,11 @@ namespace TwitchBot.Assistant
         public abstract Task<bool> CreatePoll();
 
         public abstract Task<bool> AnnouncePoll(string title, List<string> options);
-
         public abstract Task<bool> ConcludePoll(string title, string winner);
 
         public abstract Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost);
+        public abstract Task<bool> RunAd(int adSeconds = 5);
+
 
         public abstract void CleanUp();
 
@@ -106,6 +107,5 @@ namespace TwitchBot.Assistant
 
             return;
         }
-
     }
 }
