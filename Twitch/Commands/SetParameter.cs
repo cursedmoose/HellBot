@@ -29,8 +29,11 @@ namespace TwitchBot.Twitch.Commands
                 if (subComand == "stability" && subCommandParams.Count >= 1)
                 {
                     Console.WriteLine($"Setting variable {subComand} to {subCommandParams[0]}.");
-                    var oldVoice = VoiceProfiles.getVoiceProfile(message.Username);
-                    var newVoice = new VoiceProfile(oldVoice.voiceId, int.Parse(subCommandParams[0]) / 100f, oldVoice.similarity);
+                    var oldVoice = VoiceProfiles.GetVoiceProfile(message.Username);
+                    if (oldVoice != null)
+                    {
+                        var newVoice = new VoiceProfile(oldVoice.VoiceId, int.Parse(subCommandParams[0]) / 100f, oldVoice.Similarity);
+                    }
                 }
             }
         }

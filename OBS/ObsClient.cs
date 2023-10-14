@@ -8,17 +8,17 @@ namespace TwitchBot.OBS
 {
     public class ObsClient
     {
-        private OBSWebsocket obs;
-        private static Logger log = new Logger("OBS");
-        private bool Enabled = true;
+        private readonly OBSWebsocket obs;
+        private readonly static Logger log = new("OBS");
+        private readonly bool Enabled = true;
 
         public ObsClient(bool enabled = true)
         {
             Enabled = enabled;
 
             obs = new OBSWebsocket();
-            obs.Connected += onConnect;
-            obs.Disconnected += onDisconnect;
+            obs.Connected += OnConnect;
+            obs.Disconnected += OnDisconnect;
 
             if (Enabled)
             {
@@ -31,20 +31,20 @@ namespace TwitchBot.OBS
             obs.Disconnect();
         }
 
-        private void onConnect(object? sender, EventArgs e)
+        private void OnConnect(object? sender, EventArgs e)
         {
             if (!Enabled)
             {
-                log.info("Connected, but not enabled!?");
+                log.Info("Connected, but not enabled!?");
                 return;
             }
 
-            log.info("Connected!");
+            log.Info("Connected!");
         }
 
-        private void onDisconnect(object? sender, ObsDisconnectionInfo e)
+        private void OnDisconnect(object? sender, ObsDisconnectionInfo e)
         {
-            log.info($"Disconnected due to {e.DisconnectReason}");
+            log.Info($"Disconnected due to {e.DisconnectReason}");
         }
 
         public void GetActiveSource()
@@ -58,7 +58,7 @@ namespace TwitchBot.OBS
             var sceneItems = obs.GetSceneItemList(scene);
             foreach (var sceneItem in sceneItems)
             {
-                log.info($"{sceneItem.SourceName} : {sceneItem.SourceType} : {sceneItem.ItemId}");
+                log.Info($"{sceneItem.SourceName} : {sceneItem.SourceType} : {sceneItem.ItemId}");
             }
         }
 

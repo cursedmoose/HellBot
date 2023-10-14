@@ -9,7 +9,7 @@ namespace TwitchBot.Twitch.Commands
         const string COMMAND = "!commemorate";
         public bool canHandle(TwitchClient client, ChatMessage message)
         {
-            var validUsername = VoiceProfiles.getVoiceProfile(message.Username) != null;
+            var validUsername = VoiceProfiles.GetVoiceProfile(message.Username) != null;
             return message.Message.StartsWith(COMMAND) && (validUsername);
         }
 

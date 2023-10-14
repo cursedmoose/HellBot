@@ -4,26 +4,23 @@ namespace TwitchBot.ElevenLabs
 {
     public class ElevenLabs
     {
-        HttpClient client;
+        readonly HttpClient client;
         public readonly long charactersStartedAt;
-        static long charactersUsed = 0;
+        public static long CharactersUsed { get; private set; } = 0;
+        readonly bool Enabled = true;
+        readonly Logger log = new("ElevenLabs");
 
         public ElevenLabs(bool enabled = true)
         {
+            Enabled = enabled;
             client = new HttpClient();
             client.DefaultRequestHeaders.Add("xi-api-key", API_KEY);
-            charactersStartedAt = getUserSubscriptionInfo().character_count;
+            charactersStartedAt = GetUserSubscriptionInfo().character_count;
         }
 
-        private void Log(string message)
+        public void PlayTts(string ttsMessage, VoiceProfile? voiceProfile)
         {
-            var timestamp = DateTime.Now.ToString(Server.LOG_FORMAT);
-            Console.WriteLine($"{timestamp} [ElevenLabs] {message}");
-        }
-
-        public void playTts(string ttsMessage, VoiceProfile? voiceProfile)
-        {
-            if (voiceProfile == null || string.IsNullOrWhiteSpace(ttsMessage))
+            if (!Enabled || voiceProfile == null || string.IsNullOrWhiteSpace(ttsMessage))
             {
                 return;
             }
@@ -31,18 +28,18 @@ namespace TwitchBot.ElevenLabs
 
             try
             {
-                PlayTts.Play(ttsMessage, voiceProfile);
+                TtsPlayer.Play(ttsMessage, voiceProfile);
             } catch (Exception e)
             {
-                Log($"Exception trying to play TTS: {e.Message}");
+                log.Info($"Exception trying to play TTS: {e.Message}");
             }
             finally
             {
-                charactersUsed += ttsMessage.Length;
+                CharactersUsed += ttsMessage.Length;
             }
         }
 
-        public SubscriptionInfoResponse getUserSubscriptionInfo()
+        public SubscriptionInfoResponse GetUserSubscriptionInfo()
         {
             return SubscriptionInfo.call(client);
         }

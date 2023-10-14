@@ -4,14 +4,16 @@ namespace TwitchBot
 {
     internal class MultiWriter : TextWriter
     {
-        StreamWriter fileOutput;
-        TextWriter consoleOutput;
+        readonly StreamWriter fileOutput;
+        readonly TextWriter consoleOutput;
         
         public MultiWriter(TextWriter stdOut, string file)
         {
             consoleOutput = stdOut;
-            fileOutput = new StreamWriter(new FileStream(file, FileMode.Append));
-            fileOutput.AutoFlush = true;
+            fileOutput = new StreamWriter(new FileStream(file, FileMode.Append))
+            {
+                AutoFlush = true
+            };
         }
 
         public override Encoding Encoding => consoleOutput.Encoding;

@@ -11,16 +11,14 @@ namespace TwitchBot.Assistant
             Name = name;
             Voice = voice;
             Obs = sceneId;
-        }
-        protected void Log(string message)
-        {
-            var timestamp = DateTime.Now.ToString(Server.LOG_FORMAT);
-            Console.WriteLine($"{timestamp} [{Name}] {message}");
+            log = new(Name);
         }
 
         public string Name { get; private set; }
         public VoiceProfile Voice { get; private set; }
         public ObsSceneId Obs { get; private set; }
+        protected readonly Logger log;
+
         private static bool AI_Running = false;
         public abstract string GetSystemPersona();
 
@@ -46,19 +44,19 @@ namespace TwitchBot.Assistant
         public void PlayTts(string message)
         {
             Obs.Enable();
-            Server.Instance.elevenlabs.playTts(message, Voice);
+            Server.Instance.elevenlabs.PlayTts(message, Voice);
             Obs.Disable();
         }
 
         public async Task Chatter()
         {
-            await Server.Instance.chatgpt.getResponse(Persona, "say anything");
+            await Server.Instance.chatgpt.GetResponse(Persona, "say anything");
             return;
         }
 
         public async void ReactToGameState(string gameState)
         {
-            await Server.Instance.chatgpt.getResponse(
+            await Server.Instance.chatgpt.GetResponse(
                 chatPrompt: $"react to me {gameState}",
                 persona: Persona
             );
@@ -87,19 +85,19 @@ namespace TwitchBot.Assistant
 
         public Task StopAI()
         {
-            Log($"Goodbye at {DateTime.Now}");
+            log.Info($"Goodbye at {DateTime.Now}");
             AI_Running = false;
             return Task.CompletedTask;
         }
 
         public async Task Commemorate(string excitingEvent, ChatMessage? requester = null)
         {
-            var image = await Server.Instance.chatgpt.getImage(excitingEvent, requester);
+            var image = await Server.Instance.chatgpt.GetImage(excitingEvent, requester);
             if (image != null)
             {
                 ObsScenes.LastImage.Enable();
             }
-            await Server.Instance.chatgpt.getResponse(
+            await Server.Instance.chatgpt.GetResponse(
                 chatPrompt: $"commemorate  {excitingEvent}",
                 persona: Persona
             );

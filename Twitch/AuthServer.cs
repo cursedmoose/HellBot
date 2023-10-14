@@ -13,7 +13,7 @@ namespace TwitchBot.Twitch
     }
     internal class AuthServer
     {
-        private HttpListener listener;
+        private readonly HttpListener listener;
 
         public AuthServer(string uri)
         {
@@ -21,13 +21,13 @@ namespace TwitchBot.Twitch
             listener.Prefixes.Add(uri);
         }
 
-        public async Task<Authorization> Listen()
+        public async Task<Authorization?> Listen()
         {
             listener.Start();
-            return await onRequest();
+            return await OnRequest();
         }
 
-        private async Task<Authorization> onRequest()
+        private async Task<Authorization?> OnRequest()
         {
             while (listener.IsListening)
             {
@@ -35,25 +35,23 @@ namespace TwitchBot.Twitch
                 var req = ctx.Request;
                 var resp = ctx.Response;
 
-                using (var writer = new StreamWriter(resp.OutputStream))
+                using var writer = new StreamWriter(resp.OutputStream);
+                if (req.QueryString.AllKeys.Any("code".Contains))
                 {
-                    if (req.QueryString.AllKeys.Any("code".Contains))
-                    {
-                        writer.WriteLine("Authorization started! Check your application!");
-                        writer.Flush();
-                        return new Authorization(req.QueryString["code"]);
-                    }
-                    else
-                    {
-                        writer.WriteLine("No code found in query string!");
-                        writer.Flush();
-                    }
+                    writer.WriteLine("Authorization started! Check your application!");
+                    writer.Flush();
+                    return new Authorization(req.QueryString["code"]);
+                }
+                else
+                {
+                    writer.WriteLine("No code found in query string!");
+                    writer.Flush();
                 }
             }
             return null;
         }
 
-        public static string getAuthorizationCodeUrl(string clientId, string redirectUri, List<string> scopes)
+        public static string GetAuthorizationCodeUrl(string clientId, string redirectUri, List<string> scopes)
         {
             var scopesStr = String.Join('+', scopes);
 

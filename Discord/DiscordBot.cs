@@ -7,37 +7,35 @@ namespace TwitchBot.Discord
 {
     public class DiscordBot
     {
-        public record GamePresence(string game, string state);
+        public record GamePresence(string Game, string State);
         
-        DiscordSocketClient client;
+        readonly DiscordSocketClient client;
         public static string LastKnownGame { get;  private set; } = "";
-        static string lastKnownState = "";
-        public static GamePresence CurrentPresence = new("", "");
+        public static string LastKnownState { get; private set; } = "";
+        public static GamePresence CurrentPresence { get; private set; } = new("", "");
         static long lastAllowListTime = 0L;
         static long lastTtsTime = 0L;
         static long ttsInterval = 600L;
         private const long SECONDS = 10_000_000L;
-        static HashSet<string> statesExperienced = new HashSet<string>();
+        static readonly HashSet<string> statesExperienced = new();
         private static bool isEnabled = true;
+
+        private readonly Logger log = new("Discord");
 
         private Task DiscordBotLog(LogMessage msg)
         {
-            Log(msg.ToString(prependTimestamp: false));
+            log.Info(msg.ToString(prependTimestamp: false));
             return Task.CompletedTask;
-        }
-
-        private void Log(string message)
-        {
-            var timestamp = DateTime.Now.ToString(Server.LOG_FORMAT);
-            Console.WriteLine($"{timestamp} [Discord] {message}");
         }
 
         public DiscordBot(bool enabled = true)
         {
             isEnabled = enabled;
-            DiscordSocketConfig config = new DiscordSocketConfig();
-            config.GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildPresences;
-            config.AlwaysDownloadUsers = true;
+            DiscordSocketConfig config = new()
+            {
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildPresences,
+                AlwaysDownloadUsers = true
+            };
             client = new DiscordSocketClient(config);
             client.Log += DiscordBotLog;
 
@@ -53,65 +51,47 @@ namespace TwitchBot.Discord
                 foreach (IActivity activity in second.Activities)
                 {
                     // printActivity(activity);
-                    playTtsForActivity(activity);
+                    PlayTtsForActivity(activity);
                 }
                 return Task.CompletedTask;
             };
         }
 
-        public string getPresence()
+        public void GetPresence()
         {
             var user = client.GetUser(Bot.DISCORD_USER_ID);
-            var user2 = client.GetUserAsync(Bot.DISCORD_USER_ID).GetAwaiter().GetResult();
-            var things = client.CurrentUser;
-
-            // Log($"Current user is {user.Username}:{user.Discriminator}");
 
             if (user != null)
             {
                 foreach (IActivity activity in user.Activities)
                 {
-                    printActivity(activity);
+                    log.Info("Presence: ");
+                    PrintActivity(activity);
                 }
             }
             else
             {
-                //Log("Failed to get user.");
+                log.Info("Failed to get user.");
             }
-
-            if (user2 != null)
-            {
-                foreach (IActivity activity in user2.Activities)
-                {
-                    printActivity(activity);
-                }
-            }
-            else
-            {
-                Log("Failed to get user2.");
-            }
-
-
-
-            return "";
         }
 
         public async void PostMessage(ulong channel, string message)
         {
             if (isEnabled)
             {
-                var imageChannel = client.GetChannel(channel) as IMessageChannel;
-                if (imageChannel != null)
+                if (client.GetChannel(channel) is IMessageChannel imageChannel)
                 {
                     await imageChannel.SendMessageAsync(message);
                 }
             }
         }
 
-        private void printActivity(IActivity activity)
+        private void PrintActivity(IActivity activity)
         {
-            Log($"Last Known Game: { LastKnownGame }");
-            Log("Current Activity: ");
+            log.Info($"Last Known Game:  { LastKnownGame }");
+            log.Info($"Last Known State: { LastKnownState }");
+
+            log.Info("Current Activity: ");
             if (activity is RichGame game)
             {
                 Console.WriteLine("Rich Game!");
@@ -128,26 +108,24 @@ namespace TwitchBot.Discord
             }
         }
 
-        private void recordTtsPlayed(long playedAt)
+        private void RecordTtsPlayed(long playedAt)
         {
             lastTtsTime = playedAt;
-            resetInterval();
-            Log($"Next TTS in {ttsInterval}s");
+            ResetInterval();
+            log.Info($"Next TTS in {ttsInterval}s");
         }
 
-        private void recordStateSeenFromRichPresence(string game, string gameState)
+        private static void RecordStateSeenFromRichPresence(string game, string gameState)
         {
             CurrentPresence = new(game, gameState);
             if (statesExperienced.Add(gameState))
             {
-                using (StreamWriter sw = File.AppendText($"{Directory.GetCurrentDirectory()}/logs/discord/{game}-log.txt"))
-                {
-                    sw.WriteLine(gameState);
-                }
+                using StreamWriter sw = File.AppendText($"{Directory.GetCurrentDirectory()}/logs/discord/{game}-log.txt");
+                sw.WriteLine(gameState);
             }
         }
 
-        private void playTtsForActivity(IActivity activity)
+        private void PlayTtsForActivity(IActivity activity)
         {
             var currentTime = DateTime.UtcNow.ToFileTimeUtc();
 
@@ -155,10 +133,8 @@ namespace TwitchBot.Discord
             {
                 if (lastTtsTime == 0L || (activity.Name != LastKnownGame && !string.IsNullOrEmpty(activity.Name)))
                 {
-                    Log($"Last known game: {LastKnownGame}");
-                    recordTtsPlayed(currentTime);
+                    RecordTtsPlayed(currentTime);
                     LastKnownGame = activity.Name;
-                    Log($"Last known game: {LastKnownGame}");
                     var sanitizedName = activity.Name.Replace("Demo", "").Trim();
                     Server.Instance.twitch.ChangeGame(sanitizedName).GetAwaiter().GetResult();
                     Server.Instance.Assistant.WelcomeBack(sanitizedName);
@@ -170,7 +146,7 @@ namespace TwitchBot.Discord
                 //if (game.Name == "Skyrim Special Edition" && game.State != null)
                 if (!string.IsNullOrEmpty(game.Name) && !string.IsNullOrEmpty(game.State))
                 {
-                    recordStateSeenFromRichPresence(game.Name, game.State);
+                    RecordStateSeenFromRichPresence(game.Name, game.State);
                     var flavorPrefix = game.State.Split(',')[0]; // Catch that
 
                     if (game.State.Length > 0 
@@ -178,18 +154,19 @@ namespace TwitchBot.Discord
                         && (currentTime - lastAllowListTime) >= (30L * SECONDS)
                         )
                     {
-                        Log($"Requested TTS for {game.State} because it was in the allow list.");
-                        lastKnownState = game.State;
+                        log.Info($"Requested TTS for {game.State} because it was in the allow list.");
                         lastAllowListTime = currentTime;
-                        recordTtsPlayed(currentTime);
+                        RecordTtsPlayed(currentTime);
+                        LastKnownState = game.State;
                         Server.Instance.Assistant.ReactToGameState(game.State);
                     } 
                     else if ((currentTime - lastTtsTime) >= (ttsInterval * SECONDS))
                     {
                         if (!game.State.Contains("menu", StringComparison.OrdinalIgnoreCase))
                         {
-                            Log($"Requested TTS for {game.State} because time interval lapsed.");
-                            recordTtsPlayed(currentTime);
+                            log.Info($"Requested TTS for {game.State} because time interval lapsed.");
+                            RecordTtsPlayed(currentTime);
+                            LastKnownState = game.State;
                             Server.Instance.Assistant.ReactToGameState(game.State);
                         }
                     }
@@ -202,7 +179,7 @@ namespace TwitchBot.Discord
             }
         }
 
-        private long resetInterval()
+        private static long ResetInterval()
         {
             ttsInterval = new Random().NextInt64(180L, 360L);
             return ttsInterval;

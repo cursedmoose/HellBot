@@ -19,7 +19,7 @@ namespace TwitchBot.Assistant
 
         }
 
-        List<Actions> AI_CAPABILITIES = new()
+        readonly List<Actions> AI_CAPABILITIES = new()
             {
                 Actions.Ban,
                 Actions.Chat,
@@ -30,7 +30,7 @@ namespace TwitchBot.Assistant
             };
 
         private static DateTime LastPollTime = DateTime.MinValue;
-        private static Dictionary<string, string> rewardsCreated = new();
+        private static readonly Dictionary<string, string> rewardsCreated = new();
 
         public override string GetSystemPersona()
         {
@@ -50,7 +50,7 @@ namespace TwitchBot.Assistant
             if (mischief)
             {
                 var actionToTake = AI_CAPABILITIES[new Random().Next(AI_CAPABILITIES.Count)];
-                Log($"Mischief!: {actionToTake}");
+                log.Info($"Mischief!: {actionToTake}");
                 switch (actionToTake)
                 {
                     case Actions.Ban:
@@ -70,26 +70,26 @@ namespace TwitchBot.Assistant
                         }
                         else
                         {
-                            Log("Poll is on cooldown!");
+                            log.Info("Poll is on cooldown!");
                         }
                         break;
                     case Actions.CreateReward:
                         if (rewardsCreated.Count <= 0)
                         {
                             await CreateReward();
-                            Log($"{rewardsCreated.Count} rewards available!");
+                            log.Info($"{rewardsCreated.Count} rewards available!");
                         }
                         else
                         {
                             if (new Random().Next(5) == 0)
                             {
                                 await CreateReward();
-                                Log($"{rewardsCreated.Count} rewards available!");
+                                log.Info($"{rewardsCreated.Count} rewards available!");
                             }
                             else
                             {
                                 await DeleteReward();
-                                Log($"{rewardsCreated.Count} rewards available!");
+                                log.Info($"{rewardsCreated.Count} rewards available!");
                             }
                         }
                         break;
@@ -110,11 +110,11 @@ namespace TwitchBot.Assistant
         public override async Task<bool> CreatePoll()
         {
             PlayTts("How about a poll?");
-            string response = await Server.Instance.chatgpt.getResponseText(
+            string response = await Server.Instance.chatgpt.GetResponseText(
                 persona: Persona,
                 chatPrompt: Poll.PollPrompt
             );
-            Log(response);
+            log.Info(response);
 
             Poll poll = PollParser.parsePoll(response);
             return await Server.Instance.twitch.CreatePoll(
@@ -125,7 +125,7 @@ namespace TwitchBot.Assistant
 
         public override async Task<bool> AnnouncePoll(string title, List<string> options)
         {
-            StringBuilder pollMessageBuilder = new StringBuilder();
+            StringBuilder pollMessageBuilder = new();
             pollMessageBuilder.Append($"Title:{title}\r\n");
             for (int x = 0; x < options.Count; x++)
             {
@@ -134,12 +134,12 @@ namespace TwitchBot.Assistant
 
             string pollMessage = pollMessageBuilder.ToString();
 
-            var messages = convertToMessages(new List<string>() {
+            var messages = ConvertToMessages(new List<string>() {
                     pollMessage,
                     Poll.PollAnnounce
             });
-            var response = await Server.Instance.chatgpt.getResponseText(Persona, messages);
-            Log(response);
+            var response = await Server.Instance.chatgpt.GetResponseText(Persona, messages);
+            log.Info(response);
             PlayTts(response);
 
             return true;
@@ -149,31 +149,31 @@ namespace TwitchBot.Assistant
         {
             PlayTts("The results are in...");
             var prompt = String.Format(Poll.PollEndPrompt, title, winner);
-            return await Server.Instance.chatgpt.getResponse(Persona, prompt);
+            return await Server.Instance.chatgpt.GetResponse(Persona, prompt);
         }
 
 
         public override async void WelcomeBack(string gameTitle)
         {
-            Log($"Oh, welcome back to {gameTitle}...");
+            log.Info($"Oh, welcome back to {gameTitle}...");
             var welcomeBack = $"welcome me back to {gameTitle}";
-            await Server.Instance.chatgpt.getResponse(Persona, welcomeBack);
+            await Server.Instance.chatgpt.GetResponse(Persona, welcomeBack);
         }
 
         public override async void WelcomeFollower(string username)
         {
-            await Server.Instance.chatgpt.getResponse(Persona, $"welcome new follower \"{username}\"");
+            await Server.Instance.chatgpt.GetResponse(Persona, $"welcome new follower \"{username}\"");
         }
 
         public override async void WelcomeSubscriber(string username, int length)
         {
-            await Server.Instance.chatgpt.getResponse(Persona, $"thank \"{username}\" for subscribing for {length} months");
+            await Server.Instance.chatgpt.GetResponse(Persona, $"thank \"{username}\" for subscribing for {length} months");
         }
 
         public override async Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost)
         {
             var prompt = $"react to \"{byUsername}\" redeeming channel reward \"{rewardTitle}\"";
-            return await Server.Instance.chatgpt.getResponse(Persona, prompt);
+            return await Server.Instance.chatgpt.GetResponse(Persona, prompt);
         }
 
         public override async Task<bool> ChangeTitle()
@@ -181,7 +181,7 @@ namespace TwitchBot.Assistant
             //PlayTts("How about a new stream title? Maybe...");
             var currentGame = await Server.Instance.twitch.GetCurrentGame();
             var prompt = $"new title for my \"{currentGame}\" stream. limit 5 words.";
-            var newTitle = await Server.Instance.chatgpt.getResponseText(Persona, prompt);
+            var newTitle = await Server.Instance.chatgpt.GetResponseText(Persona, prompt);
             PlayTts($"How about a new stream title? Maybe... {newTitle}!");
             Server.Instance.twitch.ChangeTitle(newTitle);
 
@@ -200,7 +200,7 @@ namespace TwitchBot.Assistant
                 if (userToBan.UserName != "CursedMoose" && userToBan.UserName != "Nightbot")
                 {
                     var prompt = $"pretend you are banning user \"{userToBan.UserName}\"";
-                    await Server.Instance.chatgpt.getResponse(Persona, prompt);
+                    await Server.Instance.chatgpt.GetResponse(Persona, prompt);
 
                     banned = true;
                 }
@@ -212,14 +212,14 @@ namespace TwitchBot.Assistant
 
         public async Task<string> CreateReward()
         {
-            var rewardTitle = await Server.Instance.chatgpt.getResponseText(Persona, "create a new point reward. limit 5 words");
+            var rewardTitle = await Server.Instance.chatgpt.GetResponseText(Persona, "create a new point reward. limit 5 words");
             var rewardCost = new Random().Next(500, 10_000);
             var advertisementPrompt = $"advertise new reward \"{rewardTitle}\" for {rewardCost} points.";
             var newReward = await Server.Instance.twitch.CreateCustomReward(rewardTitle, rewardCost);
-            await Server.Instance.chatgpt.getResponse(Persona, advertisementPrompt);
+            await Server.Instance.chatgpt.GetResponse(Persona, advertisementPrompt);
             rewardsCreated.Add(rewardTitle, newReward);
 
-            Log($"{rewardsCreated.Count} rewards available!");
+            log.Info($"{rewardsCreated.Count} rewards available!");
 
             return newReward;
         }
@@ -230,10 +230,10 @@ namespace TwitchBot.Assistant
             {
                 var rewardToDelete = rewardsCreated.ElementAt(new Random().Next(rewardsCreated.Count));
                 var revocationPrompt = $"announce the reward \"{rewardToDelete.Key}\" is being discontinued";
-                await Server.Instance.chatgpt.getResponse(Persona, revocationPrompt);
+                await Server.Instance.chatgpt.GetResponse(Persona, revocationPrompt);
                 var deleted = await Server.Instance.twitch.DeleteCustomReward(rewardToDelete.Value);
 
-                Log($"{rewardsCreated.Count} rewards available!");
+                log.Info($"{rewardsCreated.Count} rewards available!");
                 if (deleted)
                 {
                     rewardsCreated.Remove(rewardToDelete.Key);
@@ -267,12 +267,12 @@ namespace TwitchBot.Assistant
             PlayTts("Let's paint a picture!");
 
             var getPrompt = "make an image prompt. limit 5 words";
-            var imagePrompt = await Server.Instance.chatgpt.getResponseText(Persona, getPrompt);
-            var image = await Server.Instance.chatgpt.getImage(imagePrompt);
+            var imagePrompt = await Server.Instance.chatgpt.GetResponseText(Persona, getPrompt);
+            var image = await Server.Instance.chatgpt.GetImage(imagePrompt);
 
             ObsScenes.LastImage.Enable();
             var announcePrompt = $"announce your new painting \"{imagePrompt}\"";
-            var announcement = await Server.Instance.chatgpt.getResponse(Persona, announcePrompt);
+            var announcement = await Server.Instance.chatgpt.GetResponse(Persona, announcePrompt);
             // var shortUrl = await Server.Instance.shortenUrl(image);
             if (announcement)
             {
@@ -285,13 +285,13 @@ namespace TwitchBot.Assistant
         public override async Task<bool> RunAd(int adSeconds = 5)
         {
             var run = "apologize that it is time for an ad";
-            await Server.Instance.chatgpt.getResponse(Persona, run);
+            await Server.Instance.chatgpt.GetResponse(Persona, run);
             ObsScenes.Ads.Enable();
             await Server.Instance.twitch.RunAd(adSeconds);
             await Task.Delay((adSeconds + 10) * 1000);
             ObsScenes.Ads.Disable();
             var end = "rejoice that the ad is over";
-            await Server.Instance.chatgpt.getResponse(Persona, end);
+            await Server.Instance.chatgpt.GetResponse(Persona, end);
 
             return true;
         }

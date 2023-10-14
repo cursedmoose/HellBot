@@ -2,38 +2,39 @@
 using System.Diagnostics;
 using System.Media;
 using System.Net.Http.Json;
+using System.Runtime.Versioning;
 using static TwitchBot.Config.ElevenLabsConfig;
 
 namespace TwitchBot.ElevenLabs
 {
-    internal class PlayTts
+    internal class TtsPlayer
     {
         static int counter;
 
-        const String TTS_API = "https://api.elevenlabs.io/v1/text-to-speech/{0}";
-        const String TTS_API_LATENCY_OPTIMIZED = "https://api.elevenlabs.io/v1/text-to-speech/{0}?optimize_streaming_latency=3";
+        const string TTS_API = "https://api.elevenlabs.io/v1/text-to-speech/{0}";
+        const string TTS_API_LATENCY_OPTIMIZED = "https://api.elevenlabs.io/v1/text-to-speech/{0}?optimize_streaming_latency=3";
         const float STABILITY = 0.33f;
         const float SIMILARITY = 0.66f;
 
-        record VoiceSettings(float stability = STABILITY, float similarity_boost = SIMILARITY);
-        record PostTtsRequest(string text, VoiceSettings voice_settings);
+        record VoiceSettings(float Stability = STABILITY, float Similarity_boost = SIMILARITY);
+        record PostTtsRequest(string Text, VoiceSettings Voice_settings);
 
         private static void Log(string message)
         {
             var timestamp = DateTime.Now.ToString(Server.LOG_FORMAT);
             Console.WriteLine($"{timestamp} [PlayTTS] {message}");
         }
-        public static HttpRequestMessage buildTtsRequest(string tts, VoiceProfile profile)
+        public static HttpRequestMessage BuildTtsRequest(string tts, VoiceProfile profile)
         {
-            var url = string.Format(TTS_API_LATENCY_OPTIMIZED, profile.voiceId);
+            var url = string.Format(TTS_API_LATENCY_OPTIMIZED, profile.VoiceId);
             var request = new HttpRequestMessage(HttpMethod.Post, url);
-            var json = new PostTtsRequest(text: tts, voice_settings: new VoiceSettings(profile.stability, profile.similarity));
+            var json = new PostTtsRequest(Text: tts, Voice_settings: new VoiceSettings(profile.Stability, profile.Similarity));
             request.Content = JsonContent.Create<PostTtsRequest>(json);
 
             return request;
         }
 
-        public static string cleanStringForTts(string tts)
+        public static string CleanStringForTts(string tts)
         {
             var cleanedString = tts;
             cleanedString = Server.WEBSITE_REGEX.Replace(cleanedString, "").Trim();
@@ -42,9 +43,10 @@ namespace TwitchBot.ElevenLabs
             return cleanedString;
         }
 
+        [SupportedOSPlatform("WINDOWS")]
         public static void Play(string ttsMessage, VoiceProfile voiceProfile)
         {
-            var cleanedMessage = cleanStringForTts(ttsMessage);
+            var cleanedMessage = CleanStringForTts(ttsMessage);
 
             if (voiceProfile == null || cleanedMessage.Length == 0)
             {
@@ -58,7 +60,7 @@ namespace TwitchBot.ElevenLabs
 
             client.DefaultRequestHeaders.Add("accept", "audio/mpeg");
             client.DefaultRequestHeaders.Add("xi-api-key", API_KEY);
-            var ttsRequest = buildTtsRequest(cleanedMessage, voiceProfile);
+            var ttsRequest = BuildTtsRequest(cleanedMessage, voiceProfile);
             timer = Stopwatch.StartNew();
             var response2 = client.Send(ttsRequest);
             timer.Stop();
@@ -87,23 +89,17 @@ namespace TwitchBot.ElevenLabs
 
                     ms.Position = 0;
 
-                    using (Mp3FileReader reader = new Mp3FileReader(ms))
+                    using Mp3FileReader reader = new(ms);
+                    using WaveStream pcmStream = WaveFormatConversionStream.CreatePcmStream(reader);
+                    using Stream outStream = new MemoryStream();
+
+                    WaveFileWriter.WriteWavFileToStream(outStream, pcmStream);
+                    SoundPlayer soundPlayer = new(outStream);
+                    if (soundPlayer.Stream != null)
                     {
-                        using (WaveStream pcmStream = WaveFormatConversionStream.CreatePcmStream(reader))
-                        {
-                            using (Stream outStream = new MemoryStream())
-                            {
-                                // WaveFileWriter.CreateWaveFile("test.wav", pcmStream);
-                                WaveFileWriter.WriteWavFileToStream(outStream, pcmStream);
-                                SoundPlayer soundPlayer = new SoundPlayer(outStream);
-                                if (soundPlayer.Stream != null)
-                                {
-                                    soundPlayer.Stream.Position = 0;
-                                }
-                                soundPlayer.PlaySync();
-                            }
-                        }
+                        soundPlayer.Stream.Position = 0;
                     }
+                    soundPlayer.PlaySync();
                 }
                 timer.Stop();
                 Log($"[MSG-{messageId}] mp3 decode: {timer.ElapsedMilliseconds}ms");

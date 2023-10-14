@@ -20,26 +20,25 @@ namespace TwitchBot.OBS.Scene
         public const string MainScene = "Main Scene";
         public const string Characters = "Characters";
 
-        public static ObsSceneId Ads = new ObsSceneId(MainScene, 10);
-        public static ObsSceneId LastImage = new ObsSceneId(MainScene, 18);
+        public static readonly ObsSceneId Ads = new(MainScene, 10);
+        public static readonly ObsSceneId LastImage = new(MainScene, 18);
 
-        public static ObsSceneId Sheogorath = new ObsSceneId(Characters, 1);
-        public static ObsSceneId DagothUr = new ObsSceneId(Characters, 2);
-        public static ObsSceneId AnnoyingFan = new ObsSceneId(Characters, 3);
-        public static ObsSceneId Maiq = new ObsSceneId(Characters, 4);
+        public static readonly ObsSceneId Sheogorath = new(Characters, 1);
+        public static readonly ObsSceneId DagothUr = new(Characters, 2);
+        public static readonly ObsSceneId AnnoyingFan = new(Characters, 3);
+        public static readonly ObsSceneId Maiq = new(Characters, 4);
         
 
-        public static ObsSceneId getImageSource(string username)
+        public static ObsSceneId? GetImageSource(string username)
         {
-            switch (username.ToLower())
+            return username.ToLower() switch
             {
-                case TwitchConfig.Admins.Moose: return null;
-                case TwitchConfig.Admins.Six: return DagothUr;
-                case TwitchConfig.Admins.Sas: return Maiq;
-                case TwitchConfig.Admins.Elise2: return AnnoyingFan;
-            }
-
-            return null;
+                TwitchConfig.Admins.Moose => null,
+                TwitchConfig.Admins.Six => DagothUr,
+                TwitchConfig.Admins.Sas => Maiq,
+                TwitchConfig.Admins.Elise2 => AnnoyingFan,
+                _ => null
+            };
         }
     }
 }

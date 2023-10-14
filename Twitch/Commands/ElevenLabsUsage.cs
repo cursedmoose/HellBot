@@ -12,7 +12,7 @@ namespace TwitchBot.Twitch.Commands
 
         public void handle(TwitchClient client, ChatMessage message)
         {
-            var usageInfo = Server.Instance.elevenlabs.getUserSubscriptionInfo();
+            var usageInfo = Server.Instance.elevenlabs.GetUserSubscriptionInfo();
             client.SendMessage(message.Channel, $"Used {usageInfo.character_count} / {usageInfo.character_limit} characters.");
         }
     }

@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using TwitchBot;
+using TwitchBot.Twitch;
 using TwitchBot.ElevenLabs;
 using TwitchBot.Discord;
 using TwitchBot.ChatGpt;
@@ -9,16 +10,12 @@ using TwitchBot.Assistant;
 using TwitchBot.OBS;
 using TwitchBot.OBS.Scene;
 
-var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now.ToString("yyyy-MM-dd")}.txt");
+var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
-void Log(string message)
-{
-    var timestamp = DateTime.Now.ToString(Server.LOG_FORMAT);
-    Console.WriteLine($"{timestamp} [MAIN] {message}");
-}
+var log = new Logger("MAIN");
 
-Log("~~~~~~~~~~~~~");
-Log("Hello, World!");
+log.Info("~~~~~~~~~~~~~");
+log.Info("Hello, World!");
 
 Server server = Server.Instance;
 
@@ -31,7 +28,7 @@ while (true)
     }
     else if (next == "exit")
     {
-        server.twitch.stop();
+        server.twitch.Stop();
         server.web.Dispose();
         server.obs.Disconnect();
         server.Assistant.CleanUp();
@@ -43,48 +40,48 @@ while (true)
     }
     else if (next == "usage")
     {
-        var info = server.elevenlabs.getUserSubscriptionInfo();
+        var info = server.elevenlabs.GetUserSubscriptionInfo();
         // Log(info.ToString());
-        Log($"[ElevenLabs] Used {info.character_count} / {info.character_limit} characters.");
-        Log($"[ElevenLabs] This instance has used {info.character_count - server.elevenlabs.charactersStartedAt} characters.");
+        log.Info($"[ElevenLabs] Used {info.character_count} / {info.character_limit} characters.");
+        log.Info($"[ElevenLabs] This instance has used {info.character_count - server.elevenlabs.charactersStartedAt} characters.");
 
-        server.chatgpt.getUsage();
+        server.chatgpt.GetUsage();
     }
-    else if (next == "okok")
+    else if (next == "presence")
     {
-        Log($"Presence: {server.discord.getPresence()}");
+        server.discord.GetPresence();
     }
     else if (next.Contains("dalle"))
     {
         try
         {
-            var prompt = next.Substring(5).Trim();
-            Log($"Generating image for : \"{prompt}\"");
-            var image = await server.chatgpt.getImage(prompt);
-            Log($"{image}");
+            var prompt = next[5..].Trim();
+            log.Info($"Generating image for : \"{prompt}\"");
+            var image = await server.chatgpt.GetImage(prompt);
+            log.Info($"{image}");
         }
         catch (Exception e)
         {
-            Log($"Exceptioned out. Got {e.Message}");
+            log.Info($"Exceptioned out. Got {e.Message}");
         }
     }
     else if (next.Contains("gpt"))
     {
         try
         {
-            var prompt = next.Substring(3).Trim();
-            Log($"Generating words for : \"{prompt}\"");
-            Log(await server.chatgpt.getResponseText(server.Assistant.Persona, prompt));
+            var prompt = next[3..].Trim();
+            log.Info($"Generating words for : \"{prompt}\"");
+            log.Info(await server.chatgpt.GetResponseText(server.Assistant.Persona, prompt));
         }
         catch (Exception e)
         {
-            Log($"Exceptioned out. Got {e.Message}");
+            log.Info($"Exceptioned out. Got {e.Message}");
         }
     }
     else if (next.Contains("chatters"))
     {
         var chatters = await Server.Instance.twitch.GetChatterNames();
-        chatters.ForEach(Log);
+        chatters.ForEach(log.Info);
     }
     else if (next.Contains("start"))
     {
@@ -97,7 +94,7 @@ while (true)
     else if(next.Contains("create"))
     {
         // (server.Assistant as Sheogorath).CreateReward();
-        (server.Assistant as Sheogorath).PaintPicture();
+        (server.Assistant as Sheogorath)?.PaintPicture();
     }
     else if (next.Contains("delete"))
     {
@@ -113,7 +110,7 @@ while (true)
     }
     else if (next.Contains("ad"))
     {
-        var timeString = next.Substring(2).Trim();
+        var timeString = next[2..].Trim();
         try
         {
             var time = int.Parse(timeString);
@@ -126,7 +123,7 @@ while (true)
     }
     else if (next.Contains("id"))
     {
-        var game = next.Substring(2).Trim();
+        var game = next[2..].Trim();
         if (game.Length > 1)
         {
             await server.twitch.ChangeGame(game);
@@ -160,23 +157,17 @@ while (true)
     }
     else
     {
-        //Console.WriteLine(PlayTts.cleanStringForTts(next));
-        // server.elevenlabs.playTts(next, VoiceProfiles.EsoProphet);
-        //var cleanedMessage = Server.WEBSITE_REGEX.Replace(next, "");
-        //Log(cleanedMessage);
-
-        // var image = await server.chatgpt.getImage(next);
-        // server.chatgpt.getResponse(next);
+        
     }
 }
 
 public class Server
 {
-    public static readonly CultureInfo LOG_FORMAT = new CultureInfo("en-GB");
-    public static readonly Regex WEBSITE_REGEX = new Regex("[(http(s)?):\\/\\/(www\\.)?a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)", RegexOptions.IgnoreCase);
-    public static readonly Regex EMOTE_REGEX = new Regex("cursed99");
+    public static readonly CultureInfo LOG_FORMAT = new("en-GB");
+    public static readonly Regex WEBSITE_REGEX = new("[(http(s)?):\\/\\/(www\\.)?a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)", RegexOptions.IgnoreCase);
+    public static readonly Regex EMOTE_REGEX = new("cursed99");
 
-    static bool GLOBAL_ENABLE = true;
+    static readonly bool GLOBAL_ENABLE = true;
 
     public Assistant Assistant = new Sheogorath();
 
@@ -188,10 +179,10 @@ public class Server
     public HttpClient web = new();
 
 
-    private static readonly Lazy<Server> lazy = new Lazy<Server>(() => new Server());
+    private static readonly Lazy<Server> lazy = new(() => new Server());
     public static Server Instance { get { return lazy.Value; } }
 
-    public async void saveImageAs(string webUrl, string filename, string fileExtension = "")
+    public async void SaveImageAs(string webUrl, string filename, string fileExtension = "")
     {
         var response = await web.GetAsync(webUrl);
         var sourceFile = Path.Combine("images", RemoveInvalidChars(filename) + fileExtension);
@@ -203,15 +194,14 @@ public class Server
         File.Copy(sourceFile, latest, true);
     }
 
-    public async Task<string> shortenUrl(string longUrl)
+    public async Task<string> ShortenUrl(string longUrl)
     {
-        // "https://tinyurl.com/app/api/url/create"
         var response = await web.GetAsync($"https://tinyurl.com/api-create.php?url={longUrl}");
 
         return await response.Content.ReadAsStringAsync();
     }
 
-    private string RemoveInvalidChars(string filename)
+    private static string RemoveInvalidChars(string filename)
     {
         return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
     }
