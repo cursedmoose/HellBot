@@ -9,6 +9,14 @@ using static TwitchBot.Config.DiscordConfig;
 
 namespace TwitchBot.ChatGpt
 {
+    public record ChatGptOptions(
+        double? Temperature,
+        double? FrequencyPenalty,
+        double? PresencePenalty
+        )
+    {
+        public static readonly ChatGptOptions Default = new(1.25, 0, 0);
+    }
     public class ChatGpt
     {
         readonly OpenAIClient openAI;
@@ -48,11 +56,11 @@ namespace TwitchBot.ChatGpt
             return chatPrompts;
         }
 
-        private async Task<bool> RequestResponses(List<Message> messages)
+        private async Task<bool> RequestResponses(List<Message> messages, ChatGptOptions? options = null)
         {
             try
             {
-                var result = await RequestResponseText(messages);
+                var result = await RequestResponseText(messages, options);
                 Server.Instance.Assistant.PlayTts(result);
             }
             catch (Exception e)
@@ -64,12 +72,15 @@ namespace TwitchBot.ChatGpt
             return true;
         }
 
-        private async Task<string> RequestResponseText(List<Message> messages)
+        private async Task<string> RequestResponseText(List<Message> messages, ChatGptOptions? options = null)
         {
+            ChatGptOptions api_params = options == null ? ChatGptOptions.Default : options;
             var chatRequest = new ChatRequest(
                 model: Model.GPT3_5_Turbo,
                 messages: messages,
-                temperature: 1.25,
+                temperature: api_params.Temperature,
+                presencePenalty: api_params.PresencePenalty,
+                frequencyPenalty: api_params.FrequencyPenalty,
                 maxTokens: 75);
             var responseText = "";
             try
@@ -86,7 +97,7 @@ namespace TwitchBot.ChatGpt
             return responseText;
         }
 
-        public async Task<string> GetResponseText(string persona, string chatPrompt)
+        public async Task<string> GetResponseText(string persona, string chatPrompt, ChatGptOptions? options = null)
         {
             if (!isEnabled) { return ""; }
 
@@ -98,10 +109,10 @@ namespace TwitchBot.ChatGpt
                 new(Role.User, chatPrompt)
             };
 
-            return await RequestResponseText(chatPrompts);
+            return await RequestResponseText(chatPrompts, options);
         }
 
-        public async Task<string> GetResponseText(string persona, List<Message> messages)
+        public async Task<string> GetResponseText(string persona, List<Message> messages, ChatGptOptions? options = null)
         {
             if (!isEnabled) { return ""; }
 
@@ -113,15 +124,15 @@ namespace TwitchBot.ChatGpt
             };
             chatPrompts.AddRange(messages);
 
-            return await RequestResponseText(chatPrompts);
+            return await RequestResponseText(chatPrompts, options);
         }
 
-        public async Task<bool> GetResponse(string persona, string chatPrompt, int maxResponseLength = 25)
+        public async Task<bool> GetResponse(string persona, string chatPrompt, ChatGptOptions? options = null)
         {
             if (!isEnabled) { return false; }
 
             log.Info($"Asking ChatGpt to respond to {chatPrompt}");
-            string promptTemplate = GeneratePromptFromTemplate(chatPrompt, maxResponseLength);
+            string promptTemplate = GeneratePromptFromTemplate(chatPrompt, 25);
 
             log.Info(promptTemplate);
 

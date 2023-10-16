@@ -358,9 +358,15 @@ namespace TwitchBot.Twitch
             request.Choices = realChoices.ToArray();
 
             log.Info("Creating Poll...");
-            await API.Polls.CreatePollAsync(request);
-
-            return true;
+            try
+            {
+                await API.Polls.CreatePollAsync(request);
+                return true;
+            } catch (Exception ex)
+            {
+                log.Error($"Could not run poll due to {ex.Message}");
+                return false;
+            }
         }
 
         public async void ChangeTitle(string newTitle)

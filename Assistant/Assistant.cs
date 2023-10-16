@@ -1,4 +1,5 @@
-﻿using TwitchBot.ElevenLabs;
+﻿using TwitchBot.ChatGpt;
+using TwitchBot.ElevenLabs;
 using TwitchBot.OBS.Scene;
 using TwitchLib.Client.Models;
 
@@ -50,7 +51,8 @@ namespace TwitchBot.Assistant
 
         public async Task Chatter()
         {
-            await Server.Instance.chatgpt.GetResponse(Persona, "say anything");
+            var options = new ChatGptOptions(1.33, 2, 2);
+            await Server.Instance.chatgpt.GetResponse(Persona, "say anything", options);
             return;
         }
 

@@ -109,14 +109,15 @@ namespace TwitchBot.Assistant
 
         public override async Task<bool> CreatePoll()
         {
-            PlayTts("How about a poll?");
             string response = await Server.Instance.chatgpt.GetResponseText(
                 persona: Persona,
-                chatPrompt: Poll.PollPrompt
+                chatPrompt: Poll.PollPrompt,
+                options: new(1.33, 2, 2)
             );
             log.Info(response);
 
             Poll poll = PollParser.parsePoll(response);
+            PlayTts(Poll.GetPollAnnouncement());
             return await Server.Instance.twitch.CreatePoll(
                 title: poll.Title,
                 choices: poll.Choices

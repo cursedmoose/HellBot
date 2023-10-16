@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using TwitchBot.Assistant;
 using TwitchBot.OBS;
 using TwitchBot.OBS.Scene;
+using TwitchBot.Assistant.Polls;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -89,7 +90,7 @@ while (true)
     {
         await server.Assistant.StopAI();
     }
-    else if(next.Contains("create"))
+    else if (next.Contains("create"))
     {
         (server.Assistant as Sheogorath)?.CreateReward();
     }
@@ -152,9 +153,13 @@ while (true)
             server.obs.DisableScene(ObsScenes.Sheogorath);
         }
     }
+    else if (next.Contains("test"))
+    {
+        (server.Assistant as Sheogorath)?.Chatter();
+    }
     else
     {
-        
+
     }
 }
 
