@@ -1,6 +1,6 @@
 ﻿using Discord;
 
-namespace TwitchBot.Discord.Game
+namespace TwitchBot.Discord.GamePresence
 {
     internal class Skyrim
     {

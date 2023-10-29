@@ -155,7 +155,8 @@ while (true)
     }
     else if (next.Contains("test"))
     {
-        (server.Assistant as Sheogorath)?.Chatter();
+        // server.discord.SetPresence();
+        //(server.Assistant as Sheogorath)?.Chatter();
     }
     else
     {

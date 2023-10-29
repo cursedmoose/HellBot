@@ -1,7 +1,7 @@
 ﻿using Discord.WebSocket;
 using Discord;
 using static TwitchBot.Config.DiscordConfig;
-using TwitchBot.Discord.Game;
+using TwitchBot.Discord.GamePresence;
 
 namespace TwitchBot.Discord
 {
