@@ -13,12 +13,15 @@ namespace TwitchBot.Assistant
             Voice = voice;
             Obs = sceneId;
             log = new(Name);
+            Agent = new("assistant", Name);
         }
 
         public string Name { get; private set; }
         public VoiceProfile Voice { get; private set; }
         public ObsSceneId Obs { get; private set; }
         protected readonly Logger log;
+
+        public readonly FileGenerator.FileGenerator.Agent Agent;
 
         private static bool AI_Running = false;
         public abstract string GetSystemPersona();
@@ -95,14 +98,21 @@ namespace TwitchBot.Assistant
         public async Task Commemorate(string excitingEvent, ChatMessage? requester = null)
         {
             var image = await Server.Instance.chatgpt.GetImage(excitingEvent, requester);
+            var agent = requester == null
+                ? Agent
+                : new FileGenerator.FileGenerator.Agent("user", requester.DisplayName);
+            var imageFile = await Server.Instance.file.SaveImage(image, agent);
+
             if (image != null)
             {
                 ObsScenes.LastImage.Enable();
             }
-            await Server.Instance.chatgpt.GetResponse(
+            var commentary = await Server.Instance.chatgpt.GetResponse(
                 chatPrompt: $"commemorate  {excitingEvent}",
                 persona: Persona
             );
+
+            Server.Instance.file.PostToWebsite(agent, new FileGenerator.FileGenerator.Post("commemoration", excitingEvent, imageFile, commentary));
             ObsScenes.LastImage.Disable();
 
             return;

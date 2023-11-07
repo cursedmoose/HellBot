@@ -56,27 +56,26 @@ namespace TwitchBot.ChatGpt
             return chatPrompts;
         }
 
-        private async Task<bool> RequestResponses(List<Message> messages, ChatGptOptions? options = null)
+        private async Task<string> RequestResponses(List<Message> messages, ChatGptOptions? options = null)
         {
             try
             {
                 var result = await RequestResponseText(messages, options);
                 Server.Instance.Assistant.PlayTts(result);
+                return result;
             }
             catch (Exception e)
             {
                 log.Error($"Got error: {e.Message}");
-                return false;
+                return "";
             }
-
-            return true;
         }
 
         private async Task<string> RequestResponseText(List<Message> messages, ChatGptOptions? options = null)
         {
             ChatGptOptions api_params = options == null ? ChatGptOptions.Default : options;
             var chatRequest = new ChatRequest(
-                model: Model.GPT3_5_Turbo,
+                model: Model.GPT4,
                 messages: messages,
                 temperature: api_params.Temperature,
                 presencePenalty: api_params.PresencePenalty,
@@ -127,9 +126,9 @@ namespace TwitchBot.ChatGpt
             return await RequestResponseText(chatPrompts, options);
         }
 
-        public async Task<bool> GetResponse(string persona, string chatPrompt, ChatGptOptions? options = null)
+        public async Task<string> GetResponse(string persona, string chatPrompt, ChatGptOptions? options = null)
         {
-            if (!isEnabled) { return false; }
+            if (!isEnabled) { return ""; }
 
             log.Info($"Asking ChatGpt to respond to {chatPrompt}");
             string promptTemplate = GeneratePromptFromTemplate(chatPrompt, 25);
@@ -147,7 +146,13 @@ namespace TwitchBot.ChatGpt
 
         public async Task<string> GetImage(string imagePrompt, ChatMessage? message = null)
         {
-            var results = await openAI.ImagesEndPoint.GenerateImageAsync(imagePrompt, 1, ImageSize.Medium);
+            log.Info($"Generating image: {imagePrompt}");
+            var results = await openAI.ImagesEndPoint.GenerateImageAsync(
+                new ImageGenerationRequest(
+                    prompt: imagePrompt,
+                    model: Model.DallE_3
+                ));
+
             var result = results[0];
             var shortUrl = await Server.Instance.ShortenUrl(result);
 
@@ -159,9 +164,6 @@ namespace TwitchBot.ChatGpt
             if (message != null) {
                 Server.Instance.twitch.RespondTo(message, $"{title}: {shortUrl}");
             }
-            var author = message == null ? Server.Instance.Assistant.Name : message.DisplayName;
-            var fileName = $"[{author}] {title}";
-            Server.Instance.SaveImageAs(result, fileName, ".png");
 
             return shortUrl;
         }

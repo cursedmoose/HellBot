@@ -150,7 +150,8 @@ namespace TwitchBot.Assistant
         {
             PlayTts("The results are in...");
             var prompt = String.Format(Poll.PollEndPrompt, title, winner);
-            return await Server.Instance.chatgpt.GetResponse(Persona, prompt);
+            await Server.Instance.chatgpt.GetResponse(Persona, prompt);
+            return true;
         }
 
 
@@ -174,7 +175,8 @@ namespace TwitchBot.Assistant
         public override async Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost)
         {
             var prompt = $"react to \"{byUsername}\" redeeming channel reward \"{rewardTitle}\"";
-            return await Server.Instance.chatgpt.GetResponse(Persona, prompt);
+            await Server.Instance.chatgpt.GetResponse(Persona, prompt);
+            return true;
         }
 
         public override async Task<bool> ChangeTitle()
@@ -266,14 +268,17 @@ namespace TwitchBot.Assistant
 
             var getPrompt = "make an image prompt. limit 5 words";
             var imagePrompt = await Server.Instance.chatgpt.GetResponseText(Persona, getPrompt);
+            log.Info($"Got image prompt: {imagePrompt}");
             var image = await Server.Instance.chatgpt.GetImage(imagePrompt);
+            var imageFile = await Server.Instance.file.SaveImage(image, Agent);
 
             ObsScenes.LastImage.Enable();
             var announcePrompt = $"announce your new painting \"{imagePrompt}\"";
             var announcement = await Server.Instance.chatgpt.GetResponse(Persona, announcePrompt);
-            if (announcement)
+            if (!string.IsNullOrEmpty(announcement))
             {
                 Server.Instance.twitch.Respond($"\"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(imagePrompt)}\": {image}");
+                Server.Instance.file.PostToWebsite(Agent, new FileGenerator.FileGenerator.Post("painting", imagePrompt, imageFile, announcement));
             }
             ObsScenes.LastImage.Disable();
 

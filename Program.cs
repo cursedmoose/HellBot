@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using TwitchBot.Assistant;
 using TwitchBot.OBS;
 using TwitchBot.OBS.Scene;
-using TwitchBot.Assistant.Polls;
+using TwitchBot.FileGenerator;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -57,6 +57,7 @@ while (true)
             var prompt = next[5..].Trim();
             log.Info($"Generating image for : \"{prompt}\"");
             var image = await server.chatgpt.GetImage(prompt);
+            var imageFile = await server.file.SaveImage(image, server.Assistant.Agent);
             log.Info($"{image}");
         }
         catch (Exception e)
@@ -92,11 +93,20 @@ while (true)
     }
     else if (next.Contains("create"))
     {
-        (server.Assistant as Sheogorath)?.CreateReward();
+        var guid = Guid.NewGuid().ToString();
+        server.file.PostToWebsite(
+            new FileGenerator.Agent("assistant", server.Assistant.Name),
+            new FileGenerator.Post("reward", "test!", guid, "This was a test!")
+            );
+        // (server.Assistant as Sheogorath)?.CreateReward();
     }
     else if (next.Contains("delete"))
     {
-        (server.Assistant as Sheogorath)?.DeleteReward();
+        // (server.Assistant as Sheogorath)?.DeleteReward();
+    }
+    else if (next.Contains("paint"))
+    {
+        (server.Assistant as Sheogorath)?.PaintPicture();
     }
     else if (next.Contains("clean"))
     {
@@ -155,8 +165,7 @@ while (true)
     }
     else if (next.Contains("test"))
     {
-        // server.discord.SetPresence();
-        //(server.Assistant as Sheogorath)?.Chatter();
+
     }
     else
     {
@@ -180,6 +189,7 @@ public class Server
     public ChatGpt chatgpt = new(GLOBAL_ENABLE);
     public ObsClient obs = new(GLOBAL_ENABLE);
     public HttpClient web = new();
+    public FileGenerator file = new();
 
 
     private static readonly Lazy<Server> lazy = new(() => new Server());

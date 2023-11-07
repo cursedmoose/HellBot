@@ -10,3 +10,4 @@ but too much
  - OpenAI ChatGPT/DallE
  - ElevenLabs
  - Discord
+ - Github Pages / Jekyll
