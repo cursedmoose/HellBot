@@ -6,6 +6,7 @@ using System.Globalization;
 using OpenAI.Models;
 using static TwitchBot.Config.ChatGptConfig;
 using static TwitchBot.Config.DiscordConfig;
+using Message = OpenAI.Chat.Message;
 
 namespace TwitchBot.ChatGpt
 {

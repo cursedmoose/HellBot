@@ -165,7 +165,7 @@ while (true)
     }
     else if (next.Contains("test"))
     {
-
+        
     }
     else
     {
@@ -217,6 +217,16 @@ public class Server
     private static string RemoveInvalidChars(string filename)
     {
         return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
+    }
+
+    public Bitmap CaptureScreen()
+    {
+        Bitmap bmp = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+        using (Graphics g = Graphics.FromImage(bmp))
+        {
+            g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
+        }
+        return bmp;
     }
 
     private Server()
