@@ -5,6 +5,7 @@
         None,
         Chat,
         React,
+        ReactToScreen,
         Respond,
         ChangeTitle,
         Ban,

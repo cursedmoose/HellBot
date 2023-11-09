@@ -66,6 +66,25 @@ namespace TwitchBot.Assistant
                 persona: Persona
             );
         }
+        public async void ReactToImage(string imageUrl)
+        {
+            var reaction = await Server.Instance.chatgpt.GetResponseFromImagePrompt(GetSystemPersona(), "react to this image as though you were human", imageUrl);
+            PlayTts(reaction);
+        }
+
+        public async Task ReactToCurrentScreen()
+        {
+            if (Discord.DiscordBot.IsEnabled())
+            {
+                var img = Server.Instance.TakeScreenshot();
+                var fileUrl = await Server.Instance.discord.UploadFile(img);
+                ReactToImage(fileUrl);
+            }
+            else
+            {
+                log.Error("Could not react to current screen as discord is disabled.");
+            }
+        }
 
         protected abstract Task AI();
 

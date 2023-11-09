@@ -176,8 +176,6 @@ namespace TwitchBot.ChatGpt
 
         public async Task<string> GetResponseFromImagePrompt(string persona, string prompt = "What's in this image?", string imageUrl = "https://i.imgur.com/En3mezF.jpeg")
         {
-            log.Info($"Obtaining visions of {imageUrl}");
-
             var messages = new List<Message>
             {
                 new Message(Role.System, persona),
@@ -190,7 +188,6 @@ namespace TwitchBot.ChatGpt
             var chatRequest = new ChatRequest(messages, model: "gpt-4-vision-preview", maxTokens: 300);
             var result = await openAI.ChatEndpoint.GetCompletionAsync(chatRequest);
             usage.recordUsage(result.Usage);
-            log.Info($"{result.FirstChoice.Message.Role}: {result.FirstChoice.Message.Content} | Finish Reason: {result.FirstChoice.FinishDetails}");
 
             return result.FirstChoice;
         }

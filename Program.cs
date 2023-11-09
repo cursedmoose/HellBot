@@ -9,6 +9,8 @@ using TwitchBot.Assistant;
 using TwitchBot.OBS;
 using TwitchBot.OBS.Scene;
 using TwitchBot.FileGenerator;
+using System.Diagnostics;
+using TwitchLib.PubSub.Models.Responses;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -165,7 +167,7 @@ while (true)
     }
     else if (next.Contains("test"))
     {
-        server.chatgpt.GetResponseFromImagePrompt(server.Assistant.Persona);
+        await server.Assistant.ReactToCurrentScreen();
     }
     else
     {
@@ -227,6 +229,17 @@ public class Server
             g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
         }
         return bmp;
+    }
+
+    public string TakeScreenshot()
+    {
+        var filePath = "images/screenshots/latest.png";
+        var img = CaptureScreen();
+        using (var fs = new FileStream(filePath, FileMode.Create))
+        {
+            img.Save(fs, System.Drawing.Imaging.ImageFormat.Png);
+        }
+        return filePath;
     }
 
     private Server()

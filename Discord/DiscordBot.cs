@@ -8,9 +8,9 @@ namespace TwitchBot.Discord
     public class DiscordBot
     {
         public record GamePresence(string Game, string State);
-        
+
         readonly DiscordSocketClient client;
-        public static string LastKnownGame { get;  private set; } = "";
+        public static string LastKnownGame { get; private set; } = "";
         public static string LastKnownState { get; private set; } = "";
         public static GamePresence CurrentPresence { get; private set; } = new("", "");
         static long lastAllowListTime = 0L;
@@ -26,6 +26,11 @@ namespace TwitchBot.Discord
         {
             log.Info(msg.ToString(prependTimestamp: false));
             return Task.CompletedTask;
+        }
+
+        public static bool IsEnabled()
+        {
+            return isEnabled;
         }
 
         public DiscordBot(bool enabled = true)
@@ -179,6 +184,21 @@ namespace TwitchBot.Discord
         {
             ttsInterval = new Random().NextInt64(180L, 360L);
             return ttsInterval;
+        }
+
+        public async Task<string> UploadFile(string filePath = "images/screenshots/latest.png")
+        {
+            ulong channel = Config.DiscordConfig.Channel.JustMe.IMAGES;
+            if (isEnabled)
+            {
+                if (client.GetChannel(channel) is IMessageChannel imageChannel)
+                {
+                    var message = await imageChannel.SendFileAsync(filePath);
+                    return message.Attachments.First().Url;
+                }
+            }
+
+            return "";
         }
     }
 }

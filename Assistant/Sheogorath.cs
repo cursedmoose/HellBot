@@ -26,7 +26,8 @@ namespace TwitchBot.Assistant
                 // Actions.ChangeTitle,
                 Actions.RunPoll,
                 Actions.CreateReward,
-                Actions.PaintPicture
+                Actions.PaintPicture,
+                Actions.ReactToScreen,
             };
 
         private static DateTime LastPollTime = DateTime.MinValue;
@@ -96,11 +97,22 @@ namespace TwitchBot.Assistant
                     case Actions.PaintPicture:
                         await PaintPicture();
                         break;
+                    case Actions.ReactToScreen:
+                        await ReactToCurrentScreen();
+                        break;
                 }
             }
             else
             {
-                await Chatter();
+                var bored = new Random().Next(3) == 0;
+                if (bored)
+                {
+                    await Chatter();
+                }
+                else
+                {
+                    await ReactToCurrentScreen();
+                }
             }
 
             await Task.Delay(300 * 1_000);
