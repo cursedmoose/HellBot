@@ -614,7 +614,7 @@ namespace TwitchBot.Twitch
                 Respond($"@{eventData.UserName}: {reward}");
                 var agent = new FileGenerator.FileGenerator.Agent("user", eventData.UserName);
                 var imageFile = await Server.Instance.file.SaveImage(reward, agent);
-                Server.Instance.file.PostToWebsite(agent, new FileGenerator.FileGenerator.Post("reward", reward, imageFile));
+                Server.Instance.file.PostToWebsite(agent, new FileGenerator.FileGenerator.Post("reward", reward, imageFile, $"a huge waste of {eventData.Reward.Cost} sweet rolls"));
             }
         }
 
