@@ -55,6 +55,7 @@ namespace TwitchBot.Twitch
             new BotCheck(),
             new ElevenLabsUsage(),
             new CommemerateEvent(),
+            new CreatePoll(),
         };
 
             tts = new();
@@ -207,7 +208,7 @@ namespace TwitchBot.Twitch
         #region TwitchClient Handlers
         private void Client_OnLog(object? sender, OnLogArgs e)
         {
-            log.Info($"{e.BotUsername} - {e.Data}");
+            // log.Info($"{e.BotUsername} - {e.Data}");
         }
 
         private void Client_OnConnected(object? sender, OnConnectedArgs e)

@@ -5,7 +5,7 @@ namespace TwitchBot.Assistant.Polls
     public class Poll
     {
         public const string PollPrompt = "fill out the following poll\r\nTitle:\r\nOption 1:\r\nOption 2:\r\nOption 3:\r\nlimit 3 words per option";
-        public const string PollTopicPrompt = "fill out the following poll about {0}\r\nTitle:\r\nOption 1:\r\nOption 2:\r\nOption 3:";
+        public const string PollTopicPrompt = "fill out the following poll about {0}\r\nTitle:\r\nOption 1:\r\nOption 2:\r\nOption 3:\r\nlimit 3 words per option";
         public const string PollAnnounce = "announce the poll. limit 25 words";
         public const string PollEndPrompt = "the poll \"{0}\" ended. \"{1}\" was the winner";
 

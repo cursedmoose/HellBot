@@ -4,6 +4,7 @@ using TwitchBot.Assistant.AI;
 using TwitchBot.Assistant.Polls;
 using TwitchBot.ElevenLabs;
 using TwitchBot.OBS.Scene;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 using static TwitchBot.ChatGpt.ChatGpt;
 
 namespace TwitchBot.Assistant
@@ -119,11 +120,27 @@ namespace TwitchBot.Assistant
             return;
         }
 
-        public override async Task<bool> CreatePoll()
+        public override async Task<bool> CreatePoll(string topic = "")
         {
+            var time = DateTime.Now;
+            if (LastPollTime.AddMinutes(5) < time)
+            {
+                LastPollTime = time;
+            }
+            else
+            {
+                log.Info("Poll is on cooldown!");
+                return false;
+            }
+
+            string pollPrompt = Poll.PollPrompt;
+            if (!string.IsNullOrWhiteSpace(topic)) 
+            {
+                pollPrompt = string.Format(Poll.PollTopicPrompt, topic);
+            }
             string response = await Server.Instance.chatgpt.GetResponseText(
                 persona: Persona,
-                chatPrompt: Poll.PollPrompt,
+                chatPrompt: pollPrompt,
                 options: new(1.33, 2, 2)
             );
             log.Info(response);

@@ -34,7 +34,7 @@ namespace TwitchBot.Assistant
         public abstract void WelcomeSubscriber(string username, int length);
 
         public abstract Task<bool> ChangeTitle();
-        public abstract Task<bool> CreatePoll();
+        public abstract Task<bool> CreatePoll(string topic);
 
         public abstract Task<bool> AnnouncePoll(string title, List<string> options);
         public abstract Task<bool> ConcludePoll(string title, string winner);
