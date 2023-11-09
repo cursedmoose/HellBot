@@ -173,5 +173,26 @@ namespace TwitchBot.ChatGpt
         {
             return $"{chatPrompt}. limit {maxResponseLength} words";
         }
+
+        public async Task<string> GetResponseFromImagePrompt(string persona, string prompt = "What's in this image?", string imageUrl = "https://i.imgur.com/En3mezF.jpeg")
+        {
+            log.Info($"Obtaining visions of {imageUrl}");
+
+            var messages = new List<Message>
+            {
+                new Message(Role.System, persona),
+                new Message(Role.User, new List<Content>
+                {
+                    new Content(ContentType.Text, GeneratePromptFromTemplate(prompt, 35)),
+                    new Content(ContentType.ImageUrl, imageUrl)
+                })
+            };
+            var chatRequest = new ChatRequest(messages, model: "gpt-4-vision-preview", maxTokens: 300);
+            var result = await openAI.ChatEndpoint.GetCompletionAsync(chatRequest);
+            usage.recordUsage(result.Usage);
+            log.Info($"{result.FirstChoice.Message.Role}: {result.FirstChoice.Message.Content} | Finish Reason: {result.FirstChoice.FinishDetails}");
+
+            return result.FirstChoice;
+        }
     }
 }

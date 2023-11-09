@@ -272,11 +272,14 @@ namespace TwitchBot.Assistant
             var image = await Server.Instance.chatgpt.GetImage(imagePrompt);
             var imageFile = await Server.Instance.file.SaveImage(image, Agent);
 
-            ObsScenes.LastImage.Enable();
-            var announcePrompt = $"announce your new painting \"{imagePrompt}\"";
-            var announcement = await Server.Instance.chatgpt.GetResponse(Persona, announcePrompt);
+            var announcePrompt = $"announce your painting \"{imagePrompt}\" and describe what's in it";
+
+            var announcement = await Server.Instance.chatgpt.GetResponseFromImagePrompt(Persona, announcePrompt, image);
             if (!string.IsNullOrEmpty(announcement))
             {
+                ObsScenes.LastImage.Enable();
+                log.Info($"Major announcement: {announcement}");
+                PlayTts(announcement);
                 Server.Instance.twitch.Respond($"\"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(imagePrompt)}\": {image}");
                 Server.Instance.file.PostToWebsite(Agent, new FileGenerator.FileGenerator.Post("painting", imagePrompt, imageFile, announcement));
             }

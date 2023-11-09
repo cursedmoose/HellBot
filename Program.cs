@@ -165,7 +165,7 @@ while (true)
     }
     else if (next.Contains("test"))
     {
-        
+        server.chatgpt.GetResponseFromImagePrompt(server.Assistant.Persona);
     }
     else
     {
