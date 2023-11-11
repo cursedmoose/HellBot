@@ -401,8 +401,15 @@ namespace TwitchBot.Twitch
 
         public async Task<ChannelInformation> GetStreamInfo()
         {
-            var info = await API.Channels.GetChannelInformationAsync(AccountInfo.CHANNEL_ID);
-            return info.Data[0];
+            if (Enabled)
+            {
+                var info = await API.Channels.GetChannelInformationAsync(AccountInfo.CHANNEL_ID);
+                return info.Data[0];
+            }
+            else
+            {
+                return new ChannelInformation();
+            }
         }
 
         public async Task<string> GetCurrentGame()

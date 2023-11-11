@@ -17,6 +17,7 @@ namespace TwitchBot.ChatGpt
         )
     {
         public static readonly ChatGptOptions Default = new(1.25, 0, 0);
+        public static readonly ChatGptOptions Vision = new(1.25, 0, 0);
     }
     public class ChatGpt
     {
@@ -176,6 +177,8 @@ namespace TwitchBot.ChatGpt
 
         public async Task<string> GetResponseFromImagePrompt(string persona, string prompt = "What's in this image?", string imageUrl = "https://i.imgur.com/En3mezF.jpeg")
         {
+            log.Info($"looking at {imageUrl}");
+            ChatGptOptions api_params = ChatGptOptions.Vision;
             var messages = new List<Message>
             {
                 new Message(Role.System, persona),
@@ -185,11 +188,25 @@ namespace TwitchBot.ChatGpt
                     new Content(ContentType.ImageUrl, imageUrl)
                 })
             };
-            var chatRequest = new ChatRequest(messages, model: "gpt-4-vision-preview", maxTokens: 300);
-            var result = await openAI.ChatEndpoint.GetCompletionAsync(chatRequest);
-            usage.recordUsage(result.Usage);
+            var chatRequest = new ChatRequest(
+                messages: messages, 
+                model: "gpt-4-vision-preview",
+                temperature: api_params.Temperature,
+                presencePenalty: api_params.PresencePenalty,
+                frequencyPenalty: api_params.FrequencyPenalty,
+                maxTokens: 300);
+            try
+            {
+                var result = await openAI.ChatEndpoint.GetCompletionAsync(chatRequest);
+                usage.recordUsage(result.Usage);
 
-            return result.FirstChoice;
+                return result.FirstChoice;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Could not process request: {ex.Message}");
+                return "";
+            }
         }
     }
 }

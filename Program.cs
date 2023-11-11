@@ -100,11 +100,10 @@ while (true)
             new FileGenerator.Agent("assistant", server.Assistant.Name),
             new FileGenerator.Post("reward", "test!", guid, "This was a test!")
             );
-        // (server.Assistant as Sheogorath)?.CreateReward();
     }
     else if (next.Contains("delete"))
     {
-        // (server.Assistant as Sheogorath)?.DeleteReward();
+
     }
     else if (next.Contains("paint"))
     {
@@ -167,7 +166,7 @@ while (true)
     }
     else if (next.Contains("test"))
     {
-        await server.Assistant.ReactToCurrentScreen();
+        server.Assistant.ReactToCurrentState();
     }
     else
     {
@@ -212,7 +211,6 @@ public class Server
     public async Task<string> ShortenUrl(string longUrl)
     {
         var response = await web.GetAsync($"https://tinyurl.com/api-create.php?url={longUrl}");
-
         return await response.Content.ReadAsStringAsync();
     }
 
@@ -240,6 +238,13 @@ public class Server
             img.Save(fs, System.Drawing.Imaging.ImageFormat.Png);
         }
         return filePath;
+    }
+
+    public async Task<string> TakeAndUploadScreenshot()
+    {
+        var img = TakeScreenshot();
+        var fileUrl = await discord.UploadFile(img);
+        return fileUrl;
     }
 
     private Server()

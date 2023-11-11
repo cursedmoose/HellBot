@@ -15,8 +15,14 @@ namespace TwitchBot.ElevenLabs
         const string TTS_API_LATENCY_OPTIMIZED = "https://api.elevenlabs.io/v1/text-to-speech/{0}?optimize_streaming_latency=3";
         const float STABILITY = 0.33f;
         const float SIMILARITY = 0.66f;
+        const float STYLE = 0.75f;
 
-        record VoiceSettings(float Stability = STABILITY, float Similarity_boost = SIMILARITY);
+        record VoiceSettings(
+            float Stability = STABILITY, 
+            float Similarity_boost = SIMILARITY,
+            float Style = STYLE,
+            bool Use_speaker_boost = false
+        );
         record PostTtsRequest(string Text, VoiceSettings Voice_settings);
 
         private static void Log(string message)
@@ -28,7 +34,15 @@ namespace TwitchBot.ElevenLabs
         {
             var url = string.Format(TTS_API_LATENCY_OPTIMIZED, profile.VoiceId);
             var request = new HttpRequestMessage(HttpMethod.Post, url);
-            var json = new PostTtsRequest(Text: tts, Voice_settings: new VoiceSettings(profile.Stability, profile.Similarity));
+            var json = new PostTtsRequest(
+                Text: tts, 
+                Voice_settings: new VoiceSettings(
+                    Stability: profile.Stability,
+                    Similarity_boost: profile.Similarity,
+                    Style: profile.Style,
+                    Use_speaker_boost: false
+                    )
+                );
             request.Content = JsonContent.Create<PostTtsRequest>(json);
 
             return request;

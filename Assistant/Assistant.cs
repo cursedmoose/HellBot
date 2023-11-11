@@ -1,4 +1,5 @@
 ﻿using TwitchBot.ChatGpt;
+using TwitchBot.Discord;
 using TwitchBot.ElevenLabs;
 using TwitchBot.OBS.Scene;
 using TwitchLib.Client.Models;
@@ -66,18 +67,50 @@ namespace TwitchBot.Assistant
                 persona: Persona
             );
         }
-        public async void ReactToImage(string imageUrl)
+        public async void ReactToImage(string imageUrl, string prompt = "give exciting commentary on this image")
         {
-            var reaction = await Server.Instance.chatgpt.GetResponseFromImagePrompt(GetSystemPersona(), "react to this image as though you were human", imageUrl);
+            var reaction = await Server.Instance.chatgpt.GetResponseFromImagePrompt(Persona, prompt, imageUrl);
             PlayTts(reaction);
+        }
+
+        public async void ReactToGameStateAndCurrentScreen(string gameState)
+        {
+            var fileUrl = await Server.Instance.TakeAndUploadScreenshot();
+            log.Info($"Reacting to {gameState}");
+            ReactToImage(fileUrl, $"give exciting commentary on me {gameState}");
+        }
+
+        public async void ReactToCurrentState()
+        {
+            if (!DiscordBot.IsEnabled())
+            {
+                log.Error("Cannot react to current state without discord running.");
+                return;
+            }
+
+            var fileUrl = await Server.Instance.TakeAndUploadScreenshot();
+            var discord = Task.Run(() => Server.Instance.discord.GetCurrentGameState());
+            var twitch = Task.Run(() => Server.Instance.twitch.GetStreamInfo());
+            await Task.WhenAll(discord, twitch);
+
+            var discordState = discord.GetAwaiter().GetResult();
+            var twitchState = twitch.GetAwaiter().GetResult();
+
+            if (!string.IsNullOrEmpty(discordState))
+            {
+                ReactToGameStateAndCurrentScreen(discordState);
+            } 
+            else {
+                ReactToGameStateAndCurrentScreen(twitchState.GameName);
+            }
+            
         }
 
         public async Task ReactToCurrentScreen()
         {
             if (Discord.DiscordBot.IsEnabled())
             {
-                var img = Server.Instance.TakeScreenshot();
-                var fileUrl = await Server.Instance.discord.UploadFile(img);
+                var fileUrl = await Server.Instance.TakeAndUploadScreenshot();
                 ReactToImage(fileUrl);
             }
             else
@@ -87,7 +120,8 @@ namespace TwitchBot.Assistant
         }
 
         protected abstract Task AI();
-
+        protected abstract Task AI_On_Start();
+        protected abstract Task AI_On_Stop();
         private async Task Run_AI()
         {
             do {
@@ -101,17 +135,22 @@ namespace TwitchBot.Assistant
         {
             if (!AI_Running)
             {
+                log.Info($"Hello at {DateTime.Now}");
+                await AI_On_Start();
                 AI_Running = true;
                 await Task.Run(Run_AI);
             }
             return;
         }
 
-        public Task StopAI()
+
+
+        public async Task StopAI()
         {
             log.Info($"Goodbye at {DateTime.Now}");
             AI_Running = false;
-            return Task.CompletedTask;
+            await AI_On_Stop();
+            return;
         }
 
         public async Task Commemorate(string excitingEvent, ChatMessage? requester = null)

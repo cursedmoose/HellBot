@@ -60,22 +60,33 @@ namespace TwitchBot.Discord
             };
         }
 
-        public void GetPresence()
+        public async Task<IActivity> GetPresence()
         {
-            var user = client.GetUserAsync(Bot.DISCORD_USER_ID).GetAwaiter().GetResult();
+            var user = await client.GetUserAsync(Bot.DISCORD_USER_ID);
 
-            if (user != null)
+            if (user != null && user.Activities.Count > 0)
             {
-                foreach (IActivity activity in user.Activities)
-                {
-                    log.Info("Presence: ");
-                    PrintActivity(activity);
-                }
+                return user.Activities.First();
             }
             else
             {
-                log.Info("Failed to get user.");
+                log.Info("Failed to get user or there were no activities.");
+                return new Game("", ActivityType.Streaming, ActivityProperties.None, null);
             }
+        }
+
+        public async Task<string> GetCurrentGameState()
+        {
+            if (isEnabled)
+            {
+                var activity = await GetPresence();
+                if (activity is RichGame game)
+                {
+                    return game.State;
+                }
+            }
+
+            return "";
         }
 
         public async void PostMessage(ulong channel, string message)
@@ -89,8 +100,9 @@ namespace TwitchBot.Discord
             }
         }
 
-        private void PrintActivity(IActivity activity)
+        public async void PrintActivity()
         {
+            var activity = await GetPresence();
             log.Info($"Last Known Game:  { LastKnownGame }");
             log.Info($"Last Known State: { LastKnownState }");
 
@@ -151,7 +163,7 @@ namespace TwitchBot.Discord
                     RecordStateSeenFromRichPresence(game.Name, game.State);
                     var flavorPrefix = game.State.Split(',')[0];
 
-                    if (game.State.Length > 0 
+                    if (game.State.Length > 0
                         && Skyrim.AllowedFlavours.Contains(flavorPrefix)
                         && (currentTime - lastAllowListTime) >= (30L * SECONDS)
                         )
@@ -161,7 +173,7 @@ namespace TwitchBot.Discord
                         RecordTtsPlayed(currentTime);
                         LastKnownState = game.State;
                         Server.Instance.Assistant.ReactToGameState(game.State);
-                    } 
+                    }
                     else if ((currentTime - lastTtsTime) >= (ttsInterval * SECONDS))
                     {
                         if (!game.State.Contains("menu", StringComparison.OrdinalIgnoreCase))
@@ -169,7 +181,16 @@ namespace TwitchBot.Discord
                             log.Info($"Requested TTS for {game.State} because time interval lapsed.");
                             RecordTtsPlayed(currentTime);
                             LastKnownState = game.State;
-                            Server.Instance.Assistant.ReactToGameState(game.State);
+                            if (new Random().Next(1) == 0)
+                            {
+                                log.Info("Using legacy reaction");
+                                Server.Instance.Assistant.ReactToGameState(game.State);
+                            }
+                            else
+                            {
+                                log.Info("Using vision reaction");
+                                Server.Instance.Assistant.ReactToGameStateAndCurrentScreen(game.State);
+                            }
                         }
                     }
                     else

@@ -5,7 +5,8 @@ namespace TwitchBot.ElevenLabs
     public record VoiceProfile(
         string VoiceId,
         float Stability,
-        float Similarity
+        float Similarity,
+        float Style = 0.66f
         );
 
     public static class VoiceProfiles
@@ -19,6 +20,7 @@ namespace TwitchBot.ElevenLabs
         public static readonly VoiceProfile EsoProphet = new("jePAZffIDg7pne1XGqjK", 0.5f, 0.8f);
         public static readonly VoiceProfile DrunkMale = new("vYoMFSJ7aibDefdtHAYC", 0.2f, 0.66f);
         public static readonly VoiceProfile TaraStrong = new("HLhL4bqJHbKk7F6PjcQN", 0.2f, 0.8f);
+        public static readonly VoiceProfile Moira = new("Ute34dcnpIGwB8djz54Z", 0.2f, 0.8f);
 
         public static readonly VoiceProfile MasculineRumor = new("Fd3Nv8dOlr8Sd2GrltVV", 0.9f, 0.9f);
         public static readonly VoiceProfile FeminineRumor = new("wkMAp1DzoqsRcv2sVcBs", 0.9f, 0.9f);
@@ -34,7 +36,7 @@ namespace TwitchBot.ElevenLabs
                 TwitchConfig.Admins.Sas => Maiq,
                 TwitchConfig.Admins.Elise1 => Azura,
                 TwitchConfig.Admins.Elise2 => AnnoyingFan,
-                TwitchConfig.Admins.Dlique => TaraStrong,
+                TwitchConfig.Admins.Dlique => Moira,
                 _ => null,
             };
         }

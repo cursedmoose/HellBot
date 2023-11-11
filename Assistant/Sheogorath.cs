@@ -4,7 +4,6 @@ using TwitchBot.Assistant.AI;
 using TwitchBot.Assistant.Polls;
 using TwitchBot.ElevenLabs;
 using TwitchBot.OBS.Scene;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 using static TwitchBot.ChatGpt.ChatGpt;
 
 namespace TwitchBot.Assistant
@@ -22,8 +21,8 @@ namespace TwitchBot.Assistant
 
         readonly List<Actions> AI_CAPABILITIES = new()
             {
-                Actions.Ban,
-                Actions.Chat,
+                // Actions.Ban,
+                // Actions.Chat,
                 // Actions.ChangeTitle,
                 Actions.RunPoll,
                 Actions.CreateReward,
@@ -117,6 +116,25 @@ namespace TwitchBot.Assistant
             }
 
             await Task.Delay(300 * 1_000);
+            return;
+        }
+
+        protected override async Task AI_On_Start()
+        {
+            await Server.Instance.chatgpt.GetResponse(
+                chatPrompt: $"welcome back",
+                persona: Persona
+            );
+            await Task.Delay(15 * 1_000);
+            return;
+        }
+
+        protected override async Task AI_On_Stop()
+        {
+            await Server.Instance.chatgpt.GetResponse(
+                chatPrompt: $"goodbye",
+                persona: Persona
+            );
             return;
         }
 

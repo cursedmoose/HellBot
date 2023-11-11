@@ -14,8 +14,6 @@
         public record Agent(string Type, string Name);
         public record Post(string Type, string Title, string Image, string Message = "");
 
-        // FileGenerator.CreateFile(filename, extension).from(source)
-
         public async Task<string> SaveImage(string webUrl, Agent agent)
         {
             log.Info($"Saving image from {webUrl}");
@@ -61,8 +59,6 @@
             var date = DateTime.Now;
             var fileDate = date.ToString("yyyy-MM-dd");
             var sourceFile = Path.Combine("_posts", $"{fileDate}-{post.Type}-{post.Image}.markdown");
-            //var maybePath = Path.GetFullPath(@"\\wsl.localhost\Ubuntu\home\cursedmoose\app\website\cursedmoose.github.io\_posts");
-            // var copyTo = Path.Combine(@"\\wsl.localhost\Ubuntu\home\cursedmoose\app\website\cursedmoose.github.io\_posts", $"{fileDate}-reward-{imageReference}.markdown");
             Directory.CreateDirectory("_posts");
             File.WriteAllText(
                 path: sourceFile,
@@ -79,7 +75,6 @@
             );
 
             CopyPostToJekyll(agent, sourceFile);
-            //File.Copy(sourceFile, copyTo);
         }
 
         public static string RemoveInvalidChars(string filename)
