@@ -166,7 +166,7 @@ while (true)
     }
     else if (next.Contains("test"))
     {
-        server.Assistant.ReactToCurrentState();
+        //server.Assistant.ReactToCurrentState();
     }
     else
     {

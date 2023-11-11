@@ -1,7 +1,5 @@
-﻿using NAudio.MediaFoundation;
-using OBSWebsocketDotNet;
+﻿using OBSWebsocketDotNet;
 using OBSWebsocketDotNet.Communication;
-using OBSWebsocketDotNet.Types;
 using TwitchBot.OBS.Scene;
 
 namespace TwitchBot.OBS
@@ -10,7 +8,7 @@ namespace TwitchBot.OBS
     {
         private readonly OBSWebsocket obs;
         private readonly static Logger log = new("OBS");
-        private readonly bool Enabled = true;
+        public readonly bool Enabled = true;
 
         public ObsClient(bool enabled = true)
         {

@@ -1,26 +1,26 @@
-﻿using TwitchBot.ElevenLabs;
-using TwitchLib.Client;
-using TwitchLib.Client.Models;
+﻿using TwitchLib.Client.Models;
 
 namespace TwitchBot.Twitch.Commands
 {
     internal class CommemerateEvent : CommandHandler
     {
-        const string COMMAND = "!commemorate";
-        const string ALT_COMMAND = "!commemoration";
-        public bool canHandle(TwitchClient client, ChatMessage message)
+        public CommemerateEvent() : base(command: "!commemorate", users: PermissionGroup.Admin)
         {
-            var validUsername = VoiceProfiles.GetVoiceProfile(message.Username) != null;
-            return (message.Message.StartsWith(COMMAND) || message.Message.StartsWith(ALT_COMMAND))
-                && validUsername;
+            Aliases.Add("!commemoration");
         }
 
-        public void handle(TwitchClient client, ChatMessage message)
+        public override bool MeetsCommandRequirements(ChatMessage message)
         {
-            var imageRequest = message.Message.Replace(COMMAND, string.Empty).Trim();
+            return Server.Instance.chatgpt.Enabled;
+        }
+
+        public override async void Handle(TwitchIrcBot client, ChatMessage message)
+        {
+            var imageRequest = StripCommandFromMessage(message);
+
             if (imageRequest.Length > 0)
             {
-                Server.Instance.Assistant.Commemorate(imageRequest, message).GetAwaiter().GetResult();
+                await Server.Instance.Assistant.Commemorate(imageRequest, message);
             }
         }
     }

@@ -18,7 +18,7 @@ namespace TwitchBot.Discord
         static long ttsInterval = 600L;
         private const long SECONDS = 10_000_000L;
         static readonly HashSet<string> statesExperienced = new();
-        private static bool isEnabled = true;
+        public static bool Enabled = true;
 
         private readonly Logger log = new("Discord");
 
@@ -30,12 +30,12 @@ namespace TwitchBot.Discord
 
         public static bool IsEnabled()
         {
-            return isEnabled;
+            return Enabled;
         }
 
         public DiscordBot(bool enabled = true)
         {
-            isEnabled = enabled;
+            Enabled = enabled;
             DiscordSocketConfig config = new()
             {
                 GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildPresences,
@@ -77,7 +77,7 @@ namespace TwitchBot.Discord
 
         public async Task<string> GetCurrentGameState()
         {
-            if (isEnabled)
+            if (Enabled)
             {
                 var activity = await GetPresence();
                 if (activity is RichGame game)
@@ -91,7 +91,7 @@ namespace TwitchBot.Discord
 
         public async void PostMessage(ulong channel, string message)
         {
-            if (isEnabled)
+            if (Enabled)
             {
                 if (client.GetChannel(channel) is IMessageChannel imageChannel)
                 {
@@ -181,7 +181,7 @@ namespace TwitchBot.Discord
                             log.Info($"Requested TTS for {game.State} because time interval lapsed.");
                             RecordTtsPlayed(currentTime);
                             LastKnownState = game.State;
-                            if (new Random().Next(1) == 0)
+                            if (new Random().Next(5) == 0)
                             {
                                 log.Info("Using legacy reaction");
                                 Server.Instance.Assistant.ReactToGameState(game.State);
@@ -210,7 +210,7 @@ namespace TwitchBot.Discord
         public async Task<string> UploadFile(string filePath = "images/screenshots/latest.png")
         {
             ulong channel = Config.DiscordConfig.Channel.JustMe.IMAGES;
-            if (isEnabled)
+            if (Enabled)
             {
                 if (client.GetChannel(channel) is IMessageChannel imageChannel)
                 {

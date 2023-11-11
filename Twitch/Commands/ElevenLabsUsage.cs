@@ -1,19 +1,15 @@
-﻿using TwitchLib.Client;
-using TwitchLib.Client.Models;
+﻿using TwitchLib.Client.Models;
 
 namespace TwitchBot.Twitch.Commands
 {
     internal class ElevenLabsUsage : CommandHandler
     {
-        public bool canHandle(TwitchClient client, ChatMessage message)
-        {
-            return message.Message.ToLower().StartsWith("!usage");
-        }
+        public ElevenLabsUsage() : base(command: "!usage", users: PermissionGroup.User) { }
 
-        public void handle(TwitchClient client, ChatMessage message)
+        public override void Handle(TwitchIrcBot client, ChatMessage message)
         {
             var usageInfo = Server.Instance.elevenlabs.GetUserSubscriptionInfo();
-            client.SendMessage(message.Channel, $"Used {usageInfo.character_count} / {usageInfo.character_limit} characters.");
+            client.RespondTo(message, $"Used {usageInfo.character_count} / {usageInfo.character_limit} characters.");
         }
     }
 }

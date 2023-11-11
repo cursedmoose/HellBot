@@ -23,13 +23,13 @@ namespace TwitchBot.ChatGpt
     {
         readonly OpenAIClient openAI;
         static readonly ChatGptUsage usage = new();
-        readonly bool isEnabled;
+        public readonly bool Enabled;
         readonly Logger log = new("ChatGpt");
 
         public ChatGpt(bool enabled = true)
         {
             openAI = new(openAIAuthentication: new(API_KEY, ORGANIZATION_ID));
-            isEnabled = enabled;
+            Enabled = enabled;
         }
 
         public void GetUsage()
@@ -100,7 +100,7 @@ namespace TwitchBot.ChatGpt
 
         public async Task<string> GetResponseText(string persona, string chatPrompt, ChatGptOptions? options = null)
         {
-            if (!isEnabled) { return ""; }
+            if (!Enabled) { return ""; }
 
             log.Info($"Asking ChatGpt to respond to {chatPrompt}");
 
@@ -115,7 +115,7 @@ namespace TwitchBot.ChatGpt
 
         public async Task<string> GetResponseText(string persona, List<Message> messages, ChatGptOptions? options = null)
         {
-            if (!isEnabled) { return ""; }
+            if (!Enabled) { return ""; }
 
             log.Info($"Asking ChatGpt to respond to {messages.Count} messages.");
 
@@ -130,7 +130,7 @@ namespace TwitchBot.ChatGpt
 
         public async Task<string> GetResponse(string persona, string chatPrompt, ChatGptOptions? options = null)
         {
-            if (!isEnabled) { return ""; }
+            if (!Enabled) { return ""; }
 
             log.Info($"Asking ChatGpt to respond to {chatPrompt}");
             string promptTemplate = GeneratePromptFromTemplate(chatPrompt, 25);

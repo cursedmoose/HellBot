@@ -1,17 +1,16 @@
-﻿using TwitchLib.Client;
-using TwitchLib.Client.Models;
+﻿using TwitchLib.Client.Models;
 
 namespace TwitchBot.Twitch.Commands
 {
     internal class BotCheck : CommandHandler
     {        
-        public bool canHandle(TwitchClient client, ChatMessage message)
+        public BotCheck() : base(command: "!botcheck", users: PermissionGroup.User)
         {
-            return message.Message.ToLower().StartsWith("!botcheck");
+            Aliases.Add("!hello");
         }
-        public void handle(TwitchClient client, ChatMessage message)
+        public override void Handle(TwitchIrcBot client, ChatMessage message)
         {
-            client.SendMessage(message.Channel, "TTS Bot is working.");
+            client.RespondTo(message, "TTS Bot is working.");
         }
     }
 }

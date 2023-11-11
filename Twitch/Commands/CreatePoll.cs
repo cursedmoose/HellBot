@@ -1,22 +1,14 @@
-﻿using TwitchBot.ElevenLabs;
-using TwitchLib.Client;
-using TwitchLib.Client.Models;
+﻿using TwitchLib.Client.Models;
 
 namespace TwitchBot.Twitch.Commands
 {
     internal class CreatePoll : CommandHandler
     {
-        const string COMMAND = "!poll";
+        public CreatePoll() : base (command: "!poll", users: PermissionGroup.Admin) { }
 
-        public bool canHandle(TwitchClient client, ChatMessage message)
+        public override void Handle(TwitchIrcBot client, ChatMessage message)
         {
-            var validUsername = VoiceProfiles.GetVoiceProfile(message.Username) != null;
-            return message.Message.StartsWith(COMMAND) && validUsername;
-        }
-
-        public void handle(TwitchClient client, ChatMessage message)
-        {
-            var pollTopic = message.Message.Replace(COMMAND, string.Empty).Trim();
+            var pollTopic = StripCommandFromMessage(message);
             if (pollTopic.Length > 0)
             {
                 var pollMade = Server.Instance.Assistant.CreatePoll(pollTopic).Result;

@@ -34,7 +34,7 @@ namespace TwitchBot.Twitch
 {
     public class TwitchIrcBot
     {
-        readonly bool Enabled = false;
+        public readonly bool Enabled = false;
         readonly TwitchClient client;
         readonly TwitchAPI api;
         readonly EventSubWebsocketClient events;
@@ -44,7 +44,7 @@ namespace TwitchBot.Twitch
         Helix API { get { return api.Helix; } }
         Auth Auth { get { return api.Auth; } }
 
-        readonly List<CommandHandler> commands;
+        internal readonly List<CommandHandler> commands;
         readonly MemoryCache eventLog = new("Events");
         readonly Logger log = new("Twitch");
         public TwitchIrcBot(bool enabled = true)
@@ -52,6 +52,7 @@ namespace TwitchBot.Twitch
             Enabled = enabled;
             commands = new List<CommandHandler>()
         {
+            new GetCommands(),
             new BotCheck(),
             new ElevenLabsUsage(),
             new CommemerateEvent(),
@@ -105,7 +106,6 @@ namespace TwitchBot.Twitch
                 log.Info($"[Events]\t[{sub.Type}]: {sub.CreatedAt}");
             }
         }
-
         private TwitchAPI Init_API()
         {
             TwitchAPI api = new();
@@ -186,7 +186,7 @@ namespace TwitchBot.Twitch
 
         public void RespondTo(ChatMessage message, string withMessage)
         {
-            log.Info($"Sending {withMessage} to {message.Channel}");
+            // log.Info($"Sending {withMessage} to {message.Channel}");
             client.SendMessage(message.Channel, withMessage);
         }
 
@@ -225,7 +225,7 @@ namespace TwitchBot.Twitch
         {
             if (e.ChatMessage.Message.StartsWith('!'))
             {
-                log.Info($"Message looks like a bot command.");
+                log.Info($"Processing bot command {e.ChatMessage.Message.Split(" ")[0]} from {e.ChatMessage.Username}");
                 HandleCommand(sender, e);
                 return;
             }
@@ -274,9 +274,9 @@ namespace TwitchBot.Twitch
         {
             foreach (CommandHandler handler in commands)
             {
-                if (handler.canHandle(client, e.ChatMessage))
+                if (handler.CanHandle(e.ChatMessage))
                 {
-                    handler.handle(client, e.ChatMessage);
+                    handler.Handle(this, e.ChatMessage);
                     return;
                 }
             }

@@ -1,18 +1,13 @@
 ﻿using TwitchBot.ElevenLabs;
-using TwitchLib.Client;
 using TwitchLib.Client.Models;
 
 namespace TwitchBot.Twitch.Commands
 {
     internal class SetParameter : CommandHandler
     {
-        private const string COMMAND = "!set";
-        bool CommandHandler.canHandle(TwitchClient client, ChatMessage message)
-        {
-            return false;
-        }
+        public SetParameter() : base(command: "!set", users: PermissionGroup.Admin) { }
 
-        void CommandHandler.handle(TwitchClient client, ChatMessage message)
+        public override void Handle(TwitchIrcBot client, ChatMessage message)
         {
             var tokens = message.Message.Split(' ');
             if (tokens.Length <= 2 ) {

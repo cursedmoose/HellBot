@@ -7,7 +7,7 @@ namespace TwitchBot.ElevenLabs
         readonly HttpClient client;
         public readonly long charactersStartedAt;
         public static long CharactersUsed { get; private set; } = 0;
-        readonly bool Enabled = true;
+        public readonly bool Enabled = true;
         readonly Logger log = new("ElevenLabs");
 
         public ElevenLabs(bool enabled = true)
