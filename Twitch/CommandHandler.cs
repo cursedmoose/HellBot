@@ -9,7 +9,7 @@ namespace TwitchBot.Twitch
         public List<string> Aliases { get; }
         public PermissionGroup Users { get; }
 
-        private const StringComparison CompareBy = StringComparison.OrdinalIgnoreCase;
+        protected const StringComparison CompareBy = StringComparison.OrdinalIgnoreCase;
 
         public CommandHandler(string command, PermissionGroup users)
         {

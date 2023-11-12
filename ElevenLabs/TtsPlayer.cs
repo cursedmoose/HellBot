@@ -32,7 +32,7 @@ namespace TwitchBot.ElevenLabs
         }
         public static HttpRequestMessage BuildTtsRequest(string tts, VoiceProfile profile)
         {
-            var url = string.Format(TTS_API_LATENCY_OPTIMIZED, profile.VoiceId);
+            var url = string.Format(TTS_API_LATENCY_OPTIMIZED, profile.Voice.VoiceId);
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             var json = new PostTtsRequest(
                 Text: tts, 

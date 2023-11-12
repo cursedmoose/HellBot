@@ -1,17 +1,14 @@
-﻿using Octokit;
+﻿using TwitchBot.Config;
 
 namespace TwitchBot.Twitch
 {
-    enum PermissionGroup
+    public enum PermissionGroup
     {
         Admin,
-        Friend,
         User,
-        Mod,
         Moose,
-
     }
-    internal static class Permissions
+    public static class Permissions
     {
         public static bool IsUserInGroup(string user, PermissionGroup group)
         {
@@ -22,13 +19,17 @@ namespace TwitchBot.Twitch
 
         public static readonly List<string> Admin = new()
         {
-            "thatonesix",
-            "cursedmoose",
+            // TwitchConfig.Admins.Moose,
+            TwitchConfig.Admins.Six,
+            TwitchConfig.Admins.Sas,
+            TwitchConfig.Admins.Dlique,
+            TwitchConfig.Admins.Elise1,
+            TwitchConfig.Admins.Elise2
         };
 
         public static readonly List<string> Moose = new()
         {
-            "cursedmoose",
+            TwitchConfig.Admins.Moose
         };
 
         public static readonly Dictionary<PermissionGroup, List<string>> Group = new()

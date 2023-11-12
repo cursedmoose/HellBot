@@ -9,8 +9,6 @@ using TwitchBot.Assistant;
 using TwitchBot.OBS;
 using TwitchBot.OBS.Scene;
 using TwitchBot.FileGenerator;
-using System.Diagnostics;
-using TwitchLib.PubSub.Models.Responses;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -20,6 +18,7 @@ log.Info("~~~~~~~~~~~~~");
 log.Info("Hello, World!");
 
 Server server = Server.Instance;
+VoiceProfiles.LoadProfiles();
 
 while (true)
 {
@@ -166,7 +165,7 @@ while (true)
     }
     else if (next.Contains("test"))
     {
-        //server.Assistant.ReactToCurrentState();
+
     }
     else
     {
@@ -191,7 +190,6 @@ public class Server
     public ObsClient obs = new(GLOBAL_ENABLE);
     public HttpClient web = new();
     public FileGenerator file = new();
-
 
     private static readonly Lazy<Server> lazy = new(() => new Server());
     public static Server Instance { get { return lazy.Value; } }

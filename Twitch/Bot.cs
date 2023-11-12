@@ -57,6 +57,7 @@ namespace TwitchBot.Twitch
             new ElevenLabsUsage(),
             new CommemerateEvent(),
             new CreatePoll(),
+            new SetVoice()
         };
 
             tts = new();
@@ -232,7 +233,7 @@ namespace TwitchBot.Twitch
 
             log.Info($"{e.ChatMessage.Username} sent message: ${e.ChatMessage.Message}");
 
-            if (Admins.isAdmin(e.ChatMessage.Username))
+            if (Permissions.IsUserInGroup(e.ChatMessage.Username, PermissionGroup.Admin))
             {
                 PlayTts(sender, e);
             }

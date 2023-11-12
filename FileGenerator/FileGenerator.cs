@@ -1,17 +1,24 @@
-﻿namespace TwitchBot.FileGenerator
+﻿using System.Text.Json;
+
+namespace TwitchBot.FileGenerator
 {
     public class FileGenerator
     {
         private const string WSL_PATH = @"\\wsl.localhost\Ubuntu\home\cursedmoose\app\website\cursedmoose.github.io\";
-
+        private const string IMAGES = "images";
+        private const string CONFIG = "config";
         public FileGenerator() 
         {
 
         }
 
         protected readonly Logger log = new("File");
+        JsonSerializerOptions jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
 
         public record Agent(string Type, string Name);
+
+        public record UserAgent(string Name) : Agent("user", Name);
+        public record AssistantAgent(string Name) : Agent("assistant", Name);
         public record Post(string Type, string Title, string Image, string Message = "");
 
         public async Task<string> SaveImage(string webUrl, Agent agent)
@@ -82,10 +89,30 @@
             return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
         }
 
-
-
+        public string CreateAgentConfig(Agent agent, string configType, object configData)
+        {
+            var agentDirectory = Path.Combine(CONFIG, agent.Type, agent.Name);
+            var fullPath = Path.Combine(agentDirectory, configType.ToLower() + ".json");
+            log.Info($"Creating {fullPath}");
+            Directory.CreateDirectory(agentDirectory);
+            File.WriteAllText(fullPath, JsonSerializer.Serialize(configData, jsonOptions));
+            return fullPath;
+        }
+        
+        public T? LoadAgentConfig<T>(Agent agent, string configType)
+        {
+            var agentDirectory = Path.Combine(CONFIG, agent.Type, agent.Name);
+            var fullPath = Path.Combine(agentDirectory, configType.ToLower() + ".json");
+            try
+            {
+                var jsonString = File.ReadAllText(fullPath);
+                return JsonSerializer.Deserialize<T>(jsonString, jsonOptions);
+            }
+            catch (Exception ex) 
+            {
+                log.Error($"Could not load config {fullPath} due to {ex.Message}");
+                return default;
+            }
+        }
     }
-
-    
-
 }
