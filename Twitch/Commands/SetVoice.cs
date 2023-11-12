@@ -1,7 +1,5 @@
-﻿using System.Runtime.CompilerServices;
-using TwitchBot.ElevenLabs;
+﻿using TwitchBot.ElevenLabs;
 using TwitchLib.Client.Models;
-using TwitchLib.Communication.Interfaces;
 
 namespace TwitchBot.Twitch.Commands
 {

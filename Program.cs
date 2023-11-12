@@ -9,6 +9,11 @@ using TwitchBot.Assistant;
 using TwitchBot.OBS;
 using TwitchBot.OBS.Scene;
 using TwitchBot.FileGenerator;
+using TwitchBot.CommandLine;
+using TwitchBot.CommandLine.Commands;
+using TwitchBot.CommandLine.Commands.Assistant;
+using TwitchBot.CommandLine.Commands.Discord;
+using System.Reflection.Metadata;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -20,6 +25,25 @@ log.Info("Hello, World!");
 Server server = Server.Instance;
 VoiceProfiles.LoadProfiles();
 
+List<ServerCommand> Commands = new List<ServerCommand>()
+{
+    #region Server Commands
+    new HealthCheck(),
+    new ServiceUsage(),
+    new StopServer(),
+    #endregion
+    #region Assistant Commands
+    new CleanUpAssistant(),
+    new StartAssistant(),
+    new StopAssistant(),
+    new RunAdvertisement(),
+    #endregion
+    #region Discord Commands
+    new GetCurrentPresence(),
+    #endregion
+};
+ServerCommand.ValidateCommandList(Commands);
+
 while (true)
 {
     var next = Console.ReadLine();
@@ -27,31 +51,35 @@ while (true)
     {
         continue;
     }
-    else if (next == "exit")
+    else if(next.StartsWith("commands"))
     {
-        server.twitch.Stop();
-        server.web.Dispose();
-        server.obs.Disconnect();
-        server.Assistant.CleanUp();
-        break;
+        Console.WriteLine("Available Commands:");
+        foreach (ServerCommand handler in Commands)
+        {
+            Console.WriteLine($"\t{handler.Command}");
+        }
     }
-    else if (next == "health")
+    else
     {
-        Server.Instance.twitch.HealthCheck();
-    }
-    else if (next == "usage")
-    {
-        var info = server.elevenlabs.GetUserSubscriptionInfo();
-        log.Info($"[ElevenLabs] Used {info.character_count} / {info.character_limit} characters.");
-        log.Info($"[ElevenLabs] This instance has used {info.character_count - server.elevenlabs.charactersStartedAt} characters.");
+        var handled = false;
+        foreach (ServerCommand handler in Commands)
+        {
+            if (!handled && handler.CanHandle(next))
+            {
+                log.Info($"Command {next} is being handled by {handler.GetType()}");
+                handler.Handle(server, next);
+                handled = true;
+                break;
+            }
+        }
 
-        server.chatgpt.GetUsage();
+        if (!handled)
+        {
+            log.Info($"No handler found for {next}. Falling back to if statements.");
+        }
     }
-    else if (next == "presence")
-    {
-        server.discord.GetPresence();
-    }
-    else if (next.Contains("dalle"))
+
+    if (next.Contains("dalle"))
     {
         try
         {
@@ -84,14 +112,6 @@ while (true)
         var chatters = await Server.Instance.twitch.GetChatterNames();
         chatters.ForEach(log.Info);
     }
-    else if (next.Contains("start"))
-    {
-        server.Assistant.StartAI();
-    }
-    else if (next.Contains("stop"))
-    {
-        await server.Assistant.StopAI();
-    }
     else if (next.Contains("create"))
     {
         var guid = Guid.NewGuid().ToString();
@@ -108,26 +128,9 @@ while (true)
     {
         (server.Assistant as Sheogorath)?.PaintPicture();
     }
-    else if (next.Contains("clean"))
-    {
-        server.Assistant.CleanUp();
-    }
     else if (next.Contains("obs"))
     {
         server.obs.GetActiveSource();
-    }
-    else if (next.Contains("ad"))
-    {
-        var timeString = next[2..].Trim();
-        try
-        {
-            var time = int.Parse(timeString);
-            await server.Assistant.RunAd(time);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-        }
     }
     else if (next.Contains("id"))
     {
@@ -179,7 +182,7 @@ public class Server
     public static readonly Regex WEBSITE_REGEX = new("[(http(s)?):\\/\\/(www\\.)?a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)", RegexOptions.IgnoreCase);
     public static readonly Regex EMOTE_REGEX = new("cursed99");
 
-    static readonly bool GLOBAL_ENABLE = true;
+    static readonly bool GLOBAL_ENABLE = false;
 
     public Assistant Assistant = new Sheogorath();
 

@@ -78,7 +78,7 @@ namespace TwitchBot.ElevenLabs
             foreach (string admin in Permissions.Admin)
             {
                 var profile = LoadVoiceProfileFromConfig(admin, DrunkMale);
-                Console.WriteLine($"Loaded voice {profile.Voice.VoiceName} for {admin}");
+                Console.WriteLine($"[VoiceProfiles] Loaded voice {profile.Voice.VoiceName} for {admin}");
             }
         }
 

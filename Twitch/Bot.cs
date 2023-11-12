@@ -91,9 +91,15 @@ namespace TwitchBot.Twitch
 
         public async void HealthCheck()
         {
+
             log.Info($"[Client] Initialized: {client.IsInitialized} | Connected: {client.IsConnected}");
-            log.Info($"[API] Valid: {Auth.ValidateAccessTokenAsync().Result.Login}");
             log.Info($"[Events] Connected: {EventSubSocket.IsConnected}");
+            if (!Enabled) {
+                log.Info($"Service is Disabled");
+                return;
+            }
+
+            log.Info($"[API] Valid: {Auth.ValidateAccessTokenAsync().Result.Login}");
             var subs = await API.EventSub.GetEventSubSubscriptionsAsync(status: "enabled");
             log.Info($"[Events] Subscriptions: {subs.Subscriptions.Length} | Cost: {subs.TotalCost}");
 
