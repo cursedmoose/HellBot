@@ -17,6 +17,8 @@ namespace TwitchBot.Assistant
             Agent = new("assistant", Name);
         }
 
+        static readonly object TtsLock = new();
+
         public string Name { get; private set; }
         public VoiceProfile Voice { get; private set; }
         public ObsSceneId Obs { get; private set; }
@@ -24,7 +26,7 @@ namespace TwitchBot.Assistant
 
         public readonly FileGenerator.FileGenerator.Agent Agent;
 
-        private static bool AI_Running = false;
+        private bool AI_Running = false;
         public abstract string GetSystemPersona();
 
         public string Persona { get { return GetSystemPersona(); } }
@@ -48,9 +50,11 @@ namespace TwitchBot.Assistant
 
         public void PlayTts(string message)
         {
-            Obs.Enable();
-            Server.Instance.elevenlabs.PlayTts(message, Voice);
-            Obs.Disable();
+            lock (TtsLock) {
+                Obs.Enable();
+                Server.Instance.elevenlabs.PlayTts(message, Voice);
+                Obs.Disable();
+            }
         }
 
         public async Task Chatter()
@@ -143,7 +147,10 @@ namespace TwitchBot.Assistant
             return;
         }
 
-
+        public bool IsRunning()
+        {
+            return AI_Running;
+        }
 
         public async Task StopAI()
         {
