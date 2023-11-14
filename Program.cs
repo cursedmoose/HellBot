@@ -7,13 +7,13 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using TwitchBot.Assistant;
 using TwitchBot.OBS;
-using TwitchBot.OBS.Scene;
 using TwitchBot.FileGenerator;
 using TwitchBot.CommandLine;
 using TwitchBot.CommandLine.Commands;
 using TwitchBot.CommandLine.Commands.Assistant;
 using TwitchBot.CommandLine.Commands.Discord;
-using System.Reflection.Metadata;
+using TwitchBot.CommandLine.Commands.OpenAI;
+using TwitchBot.CommandLine.Commands.OBS;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -31,6 +31,7 @@ List<ServerCommand> Commands = new()
     new HealthCheck(),
     new ServiceUsage(),
     new StopServer(),
+    new TestCommand(),
     #endregion
     #region Assistant Commands
     new CleanUpAssistant(),
@@ -40,6 +41,13 @@ List<ServerCommand> Commands = new()
     #endregion
     #region Discord Commands
     new GetCurrentPresence(),
+    #endregion
+    #region OpenAI Commands
+    new DalleGeneration(),
+    new ChatGptGeneration(),
+    #endregion
+    #region OBS Commands
+    new PrintSources()
     #endregion
 };
 ServerCommand.ValidateCommandList(Commands);
@@ -75,104 +83,8 @@ while (true)
 
         if (!handled)
         {
-            log.Info($"No handler found for {next}. Falling back to if statements.");
+            log.Info($"No handler found for {next}.");
         }
-    }
-
-    if (next.Contains("dalle"))
-    {
-        try
-        {
-            var prompt = next[5..].Trim();
-            log.Info($"Generating image for : \"{prompt}\"");
-            var image = await server.chatgpt.GetImage(prompt);
-            var imageFile = await server.file.SaveImage(image, server.Assistant.Agent);
-            log.Info($"{image}");
-        }
-        catch (Exception e)
-        {
-            log.Info($"Exceptioned out. Got {e.Message}");
-        }
-    }
-    else if (next.Contains("gpt"))
-    {
-        try
-        {
-            var prompt = next[3..].Trim();
-            log.Info($"Generating words for : \"{prompt}\"");
-            log.Info(await server.chatgpt.GetResponseText(server.Assistant.Persona, prompt));
-        }
-        catch (Exception e)
-        {
-            log.Info($"Exceptioned out. Got {e.Message}");
-        }
-    }
-    else if (next.Contains("chatters"))
-    {
-        var chatters = await Server.Instance.twitch.GetChatterNames();
-        chatters.ForEach(log.Info);
-    }
-    else if (next.Contains("create"))
-    {
-        var guid = Guid.NewGuid().ToString();
-        server.file.PostToWebsite(
-            new FileGenerator.Agent("assistant", server.Assistant.Name),
-            new FileGenerator.Post("reward", "test!", guid, "This was a test!")
-            );
-    }
-    else if (next.Contains("delete"))
-    {
-
-    }
-    else if (next.Contains("paint"))
-    {
-        (server.Assistant as Sheogorath)?.PaintPicture();
-    }
-    else if (next.Contains("obs"))
-    {
-        server.obs.GetActiveSource();
-    }
-    else if (next.Contains("id"))
-    {
-        var game = next[2..].Trim();
-        if (game.Length > 1)
-        {
-            await server.twitch.ChangeGame(game);
-        }
-    }
-    else if (next.Contains("on"))
-    {
-        var numOption = next.Split(" ");
-        if (numOption.Length > 1)
-        {
-            var num = numOption[1];
-            server.obs.EnableScene("Characters", int.Parse(num));
-        }
-        else
-        {
-            server.obs.EnableScene(ObsScenes.Sheogorath);
-        }
-    }
-    else if (next.Contains("off"))
-    {
-        var numOption = next.Split(" ");
-        if (numOption.Length > 1)
-        {
-            var num = numOption[1];
-            server.obs.DisableScene("Characters", int.Parse(num));
-        }
-        else
-        {
-            server.obs.DisableScene(ObsScenes.Sheogorath);
-        }
-    }
-    else if (next.Contains("test"))
-    {
-
-    }
-    else
-    {
-
     }
 }
 
