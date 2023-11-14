@@ -5,6 +5,7 @@ namespace TwitchBot.FileGenerator
     public class FileGenerator
     {
         private const string WSL_PATH = @"\\wsl.localhost\Ubuntu\home\cursedmoose\app\website\cursedmoose.github.io\";
+        private const string ASSETS = "assets";
         private const string IMAGES = "images";
         private const string CONFIG = "config";
         public FileGenerator() 
@@ -13,10 +14,9 @@ namespace TwitchBot.FileGenerator
         }
 
         protected readonly Logger log = new("File");
-        JsonSerializerOptions jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
+        readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
         public record Agent(string Type, string Name);
-
         public record UserAgent(string Name) : Agent("user", Name);
         public record AssistantAgent(string Name) : Agent("assistant", Name);
         public record Post(string Type, string Title, string Image, string Message = "");
@@ -25,14 +25,14 @@ namespace TwitchBot.FileGenerator
         {
             log.Info($"Saving image from {webUrl}");
             var imageReference = Guid.NewGuid().ToString();
-            var imagePath = $"images/{agent.Type}/{agent.Name.ToLower()}/";
+            var imagePath = $"{IMAGES}/{agent.Type}/{agent.Name.ToLower()}/";
             Directory.CreateDirectory(imagePath);
             log.Info($"Creating directory at {imagePath}");
 
 
             var response = await Server.Instance.web.GetAsync(webUrl);
             var sourceFile = Path.Combine(imagePath, imageReference + ".png");
-            var latest = Path.Combine("images", $".latest.png");
+            var latest = Path.Combine(IMAGES, $".latest.png");
             using (var fs = new FileStream(sourceFile, FileMode.Create))
             {
                 await response.Content.CopyToAsync(fs);
@@ -44,7 +44,7 @@ namespace TwitchBot.FileGenerator
         }
 
 
-        private void CopyPostToJekyll(Agent agent, string origin)
+        private void CopyPostToJekyll(string origin)
         {
             var copyTo = Path.Combine(@"\\wsl.localhost\Ubuntu\home\cursedmoose\app\website\cursedmoose.github.io\", origin);
             log.Info($"Copying file {origin}");
@@ -53,7 +53,7 @@ namespace TwitchBot.FileGenerator
         }
         private void CopyImageToJekyll(Agent agent, string origin)
         {
-            var directoryPath = Path.Combine(WSL_PATH, @"assets\images", agent.Type, agent.Name.ToLower());
+            var directoryPath = Path.Combine(WSL_PATH, ASSETS, IMAGES, agent.Type, agent.Name.ToLower());
             Directory.CreateDirectory(directoryPath);
             log.Info($"Creating directory at {directoryPath}");
             var copyTo = Path.Combine(@"\\wsl.localhost\Ubuntu\home\cursedmoose\app\website\cursedmoose.github.io\assets", origin);
@@ -73,15 +73,15 @@ namespace TwitchBot.FileGenerator
                 "---\r\n" +
                 $"layout: {post.Type}\r\n" +
                 $"category: {post.Type}\r\n" +
-                $"date:   {date.ToString("yyyy-MM-dd HH:mm:ss -0800")}\r\n" +
+                $"date:   {date:yyyy-MM-dd HH:mm:ss -0800}\r\n" +
                 $"author: {agent.Name.ToLower()}\r\n" +
                 $"reward: {post.Title}\r\n" +
-                $"image: \"/assets/images/{agent.Type}/{agent.Name.ToLower()}/{post.Image}.png\"\r\n" +
+                $"image: \"/{ASSETS}/{IMAGES}/{agent.Type}/{agent.Name.ToLower()}/{post.Image}.png\"\r\n" +
                 "---\r\n" +
                 $"{post.Message}"
             );
 
-            CopyPostToJekyll(agent, sourceFile);
+            CopyPostToJekyll(sourceFile);
         }
 
         public static string RemoveInvalidChars(string filename)

@@ -2,6 +2,7 @@
 
 namespace TwitchBot.ElevenLabs
 {
+#pragma warning disable IDE1006 // Naming Styles - External API
     public record VoiceModel(
         string model_id,
         string display_name,
@@ -51,4 +52,5 @@ namespace TwitchBot.ElevenLabs
             return request;
         }
     }
+#pragma warning restore IDE1006 // Naming Styles
 }

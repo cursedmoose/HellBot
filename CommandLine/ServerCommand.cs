@@ -5,7 +5,7 @@
         public string Command { get; }
         public List<string> Aliases { get; }
 
-        protected Logger Log = new Logger("Server");
+        protected Logger Log = new("Server");
 
         protected const StringComparison CompareBy = StringComparison.OrdinalIgnoreCase;
 

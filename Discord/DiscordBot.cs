@@ -18,7 +18,7 @@ namespace TwitchBot.Discord
         static long ttsInterval = 600L;
         private const long SECONDS = 10_000_000L;
         static readonly HashSet<string> statesExperienced = new();
-        public static bool Enabled = true;
+        public static bool Enabled { get; private set; } = true;
 
         private readonly Logger log = new("Discord");
 

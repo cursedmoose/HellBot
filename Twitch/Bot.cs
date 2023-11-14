@@ -51,34 +51,31 @@ namespace TwitchBot.Twitch
         {
             Enabled = enabled;
             commands = new List<CommandHandler>()
-        {
-            new GetCommands(),
-            new BotCheck(),
-            new ElevenLabsUsage(),
-            new CommemerateEvent(),
-            new CreatePoll(),
-            new SetVoice()
-        };
+            {
+                new GetCommands(),
+                new BotCheck(),
+                new ElevenLabsUsage(),
+                new CommemerateEvent(),
+                new CreatePoll(),
+                new SetVoice()
+            };
 
             tts = new();
-
             api = Init_API();
-
             events = Init_EventSub();
             client = Init_IRC_Client();
 
-
             var scopes = new List<string>()
-        {
-            "moderator:manage:banned_users",
-            "moderator:read:chatters",
-            "moderator:read:followers",
-            "channel:manage:polls",
-            "channel:manage:redemptions",
-            "channel:manage:broadcast",
-            "channel:manage:redemptions",
-            "channel:edit:commercial"
-        };
+            {
+                "moderator:manage:banned_users",
+                "moderator:read:chatters",
+                "moderator:read:followers",
+                "channel:manage:polls",
+                "channel:manage:redemptions",
+                "channel:manage:broadcast",
+                "channel:manage:redemptions",
+                "channel:edit:commercial"
+            };
 
             if (enabled)
             {
@@ -184,7 +181,7 @@ namespace TwitchBot.Twitch
             Console.WriteLine($"Please authorize here:\n{codeUrl}");
             System.Diagnostics.Process.Start(@"C:\Program Files\Mozilla Firefox\firefox.exe", codeUrl);
             var auth = await server.Listen();
-            var resp = await Auth.GetAccessTokenFromCodeAsync(auth.Code, AccountInfo.API_CLIENT_SECRET, AccountInfo.API_REDIRECT_URL);
+            var resp = await Auth.GetAccessTokenFromCodeAsync(auth?.Code, AccountInfo.API_CLIENT_SECRET, AccountInfo.API_REDIRECT_URL);
             api.Settings.AccessToken = resp.AccessToken;
             var user = (await API.Users.GetUsersAsync()).Users[0];
             Console.WriteLine($"Authorization success!\n\nUser: {user.DisplayName}\nScopes: {string.Join(", ", resp.Scopes)}");
@@ -248,7 +245,7 @@ namespace TwitchBot.Twitch
                 PlayRumorTts(sender, e);
             }
 
-            if (!Admins.isAdmin(e.ChatMessage.Username)) // lol admins can't get banned 
+            if (!Permissions.IsUserInGroup(e.ChatMessage.Username, PermissionGroup.Admin)) // lol admins can't get banned 
             {
                 if (e.ChatMessage.Message.Contains("dogehype") || e.ChatMessage.Message.Contains("dot com"))
                 {

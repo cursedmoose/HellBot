@@ -75,7 +75,7 @@ namespace TwitchBot.ChatGpt
 
         private async Task<string> RequestResponseText(List<Message> messages, ChatGptOptions? options = null)
         {
-            ChatGptOptions api_params = options == null ? ChatGptOptions.Default : options;
+            ChatGptOptions api_params = options ?? ChatGptOptions.Default;
             var chatRequest = new ChatRequest(
                 model: Model.GPT4,
                 messages: messages,
@@ -143,7 +143,7 @@ namespace TwitchBot.ChatGpt
                 new(Role.User, promptTemplate)
             };
 
-            return await RequestResponses(chatPrompts);
+            return await RequestResponses(chatPrompts, options);
         }
 
         public async Task<string> GetImage(string imagePrompt, ChatMessage? message = null)

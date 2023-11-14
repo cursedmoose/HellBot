@@ -42,7 +42,7 @@ namespace TwitchBot.Twitch.Commands
                         throw new Exception("bad numbers");
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     client.RespondTo(message, $"@{message.Username} this commands requires either \"save\", \"reset\", or 3 numbers from 0-100");
                 }
@@ -101,7 +101,7 @@ namespace TwitchBot.Twitch.Commands
                     + $"Similarity={(int)(voiceProfile.Similarity * 100)} "
                     + $"Style={(int)(voiceProfile.Style * 100)} ");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 client.RespondTo(message, $"@{message.Username} is missing a voice. Please yell at me to fix this.");
             }

@@ -25,7 +25,7 @@ log.Info("Hello, World!");
 Server server = Server.Instance;
 VoiceProfiles.LoadProfiles();
 
-List<ServerCommand> Commands = new List<ServerCommand>()
+List<ServerCommand> Commands = new()
 {
     #region Server Commands
     new HealthCheck(),
@@ -222,7 +222,7 @@ public class Server
 
     public Bitmap CaptureScreen()
     {
-        Bitmap bmp = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+        Bitmap bmp = new(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
         using (Graphics g = Graphics.FromImage(bmp))
         {
             g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);

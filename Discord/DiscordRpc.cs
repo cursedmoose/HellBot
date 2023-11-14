@@ -6,19 +6,7 @@ namespace TwitchBot.Discord
 {
     public class DiscordRpc
     {
-        private static RichPresence presence = new RichPresence()
-        {
-            Details = "Test Project 🎁",
-            State = "testing something",
-            Assets = new Assets()
-            {
-                LargeImageKey = "image_large",
-                LargeImageText = "test",
-                SmallImageKey = "image_small"
-            }
-        };
-
-        DiscordRpcClient client;
+        readonly DiscordRpcClient client;
         public DiscordRpc()
         {
             client = new DiscordRpcClient(applicationID: Bot.APPLICATION_ID, autoEvents: true, pipe: 0)
@@ -38,11 +26,6 @@ namespace TwitchBot.Discord
 
 
             client.Initialize();
-        }
-
-        public string getPresence()
-        {
-            return "";
         }
 
         public void Start()
