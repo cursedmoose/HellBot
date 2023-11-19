@@ -75,6 +75,7 @@ namespace TwitchBot.FileGenerator
                 $"category: {post.Type}\r\n" +
                 $"date:   {date:yyyy-MM-dd HH:mm:ss -0800}\r\n" +
                 $"author: {agent.Name.ToLower()}\r\n" +
+                $"title: {agent.Name}'s {post.Title}\r\n" +
                 $"reward: {post.Title}\r\n" +
                 $"image: \"/{ASSETS}/{IMAGES}/{agent.Type}/{agent.Name.ToLower()}/{post.Image}.png\"\r\n" +
                 "---\r\n" +

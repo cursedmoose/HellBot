@@ -14,6 +14,7 @@ using TwitchBot.CommandLine.Commands.Assistant;
 using TwitchBot.CommandLine.Commands.Discord;
 using TwitchBot.CommandLine.Commands.OpenAI;
 using TwitchBot.CommandLine.Commands.OBS;
+using TwitchBot.SpeechToText;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -94,7 +95,7 @@ public class Server
     public static readonly Regex WEBSITE_REGEX = new("[(http(s)?):\\/\\/(www\\.)?a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)", RegexOptions.IgnoreCase);
     public static readonly Regex EMOTE_REGEX = new("cursed99");
 
-    static readonly bool GLOBAL_ENABLE = false;
+    static readonly bool GLOBAL_ENABLE = true;
 
     public Assistant Assistant = new Sheogorath();
 
@@ -105,6 +106,7 @@ public class Server
     public ObsClient obs = new(GLOBAL_ENABLE);
     public HttpClient web = new();
     public FileGenerator file = new();
+    public SpeechToText speech = new(GLOBAL_ENABLE);
 
     private static readonly Lazy<Server> lazy = new(() => new Server());
     public static Server Instance { get { return lazy.Value; } }

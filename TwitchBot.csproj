@@ -26,6 +26,7 @@
     <PackageReference Include="Octokit" Version="9.0.0" />
     <PackageReference Include="OpenAI-DotNet" Version="7.2.2" />
     <PackageReference Include="System.Runtime.Caching" Version="7.0.0" />
+    <PackageReference Include="System.Speech" Version="8.0.0" />
     <PackageReference Include="System.Windows.Extensions" Version="7.0.0" />
     <PackageReference Include="TwitchLib" Version="3.5.3" />
     <PackageReference Include="TwitchLib.Api" Version="3.9.0" />

@@ -57,7 +57,8 @@ namespace TwitchBot.Twitch
                 new ElevenLabsUsage(),
                 new CommemerateEvent(),
                 new CreatePoll(),
-                new SetVoice()
+                new SetVoice(),
+                new RollDice(),
             };
 
             tts = new();
@@ -626,7 +627,12 @@ namespace TwitchBot.Twitch
                 Respond($"@{eventData.UserName}: {reward}");
                 var agent = new FileGenerator.FileGenerator.Agent("user", eventData.UserName);
                 var imageFile = await Server.Instance.file.SaveImage(reward, agent);
-                Server.Instance.file.PostToWebsite(agent, new FileGenerator.FileGenerator.Post("reward", reward, imageFile, $"a huge waste of {eventData.Reward.Cost} sweet rolls"));
+                Server.Instance.file.PostToWebsite(agent, new FileGenerator.FileGenerator.Post(
+                    Type:"reward",
+                    Title: eventData.Reward.Title,
+                    Image: imageFile, 
+                    Message: $"a huge waste of {eventData.Reward.Cost} sweet rolls")
+                );
             }
         }
 

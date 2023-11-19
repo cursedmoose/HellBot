@@ -41,6 +41,7 @@ namespace TwitchBot.ElevenLabs
         public static readonly Voice Moira = new(VoiceName: "Moira", VoiceId: "Ute34dcnpIGwB8djz54Z");
         public static readonly Voice MasculineRumor = new(VoiceName: "Rumor (M)", VoiceId: "Fd3Nv8dOlr8Sd2GrltVV");
         public static readonly Voice FeminineRumor = new(VoiceName: "Rumor (F)", VoiceId: "wkMAp1DzoqsRcv2sVcBs");
+        public static readonly Voice Herzog = new(VoiceName: "Werner", VoiceId: "mkB4DV5jXs2291mKTWgO");
     }
 
     public static class VoiceProfiles
@@ -57,6 +58,7 @@ namespace TwitchBot.ElevenLabs
         public static readonly VoiceProfile DrunkMale = new(Voices.DrunkMale, 0.2f, 0.66f);
         public static readonly VoiceProfile TaraStrong = new(Voices.TaraStrong, 0.2f, 0.8f);
         public static readonly VoiceProfile Moira = new(Voices.Moira, 0.2f, 0.8f);
+        public static readonly VoiceProfile Werner = new(Voices.Herzog, 0.3f, 0.75f, 0.7f);
 
         public static readonly VoiceProfile MasculineRumor = new(Voices.MasculineRumor, 0.9f, 0.9f);
         public static readonly VoiceProfile FeminineRumor = new(Voices.FeminineRumor, 0.9f, 0.9f);

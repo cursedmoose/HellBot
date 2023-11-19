@@ -9,11 +9,11 @@
 
         public override void Handle(Server server, string command)
         {
+            server.Assistant.StopAI().GetAwaiter().GetResult();
+            server.Assistant.CleanUp();
             server.twitch.Stop();
             server.web.Dispose();
             server.obs.Disconnect();
-            server.Assistant.StopAI().GetAwaiter().GetResult();
-            server.Assistant.CleanUp();
         }
     }
 }
