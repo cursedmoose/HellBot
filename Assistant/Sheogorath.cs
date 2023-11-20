@@ -35,7 +35,7 @@ namespace TwitchBot.Assistant
 
         public override string GetSystemPersona()
         {
-            var choice = new Random().Next(0, PersonaPrompts.All.Count);
+            var choice = Random.Next(0, PersonaPrompts.All.Count);
             return string.Format(PersonaPrompts.All[choice], Name);
         }
 
@@ -47,10 +47,10 @@ namespace TwitchBot.Assistant
         {
             var time = DateTime.Now;
 
-            var mischief = new Random().Next(3) == 0;
+            var mischief = Random.Next(3) == 0;
             if (mischief)
             {
-                var actionToTake = AI_CAPABILITIES[new Random().Next(AI_CAPABILITIES.Count)];
+                var actionToTake = AI_CAPABILITIES[Random.Next(AI_CAPABILITIES.Count)];
                 log.Info($"Mischief!: {actionToTake}");
                 switch (actionToTake)
                 {
@@ -82,7 +82,7 @@ namespace TwitchBot.Assistant
                         }
                         else
                         {
-                            if (new Random().Next(5) == 0)
+                            if (Random.Next(5) == 0)
                             {
                                 await CreateReward();
                                 log.Info($"{rewardsCreated.Count} rewards available!");
@@ -104,7 +104,7 @@ namespace TwitchBot.Assistant
             }
             else
             {
-                var bored = new Random().Next(3) == 0;
+                var bored = Random.Next(3) == 0;
                 if (bored)
                 {
                     await Chatter();
@@ -152,7 +152,7 @@ namespace TwitchBot.Assistant
             }
 
             string pollPrompt = Poll.PollPrompt;
-            if (!string.IsNullOrWhiteSpace(topic)) 
+            if (!string.IsNullOrWhiteSpace(topic))
             {
                 pollPrompt = string.Format(Poll.PollTopicPrompt, topic);
             }
@@ -177,7 +177,7 @@ namespace TwitchBot.Assistant
             pollMessageBuilder.Append($"Title:{title}\r\n");
             for (int x = 0; x < options.Count; x++)
             {
-                pollMessageBuilder.Append($"Option {x+1}: {options[x]}\r\n");
+                pollMessageBuilder.Append($"Option {x + 1}: {options[x]}\r\n");
             }
 
             string pollMessage = pollMessageBuilder.ToString();
@@ -239,13 +239,12 @@ namespace TwitchBot.Assistant
 
         private async Task BanRandomUser()
         {
-            var random = new Random();
             var allChatters = await Server.Instance.twitch.GetChatters();
             var banned = false;
 
             do
             {
-                var userToBan = allChatters[random.Next(allChatters.Count)];
+                var userToBan = allChatters[Random.Next(allChatters.Count)];
                 if (userToBan.UserName != "CursedMoose" && userToBan.UserName != "Nightbot")
                 {
                     var prompt = $"pretend you are banning user \"{userToBan.UserName}\"";
@@ -261,7 +260,7 @@ namespace TwitchBot.Assistant
         public async Task<string> CreateReward()
         {
             var rewardTitle = await Server.Instance.chatgpt.GetResponseText(Persona, "create a new point reward. limit 5 words");
-            var rewardCost = new Random().Next(500, 10_000);
+            var rewardCost = Random.Next(500, 10_000);
             var advertisementPrompt = $"advertise new reward \"{rewardTitle}\" for {rewardCost} points.";
             var newReward = await Server.Instance.twitch.CreateCustomReward(rewardTitle, rewardCost);
             await Server.Instance.chatgpt.GetResponse(Persona, advertisementPrompt);
@@ -276,7 +275,7 @@ namespace TwitchBot.Assistant
         {
             if (rewardsCreated.Count > 0)
             {
-                var rewardToDelete = rewardsCreated.ElementAt(new Random().Next(rewardsCreated.Count));
+                var rewardToDelete = rewardsCreated.ElementAt(Random.Next(rewardsCreated.Count));
                 var revocationPrompt = $"announce the reward \"{rewardToDelete.Key}\" is being discontinued";
                 await Server.Instance.chatgpt.GetResponse(Persona, revocationPrompt);
                 var deleted = await Server.Instance.twitch.DeleteCustomReward(rewardToDelete.Value);
@@ -346,6 +345,59 @@ namespace TwitchBot.Assistant
             await Server.Instance.chatgpt.GetResponse(Persona, end);
 
             return true;
+        }
+
+        public override async Task<int> RollDice(int diceMax = 20)
+        {
+            foreach (var scene in ObsScenes.AllDice)
+            {
+                scene.Disable();
+            }
+            var result = Random.Next(1, diceMax + 1);
+            var diceResultScene = ObsScenes.AllDice[result - 1];
+            diceResultScene.Enable();
+            var text = await Server.Instance.chatgpt.GetResponseText(Persona, $"react to me rolling a {result} out of {diceMax}. limit 15 words");
+            ObsScenes.DiceMain.Enable();
+            PlayTts(text);
+            ObsScenes.DiceMain.Disable();
+            diceResultScene.Disable();
+
+            return result;
+        }
+
+        private string GetDiceReactionString(int result)
+        {
+            return result switch
+            {
+                >= 20 => GetDiceReaction20(),
+                >= 13 => $"Nice, you rolled a {result}",
+                <= 1 => "Haha only a 1! What a loser!",
+                <= 8 => GetDiceReactionBad(result),
+                _ => $"{result}!"
+            };
+        }
+
+        private string GetDiceReaction20()
+        {
+            var Reactions = new List<string>()
+            {
+                "Holy cowabunga a 20!",
+                "Wow!! A 20!!!"
+            };
+
+            return Reactions[Random.Next(Reactions.Count)];
+        }
+
+        private string GetDiceReactionBad(int result)
+        {
+            var Reactions = new List<string>()
+            {
+                "Aw, you only rolled a {0}",
+                "{0}. You stink.",
+                "Uh oh, only a {0}"
+            };
+
+            return string.Format(Reactions[Random.Next(Reactions.Count)], result);
         }
 
     }

@@ -23,6 +23,7 @@ namespace TwitchBot.Assistant
         public VoiceProfile Voice { get; private set; }
         public ObsSceneId Obs { get; private set; }
         protected readonly Logger log;
+        protected readonly Random Random = new Random();
 
         public readonly FileGenerator.FileGenerator.Agent Agent;
 
@@ -44,6 +45,8 @@ namespace TwitchBot.Assistant
 
         public abstract Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost);
         public abstract Task<bool> RunAd(int adSeconds = 5);
+
+        public abstract Task<int> RollDice(int diceMax = 20);
 
 
         public abstract void CleanUp();

@@ -49,6 +49,8 @@ namespace TwitchBot.OBS
         {
             PrintSceneList(ObsScenes.MainScene);
             PrintSceneList(ObsScenes.Characters);
+            PrintSceneList(ObsScenes.Dice);
+
         }
 
         private void PrintSceneList(string scene)

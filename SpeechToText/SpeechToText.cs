@@ -41,7 +41,7 @@ namespace TwitchBot.SpeechToText
             {
                 try
                 {
-                    var command = e.Result.Text.Replace("hey hellbot", "").Replace("hey sheogorath", "").Trim();
+                    var command = e.Result.Text.Replace("hey", "").Replace("hellbot", "").Replace("madgod", "").Replace("sheogorath", "").Trim();
                     Console.WriteLine($"Confidence: {e.Result.Confidence}%, trying to {command} ({++Accepts} / {Accepts + Rejections})");
                     if (command.Contains("say hello")) 
                     {
@@ -51,10 +51,11 @@ namespace TwitchBot.SpeechToText
                     {
                         await Server.Instance.Assistant.ReactToCurrentScreen();
                     }
-                    else if (command.Contains("roll the dice"))
+                    else if (command.Contains("roll dice"))
                     {
-                        var result = new Random().Next(1, 21);
-                        Server.Instance.Assistant.PlayTts($"Looks like you rolled a {result}");
+                        await Server.Instance.Assistant.RollDice();
+                        //var result = new Random().Next(1, 21);
+                        //Server.Instance.Assistant.PlayTts($"Looks like you rolled a {result}");
                     }
                 }
                 catch (Exception ex)
@@ -71,8 +72,8 @@ namespace TwitchBot.SpeechToText
         static Grammar CreateHellbotGrammar()
         {
             // Create a grammar for finding services in different cities.  
-            Choices hellbot = new Choices(new string[] { "hellbot", "sheogorath" });
-            Choices hellbotCommands = new Choices(new string[] { "what is this", "roll the dice" });
+            Choices hellbot = new Choices(new string[] { "hellbot", "sheogorath", "madgod" });
+            Choices hellbotCommands = new Choices(new string[] { "what is this", "roll dice" });
 
             GrammarBuilder findServices = new GrammarBuilder("hey");
             findServices.Append(hellbot);

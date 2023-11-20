@@ -104,9 +104,9 @@ public class Server
     public DiscordBot discord = new(GLOBAL_ENABLE);
     public ChatGpt chatgpt = new(GLOBAL_ENABLE);
     public ObsClient obs = new(GLOBAL_ENABLE);
+    public SpeechToText speech = new(GLOBAL_ENABLE);
     public HttpClient web = new();
     public FileGenerator file = new();
-    public SpeechToText speech = new(GLOBAL_ENABLE);
 
     private static readonly Lazy<Server> lazy = new(() => new Server());
     public static Server Instance { get { return lazy.Value; } }
