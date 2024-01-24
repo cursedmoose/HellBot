@@ -178,7 +178,6 @@ namespace TwitchBot.ChatGpt
         public async Task<string> GetResponseFromImagePrompt(string persona, string prompt = "What's in this image?", string imageUrl = "https://i.imgur.com/En3mezF.jpeg")
         {
             log.Info($"looking at {imageUrl}");
-            ChatGptOptions api_params = ChatGptOptions.Vision;
             var messages = new List<Message>
             {
                 new Message(Role.System, persona),
@@ -188,8 +187,29 @@ namespace TwitchBot.ChatGpt
                     new Content(ContentType.ImageUrl, imageUrl)
                 })
             };
+            return await GetVisionResponse(messages);
+        }
+
+        public async Task<string> ExtractTextFromImage(string imageUrl = "https://i0.wp.com/bloody-disgusting.com/wp-content/uploads/2018/10/AF.jpg?w=640&ssl=1")
+        {
+            string prompt = "Only return the text in this image";
+            log.Info($"looking at {imageUrl}");
+            var messages = new List<Message>
+            {
+                new Message(Role.User, new List<Content>
+                {
+                    new Content(ContentType.Text, GeneratePromptFromTemplate(prompt, 255)),
+                    new Content(ContentType.ImageUrl, imageUrl)
+                })
+            };
+            return await GetVisionResponse(messages);
+        }
+
+        private async Task<string> GetVisionResponse(List<Message> messages)
+        {
+            ChatGptOptions api_params = ChatGptOptions.Vision;
             var chatRequest = new ChatRequest(
-                messages: messages, 
+                messages: messages,
                 model: "gpt-4-vision-preview",
                 temperature: api_params.Temperature,
                 presencePenalty: api_params.PresencePenalty,

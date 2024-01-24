@@ -15,6 +15,7 @@ using TwitchBot.CommandLine.Commands.Discord;
 using TwitchBot.CommandLine.Commands.OpenAI;
 using TwitchBot.CommandLine.Commands.OBS;
 using TwitchBot.SpeechToText;
+using TwitchBot.ScreenCapture;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -107,6 +108,7 @@ public class Server
     public SpeechToText speech = new(GLOBAL_ENABLE);
     public HttpClient web = new();
     public FileGenerator file = new();
+    public ScreenCapturer screen = new();
 
     private static readonly Lazy<Server> lazy = new(() => new Server());
     public static Server Instance { get { return lazy.Value; } }
@@ -134,31 +136,16 @@ public class Server
         return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
     }
 
-    public Bitmap CaptureScreen()
-    {
-        Bitmap bmp = new(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
-        using (Graphics g = Graphics.FromImage(bmp))
-        {
-            g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
-        }
-        return bmp;
-    }
-
-    public string TakeScreenshot()
-    {
-        var filePath = "images/screenshots/latest.png";
-        var img = CaptureScreen();
-        using (var fs = new FileStream(filePath, FileMode.Create))
-        {
-            img.Save(fs, System.Drawing.Imaging.ImageFormat.Png);
-        }
-        return filePath;
-    }
-
     public async Task<string> TakeAndUploadScreenshot()
     {
-        var img = TakeScreenshot();
-        var fileUrl = await discord.UploadFile(img);
+        var img = screen.TakeScreenshot();
+        var fileUrl = await UploadImage(img);
+        return fileUrl;
+    }
+
+    public async Task<string> UploadImage(string imagePath)
+    {
+        var fileUrl = await discord.UploadFile(imagePath);
         return fileUrl;
     }
 

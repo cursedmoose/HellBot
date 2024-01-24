@@ -185,5 +185,14 @@ namespace TwitchBot.Assistant
 
             return;
         }
+
+        public async Task ReadClipboardImage()
+        {
+            var filePath = "images/screenshots/clipboard.png";
+            var imageUrl = await Server.Instance.UploadImage(filePath);
+            var text = await Server.Instance.chatgpt.ExtractTextFromImage(imageUrl);
+            log.Info(text);
+            PlayTts(text);
+        }
     }
 }
