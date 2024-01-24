@@ -19,6 +19,7 @@ namespace TwitchBot.OBS.Scene
         public const string MainScene = "Main Scene";
         public const string Characters = "Characters";
         public const string Dice = "Dice";
+        public const string ScreenReader = "ScreenReader";
 
         public static readonly ObsSceneId Ads = new(MainScene, 10);
         public static readonly ObsSceneId LastImage = new(MainScene, 18);
@@ -75,6 +76,7 @@ namespace TwitchBot.OBS.Scene
         public static readonly ObsSceneId Dice_20 = new(Dice, 26);
         // public static readonly ObsSceneId[] AllDice = { Dice_01, Dice_02 };
 
+        public static readonly ObsSceneId ScreenReaderRegion = new(ScreenReader, 6);
 
     public static ObsSceneId? GetImageSource(string username)
         {

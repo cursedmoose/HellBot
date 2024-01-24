@@ -1,5 +1,6 @@
 ﻿using OBSWebsocketDotNet;
 using OBSWebsocketDotNet.Communication;
+using OBSWebsocketDotNet.Types.Events;
 using TwitchBot.OBS.Scene;
 
 namespace TwitchBot.OBS
@@ -17,11 +18,17 @@ namespace TwitchBot.OBS
             obs = new OBSWebsocket();
             obs.Connected += OnConnect;
             obs.Disconnected += OnDisconnect;
+            obs.SceneItemEnableStateChanged += OnSceneChange;
 
             if (Enabled)
             {
                 obs.ConnectAsync("ws://localhost:4455/", "");
             }
+        }
+
+        public void OnSceneChange(object? sender, SceneItemEnableStateChangedEventArgs e)
+        {
+            log.Info($"[Scene Changed] {e.SceneName}:{e.SceneItemId} = {e.SceneItemEnabled}");
         }
 
         public void Disconnect()
@@ -50,7 +57,7 @@ namespace TwitchBot.OBS
             PrintSceneList(ObsScenes.MainScene);
             PrintSceneList(ObsScenes.Characters);
             PrintSceneList(ObsScenes.Dice);
-
+            PrintSceneList(ObsScenes.ScreenReader);
         }
 
         private void PrintSceneList(string scene)
@@ -86,6 +93,14 @@ namespace TwitchBot.OBS
         public void DisableScene(ObsSceneId scene)
         {
             DisableScene(scene.SceneName, scene.ItemId);
+        }
+
+        public string TakeSceneshot(string scene = ObsScenes.ScreenReader)
+        {
+            var filePath = "images/screenshots/screenreader.png";
+            var path = Path.GetFullPath(filePath);
+            obs.SaveSourceScreenshot(scene, "png", path);
+            return filePath;
         }
 
     }
