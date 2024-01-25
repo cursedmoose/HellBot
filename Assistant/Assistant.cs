@@ -2,6 +2,7 @@
 using TwitchBot.Discord;
 using TwitchBot.ElevenLabs;
 using TwitchBot.OBS.Scene;
+using TwitchBot.ScreenCapture;
 using TwitchLib.Client.Models;
 
 namespace TwitchBot.Assistant
@@ -186,9 +187,8 @@ namespace TwitchBot.Assistant
             return;
         }
 
-        public async Task ReadClipboardImage()
+        public async Task ReadImage(string filePath = ImageFiles.Region)
         {
-            var filePath = "images/screenshots/clipboard.png";
             var imageUrl = await Server.Instance.UploadImage(filePath);
             var text = await Server.Instance.chatgpt.ExtractTextFromImage(imageUrl);
             log.Info(text);

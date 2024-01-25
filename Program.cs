@@ -16,6 +16,7 @@ using TwitchBot.CommandLine.Commands.OpenAI;
 using TwitchBot.CommandLine.Commands.OBS;
 using TwitchBot.SpeechToText;
 using TwitchBot.ScreenCapture;
+using TwitchBot.Hotkeys;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -53,6 +54,7 @@ List<ServerCommand> Commands = new()
     #endregion
 };
 ServerCommand.ValidateCommandList(Commands);
+HotKeyManager.Initialize();
 
 while (true)
 {
