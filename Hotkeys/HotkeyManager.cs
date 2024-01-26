@@ -32,7 +32,7 @@ namespace TwitchBot.Hotkeys
             HotKeyPressed += new EventHandler<HotKeyEventArgs>(HotKeyManager_HotKeyPressed);
             
         }
-        private static void HotKeyManager_HotKeyPressed(object? sender, HotKeyEventArgs e)
+        private static async void HotKeyManager_HotKeyPressed(object? sender, HotKeyEventArgs e)
         {
             Hotkey hotkeyPressed = new(Keys: e.Key, Modifiers: e.Modifiers);
             Console.WriteLine($"Keys Pressed: {hotkeyPressed.Modifiers}+{hotkeyPressed.Keys}");
@@ -45,7 +45,7 @@ namespace TwitchBot.Hotkeys
             {
                 Console.WriteLine("Reading selected screen region...");
                 Server.Instance.screen.TakeScreenRegion();
-                Server.Instance.Assistant.ReadImage(ImageFiles.Region);
+                await Server.Instance.Narrator.ReadImage(ImageFiles.Region);
             }
         }
 

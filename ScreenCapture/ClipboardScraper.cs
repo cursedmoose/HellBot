@@ -95,7 +95,7 @@
                 {
                     image.Save(fs, System.Drawing.Imaging.ImageFormat.Png);
                 }
-                await Server.Instance.Assistant.ReadImage(ImageFiles.Clipboard);
+                await Server.Instance.Narrator.ReadImage(ImageFiles.Clipboard);
             }
             await Task.Delay(1_000);
         }
