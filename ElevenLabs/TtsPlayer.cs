@@ -1,6 +1,7 @@
 ﻿using NAudio.Wave;
 using System.Diagnostics;
 using System.Media;
+using System.Net;
 using System.Net.Http.Json;
 using System.Runtime.Versioning;
 using static TwitchBot.Config.ElevenLabsConfig;
@@ -13,6 +14,11 @@ namespace TwitchBot.ElevenLabs
 
         const string TTS_API = "https://api.elevenlabs.io/v1/text-to-speech/{0}";
         const string TTS_API_LATENCY_OPTIMIZED = "https://api.elevenlabs.io/v1/text-to-speech/{0}?optimize_streaming_latency=3";
+        const string TTS_STREAM_API = "https://api.elevenlabs.io/v1/text-to-speech/{0}/stream";
+        const string MODEL_TURBO = "eleven_turbo_v2";
+        const string MODEL_NORMAL = "eleven_monolingual_v1";
+        const string MODEL_BEST = "eleven_multilingual_v2";
+        const string CHOSEN_MODEL = MODEL_BEST;
         const float STABILITY = 0.33f;
         const float SIMILARITY = 0.66f;
         const float STYLE = 0.75f;
@@ -23,7 +29,7 @@ namespace TwitchBot.ElevenLabs
             float Style = STYLE,
             bool Use_speaker_boost = false
         );
-        record PostTtsRequest(string Text, VoiceSettings Voice_settings);
+        record PostTtsRequest(string Text, VoiceSettings Voice_settings, string Model_id);
 
         private static void Log(string message)
         {
@@ -35,13 +41,14 @@ namespace TwitchBot.ElevenLabs
             var url = string.Format(TTS_API_LATENCY_OPTIMIZED, profile.Voice.VoiceId);
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             var json = new PostTtsRequest(
-                Text: tts, 
+                Text: tts,
                 Voice_settings: new VoiceSettings(
                     Stability: profile.Stability,
                     Similarity_boost: profile.Similarity,
                     Style: profile.Style,
                     Use_speaker_boost: false
-                    )
+                    ),
+                Model_id: CHOSEN_MODEL
                 );
             request.Content = JsonContent.Create<PostTtsRequest>(json);
 
@@ -113,10 +120,13 @@ namespace TwitchBot.ElevenLabs
                     {
                         soundPlayer.Stream.Position = 0;
                     }
+                    timer.Stop();
+                    Log($"[MSG-{messageId}] mp3 decode: {timer.ElapsedMilliseconds}ms");
+                    timer.Restart();
                     soundPlayer.PlaySync();
+                    Log($"[MSG-{messageId}] mp3 length: {timer.ElapsedMilliseconds}ms");
+
                 }
-                timer.Stop();
-                Log($"[MSG-{messageId}] mp3 decode: {timer.ElapsedMilliseconds}ms");
             }
             catch (Exception e)
             {
