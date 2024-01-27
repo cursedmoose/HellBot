@@ -8,12 +8,18 @@ namespace TwitchBot.ScreenCapture
         readonly Logger log = new("ScreenCapturer");
         private ClipboardScraper scraper;
         private ScreenRegionSelector selectorForm;
-        private Rectangle selectedRegion; // = new Rectangle(0, 0, 75, 200);
+        private Rectangle selectedRegion; // = new Rectangle(0, 0, 100, 100);
+
+        public int SelectedRegionArea
+        {
+            get { return selectedRegion.Height * selectedRegion.Width; }
+        }
 
         public ScreenCapturer()
         {
             scraper = new(CaptureScreen());
             selectorForm = new ScreenRegionSelector(CaptureScreen());
+            selectedRegion = new Rectangle(0, 0, 0, 0);
         }
 
         private Bitmap CaptureScreen()

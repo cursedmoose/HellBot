@@ -1,5 +1,4 @@
-﻿using System.Net.Mail;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using TwitchBot.ScreenCapture;
 
 namespace TwitchBot.Hotkeys
@@ -43,9 +42,16 @@ namespace TwitchBot.Hotkeys
             }
             else if (hotkeyPressed == AltF2)
             {
-                Console.WriteLine("Reading selected screen region...");
-                Server.Instance.screen.TakeScreenRegion();
-                await Server.Instance.Narrator.ReadImage(ImageFiles.Region);
+                if (Server.Instance.screen.SelectedRegionArea > 9)
+                {
+                    Console.WriteLine("Reading selected screen region...");
+                    Server.Instance.screen.TakeScreenRegion();
+                    await Server.Instance.Narrator.ReadImage(ImageFiles.Region);
+                }
+                else
+                {
+                    Console.WriteLine("[HotkeyManager] Warning: Screen Area too small to take a picture. Please select one first.");
+                }
             }
         }
 
