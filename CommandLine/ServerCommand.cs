@@ -36,8 +36,8 @@
 
         protected string StripCommandFromMessage(string command)
         {
-            var aliasUsed = Aliases.FirstOrDefault((command) => command.StartsWith(command, CompareBy), Command);
-            return command.Replace(Command, string.Empty, CompareBy).Trim();
+            var aliasUsed = Aliases.FirstOrDefault((alias) => command.StartsWith(alias, CompareBy), Command);
+            return command.Replace(aliasUsed, string.Empty, CompareBy).Trim();
         }
 
         public static void ValidateCommandList(List<ServerCommand> commandList)

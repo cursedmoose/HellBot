@@ -41,6 +41,8 @@ List<ServerCommand> Commands = new()
     new StartAssistant(),
     new StopAssistant(),
     new RunAdvertisement(),
+    new PlayTts(),
+    new Narrate(),
     #endregion
     #region Discord Commands
     new GetCurrentPresence(),
@@ -92,22 +94,34 @@ while (true)
     }
 }
 
+public class ServerConfig
+{
+    public static readonly bool ENABLED = true;
+    public static readonly bool DISABLED = false;
+
+    public static readonly bool Twitch = DISABLED;
+    public static readonly bool ElevenLabs = ENABLED;
+    public static readonly bool Discord = ENABLED;
+    public static readonly bool ChatGpt = ENABLED;
+    public static readonly bool Obs = ENABLED;
+    public static readonly bool Speech = DISABLED;
+}
+
 public class Server
 {
     public static readonly CultureInfo LOG_FORMAT = new("en-GB");
     public static readonly Regex WEBSITE_REGEX = new("[(http(s)?):\\/\\/(www\\.)?a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)", RegexOptions.IgnoreCase);
     public static readonly Regex EMOTE_REGEX = new("cursed99");
 
-    static readonly bool GLOBAL_ENABLE = true;
-
     public Assistant Assistant = new Sheogorath();
+    public Assistant Narrator = new Werner();
 
-    public TwitchIrcBot twitch = new(GLOBAL_ENABLE);
-    public ElevenLabs elevenlabs = new(GLOBAL_ENABLE);
-    public DiscordBot discord = new(GLOBAL_ENABLE);
-    public ChatGpt chatgpt = new(GLOBAL_ENABLE);
-    public ObsClient obs = new(GLOBAL_ENABLE);
-    public SpeechToText speech = new(GLOBAL_ENABLE);
+    public TwitchIrcBot twitch = new(ServerConfig.Twitch);
+    public ElevenLabs elevenlabs = new(ServerConfig.ElevenLabs);
+    public DiscordBot discord = new(ServerConfig.Discord);
+    public ChatGpt chatgpt = new(ServerConfig.ChatGpt);
+    public ObsClient obs = new(ServerConfig.Obs);
+    public SpeechToText speech = new(ServerConfig.Speech);
     public HttpClient web = new();
     public FileGenerator file = new();
     public ScreenCapturer screen = new();

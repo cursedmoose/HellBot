@@ -5,6 +5,7 @@
         public StopServer() : base("exit")
         {
             Aliases.Add("quit");
+            Aliases.Add("shutdown");
         }
 
         public override void Handle(Server server, string command)
