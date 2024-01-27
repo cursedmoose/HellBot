@@ -21,15 +21,10 @@ namespace TwitchBot.SpeechToText
 
             recognizer.SpeechRecognized += onSpeechRecognized;
             recognizer.SetInputToDefaultAudioDevice();
-            Log.Info($"Silence Timeout: {recognizer.InitialSilenceTimeout}");
-            Log.Info($"Babble Timeout: {recognizer.BabbleTimeout}");
-            Log.Info($"EndSilence Timeout: {recognizer.EndSilenceTimeout}");
-            Log.Info($"EndSilenceAmbiguous Timeout: {recognizer.EndSilenceTimeoutAmbiguous}");
-
-            Log.Info("Starting Speech Recognition Engine..");
 
             if (enabled)
             {
+                Log.Info("Starting Speech Recognition Engine..");
                 recognizer.RecognizeAsync(RecognizeMode.Multiple);
             }
         }

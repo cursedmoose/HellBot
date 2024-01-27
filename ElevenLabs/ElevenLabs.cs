@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
+using TwitchBot.OBS.Scene;
 using static TwitchBot.Config.ElevenLabsConfig;
 
 namespace TwitchBot.ElevenLabs
@@ -36,8 +38,8 @@ namespace TwitchBot.ElevenLabs
             Enabled = enabled;
             client = new HttpClient();
             client.DefaultRequestHeaders.Add("accept", "audio/mpeg");
-            client.DefaultRequestHeaders.Add("xi-api-key", API_KEY); 
-            
+            client.DefaultRequestHeaders.Add("xi-api-key", API_KEY);
+
             charactersStartedAt = GetUserSubscriptionInfo().character_count;
         }
 
@@ -61,7 +63,6 @@ namespace TwitchBot.ElevenLabs
                 var elevenLabsResponse = MakeTtsRequest(cleanedMessage, voiceProfile);
                 if (elevenLabsResponse.IsSuccessStatusCode)
                 {
-                    //TtsPlayer.Play(ttsMessage, voiceProfile);
                     using Stream responseStream = elevenLabsResponse.Content.ReadAsStream();
                     TtsPlayer.PlayResponseStream(responseStream);
                 }
@@ -69,7 +70,7 @@ namespace TwitchBot.ElevenLabs
                 {
                     log.Error($"{elevenLabsResponse.StatusCode} Error when calling API.");
                 }
-            } 
+            }
             catch (Exception e)
             {
                 log.Info($"Exception trying to play TTS: {e.Message}");
@@ -118,20 +119,47 @@ namespace TwitchBot.ElevenLabs
             return cleanedString;
         }
 
-
         public SubscriptionInfoResponse GetUserSubscriptionInfo()
         {
             return SubscriptionInfo.call(client);
         }
 
-
-        public async void StreamTts()
+        private void RunTtsStreamTask(VoiceProfile profile, string tts, ObsSceneId? obs)
         {
-            var message = BuildTtsRequest(TTS_STREAM_API, MODEL_TURBO, "woopie", VoiceProfiles.Sheogorath);
-            var response = await client.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
-            var stream = await response.Content.ReadAsStreamAsync();
-            TtsPlayer.PlayResponseStream(stream);
-            //client.GetStreamAsync(TTS_STREAM_API);
+            var program_arguments = string.Join(" ", "/C python ElevenLabs/labs.py", API_KEY, profile.Voice.VoiceId, CHOSEN_MODEL);
+            var tts_arguments = buildStreamArgs(tts);
+            var all_arguments = string.Join(" ", program_arguments, tts_arguments);
+
+            Process process = new Process();
+            process.StartInfo.FileName = "cmd.exe";
+            process.StartInfo.Arguments = all_arguments;
+            process.StartInfo.CreateNoWindow = false;
+
+            lock (Assistant.Assistant.TtsLock)
+            {
+                obs?.Enable();
+                process.Start();
+                process.WaitForExit();
+                obs?.Disable();
+            }
+        }
+
+        private string buildStreamArgs(string inputString)
+        {
+            string[] sentences = Regex.Split(inputString, @"(?<=[\.!\?])\s+");
+            List<string> sentence_arguments = new List<string>();
+
+            foreach (string sentence in sentences)
+            {
+                sentence_arguments.Add(string.Join("", "\"", sentence, "\""));
+            }
+
+            return string.Join(" ", sentence_arguments.ToArray());
+        }
+
+        public void StreamTts(VoiceProfile profile, string tts, ObsSceneId? obs = null)
+        {
+            Task.Run(() => RunTtsStreamTask(profile, tts, obs));
         }
 
     }

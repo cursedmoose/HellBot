@@ -1,4 +1,5 @@
-﻿using TwitchBot.ChatGpt;
+﻿using System.Diagnostics;
+using TwitchBot.ChatGpt;
 using TwitchBot.Discord;
 using TwitchBot.ElevenLabs;
 using TwitchBot.OBS.Scene;
@@ -16,19 +17,12 @@ namespace TwitchBot.Assistant
             Obs = sceneId;
             log = new(Name);
             Agent = new("assistant", Name);
-            ttsStream = new(voice);
-
-            if (ServerConfig.ElevenLabs == ServerConfig.ENABLED)
-            {
-                ttsStream.Start();
-            }
         }
 
         public static readonly object TtsLock = new();
 
         public string Name { get; private set; }
         public VoiceProfile Voice { get; private set; }
-        readonly TtsWebsocket ttsStream;
         public ObsSceneId Obs { get; private set; }
         protected readonly Logger log;
         protected readonly Random Random = new Random();
@@ -77,7 +71,7 @@ namespace TwitchBot.Assistant
 
         public void StreamTts(string message)
         {
-            ttsStream.Send(message);
+            Server.Instance.elevenlabs.StreamTts(Voice, message, Obs);
         }
 
         public async Task Chatter()
@@ -208,12 +202,11 @@ namespace TwitchBot.Assistant
 
         public async Task ReadImage(string filePath = ImageFiles.Region)
         {
-            var imageUrl = await Server.Instance.UploadImage(filePath);
-            var text = await Server.Instance.chatgpt.ExtractTextFromImage(imageUrl);
-            //var text = ;
-            log.Info(text);
-            PlayTts(text);
-            //StreamTts(text);
+            var stopwatch = Stopwatch.StartNew();
+            var text = await Server.Instance.imageText.ReadText(filePath);
+            stopwatch.Stop();
+            log.Info($"Model time: {stopwatch.ElapsedMilliseconds}ms");
+            StreamTts(text);
         }
     }
 }

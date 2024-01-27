@@ -17,6 +17,7 @@ using TwitchBot.CommandLine.Commands.OBS;
 using TwitchBot.SpeechToText;
 using TwitchBot.ScreenCapture;
 using TwitchBot.Hotkeys;
+using TwitchBot.OCR;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -122,6 +123,7 @@ public class Server
     public ChatGpt chatgpt = new(ServerConfig.ChatGpt);
     public ObsClient obs = new(ServerConfig.Obs);
     public SpeechToText speech = new(ServerConfig.Speech);
+    public ImageTextReader imageText = new TesseractImageReader();
     public HttpClient web = new();
     public FileGenerator file = new();
     public ScreenCapturer screen = new();

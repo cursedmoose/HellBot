@@ -9,7 +9,7 @@
         public override void Handle(Server server, string command)
         {
             var prompt = StripCommandFromMessage(command);
-            server.Narrator.StreamTts(prompt);
+            Server.Instance.elevenlabs.StreamTts(server.Narrator.Voice, prompt, server.Narrator.Obs);
         }
     }
 }
