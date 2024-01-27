@@ -1,7 +1,6 @@
 ﻿using NAudio.Wave;
 using System.Diagnostics;
 using System.Media;
-using System.Net;
 using System.Net.Http.Json;
 using System.Runtime.Versioning;
 using static TwitchBot.Config.ElevenLabsConfig;
@@ -64,48 +63,20 @@ namespace TwitchBot.ElevenLabs
             return cleanedString;
         }
 
-        [SupportedOSPlatform("WINDOWS")]
-        public static void Play(string ttsMessage, VoiceProfile voiceProfile)
+        public static void PlayResponseStream(Stream responseStream)
         {
-            var cleanedMessage = CleanStringForTts(ttsMessage);
-
-            if (voiceProfile == null || cleanedMessage.Length == 0)
-            {
-                return;
-            }
             int messageId = counter++;
-            Stopwatch timer;
-            Log($"[MSG-{messageId}] Initiated. Message: {cleanedMessage}");
-
-            var client = new HttpClient();
-
-            client.DefaultRequestHeaders.Add("accept", "audio/mpeg");
-            client.DefaultRequestHeaders.Add("xi-api-key", API_KEY);
-            var ttsRequest = BuildTtsRequest(cleanedMessage, voiceProfile);
-            timer = Stopwatch.StartNew();
-            var response2 = client.Send(ttsRequest);
-            timer.Stop();
-            Log($"[MSG-{messageId}] API call: {timer.ElapsedMilliseconds}ms");
-
-            if (!response2.IsSuccessStatusCode)
-            {
-                Log($"[MSG-{messageId}] Error: API returned {response2.StatusCode}");
-                return;
-            }
-
             try
             {
-                timer.Restart();
+                Stopwatch timer = Stopwatch.StartNew();
                 using (Stream ms = new MemoryStream())
                 {
-                    using (Stream stream = response2.Content.ReadAsStream())
+  
+                    byte[] buffer = new byte[32768];
+                    int read;
+                    while ((read = responseStream.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        byte[] buffer = new byte[32768];
-                        int read;
-                        while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                        {
-                            ms.Write(buffer, 0, read);
-                        }
+                        ms.Write(buffer, 0, read);
                     }
 
                     ms.Position = 0;
@@ -124,6 +95,7 @@ namespace TwitchBot.ElevenLabs
                     Log($"[MSG-{messageId}] mp3 decode: {timer.ElapsedMilliseconds}ms");
                     timer.Restart();
                     soundPlayer.PlaySync();
+                    timer.Stop();
                     Log($"[MSG-{messageId}] mp3 length: {timer.ElapsedMilliseconds}ms");
 
                 }

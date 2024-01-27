@@ -16,12 +16,19 @@ namespace TwitchBot.Assistant
             Obs = sceneId;
             log = new(Name);
             Agent = new("assistant", Name);
+            ttsStream = new(voice);
+
+            if (ServerConfig.ElevenLabs == ServerConfig.ENABLED)
+            {
+                ttsStream.Start();
+            }
         }
 
-        static readonly object TtsLock = new();
+        public static readonly object TtsLock = new();
 
         public string Name { get; private set; }
         public VoiceProfile Voice { get; private set; }
+        readonly TtsWebsocket ttsStream;
         public ObsSceneId Obs { get; private set; }
         protected readonly Logger log;
         protected readonly Random Random = new Random();
@@ -54,11 +61,23 @@ namespace TwitchBot.Assistant
 
         public void PlayTts(string message)
         {
-            lock (TtsLock) {
-                Obs.Enable();
-                Server.Instance.elevenlabs.PlayTts(message, Voice);
-                Obs.Disable();
+            var cleanedMessage = Server.Instance.elevenlabs.CleanStringForTts(message);
+            var elevenLabsResponse = Server.Instance.elevenlabs.MakeTtsRequest(cleanedMessage, Voice);
+            if (elevenLabsResponse.IsSuccessStatusCode)
+            {
+                lock (TtsLock)
+                {
+                    Obs.Enable();
+                    using Stream responseStream = elevenLabsResponse.Content.ReadAsStream();
+                    TtsPlayer.PlayResponseStream(responseStream);
+                    Obs.Disable();
+                }
             }
+        }
+
+        public void StreamTts(string message)
+        {
+            ttsStream.Send(message);
         }
 
         public async Task Chatter()
@@ -191,8 +210,10 @@ namespace TwitchBot.Assistant
         {
             var imageUrl = await Server.Instance.UploadImage(filePath);
             var text = await Server.Instance.chatgpt.ExtractTextFromImage(imageUrl);
+            //var text = ;
             log.Info(text);
             PlayTts(text);
+            //StreamTts(text);
         }
     }
 }

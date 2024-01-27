@@ -11,3 +11,10 @@ but too much
  - ElevenLabs
  - Discord
  - Github Pages / Jekyll
+
+## Usage
+For when I forget...
+
+- Most things run on boot
+- Start Assistant AI with "start"
+- See list of Commands with "commands"
