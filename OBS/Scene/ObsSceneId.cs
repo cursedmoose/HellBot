@@ -75,7 +75,6 @@ namespace TwitchBot.OBS.Scene
         public static readonly ObsSceneId Dice_18 = new(Dice, 24);
         public static readonly ObsSceneId Dice_19 = new(Dice, 25);
         public static readonly ObsSceneId Dice_20 = new(Dice, 26);
-        // public static readonly ObsSceneId[] AllDice = { Dice_01, Dice_02 };
 
         public static readonly ObsSceneId ScreenReaderRegion = new(ScreenReader, 6);
 

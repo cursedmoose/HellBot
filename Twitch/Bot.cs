@@ -191,7 +191,6 @@ namespace TwitchBot.Twitch
 
         public void RespondTo(ChatMessage message, string withMessage)
         {
-            // log.Info($"Sending {withMessage} to {message.Channel}");
             client.SendMessage(message.Channel, withMessage);
         }
 

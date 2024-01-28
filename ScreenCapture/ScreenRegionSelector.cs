@@ -6,17 +6,14 @@ namespace TwitchBot.ScreenCapture
     public partial class ScreenRegionSelector : Form
     {
         private PictureBox pictureBox;
-        //These variables control the mouse position
-        int selectX;
-        int selectY;
+        int mouseSelectX;
+        int mouseSelectY;
         int selectWidth;
         int selectHeight;
-        private Pen selectPen;
         private Brush selectBrush;
         private Image screen;
 
-        //This variable control when you start the right click
-        bool start = false;
+        bool hasStartedDrawing = false;
         public ScreenRegionSelector(Image screen)
         {
             InitializeComponent();
@@ -27,7 +24,6 @@ namespace TwitchBot.ScreenCapture
             FormBorderStyle = FormBorderStyle.None;
             SetStyle(ControlStyles.SupportsTransparentBackColor, true);
             BackColor = Color.Black;
-            //TransparencyKey = Color.Black;
             Opacity = 0.2;
             ControlBox = false;
             pictureBox = new PictureBox();
@@ -38,7 +34,6 @@ namespace TwitchBot.ScreenCapture
             pictureBox.MouseMove += PictureBox_MouseMove;
             pictureBox.MouseUp += PictureBox_MouseUp;
             pictureBox.BackColor = Color.Transparent;
-            selectPen = new Pen(Color.Red, 5);
             selectBrush = Brushes.Yellow;
             Controls.Add(pictureBox);
             this.screen = screen;
@@ -46,96 +41,64 @@ namespace TwitchBot.ScreenCapture
 
         private void ScreenRegionSelector_Load(object sender, EventArgs e)
         {
-            //this.Hide();
-
-            //Create a temporal memory stream for the image
             using (MemoryStream s = new MemoryStream())
             {
-                //save graphic variable into memory
                 screen.Save(s, ImageFormat.Bmp);
-                pictureBox.Size = new System.Drawing.Size(this.Width, this.Height);
-                //set the picture box with temporary stream
-                //pictureBox.Image = Image.FromStream(s);
+                pictureBox.Size = new Size(this.Width, this.Height);
             }
-            //Show Form
-            //this.Show();
-            //Cross Cursor
             Cursor = Cursors.Cross;
         }
 
         private void PictureBox_MouseMove(object? sender, MouseEventArgs e)
         {
-            //validate if there is an image
-            //if (pictureBox.Image == null)
-            //    return;
-            //validate if right-click was trigger
-            if (start)
+            if (hasStartedDrawing)
             {
-                //refresh picture box
                 pictureBox.Refresh();
-                //set corner square to mouse coordinates
-                selectWidth = e.X - selectX;
-                selectHeight = e.Y - selectY;
-                //draw dotted rectangle
-                //pictureBox.CreateGraphics().DrawRectangle(selectPen, selectX, selectY, selectWidth, selectHeight);
-                pictureBox.CreateGraphics().FillRectangle(selectBrush, selectX, selectY, selectWidth, selectHeight);
+                selectWidth = e.X - mouseSelectX;
+                selectHeight = e.Y - mouseSelectY;
+                pictureBox.CreateGraphics().FillRectangle(selectBrush, mouseSelectX, mouseSelectY, selectWidth, selectHeight);
 
             }
         }
 
         private void PictureBox_MouseUp(object? sender, MouseEventArgs e)
         {
-            if (start)
+            if (hasStartedDrawing)
             {
-                if (e.Button == System.Windows.Forms.MouseButtons.Left)
+                if (e.Button == MouseButtons.Left)
                 {
                     pictureBox.Refresh();
-                    selectWidth = e.X - selectX;
-                    selectHeight = e.Y - selectY;
-                    //pictureBox.CreateGraphics().DrawRectangle(selectPen, selectX, selectY, selectWidth, selectHeight);
-                    pictureBox.CreateGraphics().FillRectangle(selectBrush, selectX, selectY, selectWidth, selectHeight);
+                    selectWidth = e.X - mouseSelectX;
+                    selectHeight = e.Y - mouseSelectY;
+                    pictureBox.CreateGraphics().FillRectangle(selectBrush, mouseSelectX, mouseSelectY, selectWidth, selectHeight);
 
                 }
-                start = false;
-
-                //function save image to clipboard
+                hasStartedDrawing = false;
                 SaveToClipboard();
             }
         }
 
         private void PictureBox_MouseDown(object? sender, MouseEventArgs e)
         {
-            //validate when user right-click
-            if (!start)
+            if (!hasStartedDrawing)
             {
-                if (e.Button == System.Windows.Forms.MouseButtons.Left)
+                if (e.Button == MouseButtons.Left)
                 {
-                    //starts coordinates for rectangle
-                    selectX = e.X;
-                    selectY = e.Y;
-                    //selectPen = new Pen(Color.Red, 1);
-                    selectPen.DashStyle = DashStyle.Solid;
+                    mouseSelectX = e.X;
+                    mouseSelectY = e.Y;
                 }
-                //refresh picture box
                 pictureBox.Refresh();
-                //start control variable for draw rectangle
-                start = true;
-            }
-            else
-            {
+                hasStartedDrawing = true;
             }
         }
 
         private void SaveToClipboard()
         {
-            //validate if something selected
             if (selectWidth > 0)
             {
-                Rectangle rect = new Rectangle(selectX, selectY, selectWidth, selectHeight);
+                Rectangle rect = new Rectangle(mouseSelectX, mouseSelectY, selectWidth, selectHeight);
                 Server.Instance.screen.SetScreenRegion(rect);
             }
-            //End application
-            //Application.Exit();
             this.Hide();
         }
     }

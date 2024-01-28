@@ -49,8 +49,6 @@ namespace TwitchBot.SpeechToText
                     else if (command.Contains("roll dice"))
                     {
                         await Server.Instance.Assistant.RollDice();
-                        //var result = new Random().Next(1, 21);
-                        //Server.Instance.Assistant.PlayTts($"Looks like you rolled a {result}");
                     }
                 }
                 catch (Exception ex)

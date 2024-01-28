@@ -10,13 +10,10 @@ namespace TwitchBot.ElevenLabs
         float Style = 0.66f
     )
     {
-        //public VoiceProfile(Voice voice, float Stability, float Similarity, float Style = 0.66f)
-        //    : this(voice.VoiceName, voice.VoiceId, Stability, Similarity, Style) { }
         public VoiceProfile Copy(float stability = -1f, float similarity = -1f, float style = -1f)
         {
             return new VoiceProfile(
                 Voice: this.Voice, 
-                // VoiceId: this.VoiceId,
                 Stability: stability == -1f ? this.Stability : stability,
                 Similarity: similarity == -1f ? this.Similarity : similarity,
                 Style: style == -1f ? this.Style : style
@@ -42,6 +39,7 @@ namespace TwitchBot.ElevenLabs
         public static readonly Voice MasculineRumor = new(VoiceName: "Rumor (M)", VoiceId: "Fd3Nv8dOlr8Sd2GrltVV");
         public static readonly Voice FeminineRumor = new(VoiceName: "Rumor (F)", VoiceId: "wkMAp1DzoqsRcv2sVcBs");
         public static readonly Voice Herzog = new(VoiceName: "Werner", VoiceId: "mkB4DV5jXs2291mKTWgO");
+        public static readonly Voice Streamer = new(VoiceName: "Streamer", VoiceId: "zm16dLmkCXN8Q1bCHbrA");
     }
 
     public static class VoiceProfiles
@@ -59,6 +57,7 @@ namespace TwitchBot.ElevenLabs
         public static readonly VoiceProfile TaraStrong = new(Voices.TaraStrong, 0.2f, 0.8f);
         public static readonly VoiceProfile Moira = new(Voices.Moira, 0.2f, 0.8f);
         public static readonly VoiceProfile Werner = new(Voices.Herzog, 0.3f, 0.75f, 0.7f);
+        public static readonly VoiceProfile Streamer = new(Voices.Streamer, 0.3f, 0.75f, 0.66f);
 
         public static readonly VoiceProfile MasculineRumor = new(Voices.MasculineRumor, 0.9f, 0.9f);
         public static readonly VoiceProfile FeminineRumor = new(Voices.FeminineRumor, 0.9f, 0.9f);

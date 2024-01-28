@@ -32,9 +32,6 @@
                     Log.Info($"No way to invoke {options}");
                 }
             }
-
-            // _ = server.Assistant.StartAI();
-            //_ = server.screen.StartScraper();
         }
     }
 }
