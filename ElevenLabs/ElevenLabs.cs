@@ -15,7 +15,6 @@ namespace TwitchBot.ElevenLabs
         public const string MODEL_NORMAL = "eleven_monolingual_v1";
         public const string MODEL_BEST = "eleven_multilingual_v2";
 
-
         record VoiceSettings(
             float Stability = 0.33f,
             float Similarity_boost = 0.66f,
@@ -126,7 +125,7 @@ namespace TwitchBot.ElevenLabs
 
         private void RunTtsStreamTask(VoiceProfile profile, string tts, ObsSceneId? obs)
         {
-            var program_arguments = string.Join(" ", "/C python ElevenLabs/labs.py", API_KEY, profile.Voice.VoiceId, CHOSEN_MODEL);
+            var program_arguments = string.Join(" ", "/C python ElevenLabs/labs.py", API_KEY, profile.Voice.VoiceId, MODEL_TURBO);
             var tts_arguments = buildStreamArgs(tts);
             var all_arguments = string.Join(" ", program_arguments, tts_arguments);
 
@@ -151,7 +150,11 @@ namespace TwitchBot.ElevenLabs
 
             foreach (string sentence in sentences)
             {
-                sentence_arguments.Add(string.Join("", "\"", sentence, "\""));
+                var cleanSentence = sentence
+                    .Replace("\n", " ")
+                    .Replace("\"", "\\\"")
+                    .Replace("|", "I");
+                sentence_arguments.Add(string.Join("", "\"", cleanSentence, "\""));
             }
 
             return string.Join(" ", sentence_arguments.ToArray());
