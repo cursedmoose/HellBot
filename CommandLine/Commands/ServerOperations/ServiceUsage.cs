@@ -1,4 +1,4 @@
-﻿namespace TwitchBot.CommandLine.Commands
+﻿namespace TwitchBot.CommandLine.Commands.ServerOptions
 {
     internal class ServiceUsage : ServerCommand
     {

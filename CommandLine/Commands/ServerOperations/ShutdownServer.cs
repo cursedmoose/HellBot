@@ -1,8 +1,8 @@
-﻿namespace TwitchBot.CommandLine.Commands
+﻿namespace TwitchBot.CommandLine.Commands.ServerOptions
 {
-    internal class StopServer : ServerCommand
+    internal class ShutdownServer : ServerCommand
     {
-        public StopServer() : base("exit")
+        public ShutdownServer() : base("exit")
         {
             Aliases.Add("quit");
             Aliases.Add("shutdown");
@@ -10,7 +10,8 @@
 
         public override void Handle(Server server, string command)
         {
-            server.Assistant.StopAI().GetAwaiter().GetResult();
+            new ShutdownServer().Handle(server, command);
+
             server.Assistant.CleanUp();
             server.twitch.Stop();
             server.web.Dispose();

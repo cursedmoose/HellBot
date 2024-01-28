@@ -14,6 +14,7 @@ using TwitchBot.CommandLine.Commands.Assistant;
 using TwitchBot.CommandLine.Commands.Discord;
 using TwitchBot.CommandLine.Commands.OpenAI;
 using TwitchBot.CommandLine.Commands.OBS;
+using TwitchBot.CommandLine.Commands.ServerOptions;
 using TwitchBot.SpeechToText;
 using TwitchBot.ScreenCapture;
 using TwitchBot.Hotkeys;
@@ -34,13 +35,12 @@ List<ServerCommand> Commands = new()
     #region Server Commands
     new HealthCheck(),
     new ServiceUsage(),
-    new StopServer(),
+    new StartSubroutine(),
+    new StopSubroutine(),
     new TestCommand(),
     #endregion
     #region Assistant Commands
     new CleanUpAssistant(),
-    new StartAssistant(),
-    new StopAssistant(),
     new RunAdvertisement(),
     new PlayTts(),
     new Narrate(),
@@ -66,7 +66,7 @@ while (true)
     {
         continue;
     }
-    else if(next.StartsWith("commands"))
+    else if (next.StartsWith("commands"))
     {
         Console.WriteLine("Available Commands:");
         foreach (ServerCommand handler in Commands)
@@ -114,8 +114,19 @@ public class Server
     public static readonly Regex WEBSITE_REGEX = new("[(http(s)?):\\/\\/(www\\.)?a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)", RegexOptions.IgnoreCase);
     public static readonly Regex EMOTE_REGEX = new("cursed99");
 
-    public Assistant Assistant = new Sheogorath();
-    public Assistant Narrator = new Werner();
+    private Logger log = new("Server");
+
+    static Assistant Sheogorath = new Sheogorath();
+    static Assistant Werner = new Werner();
+
+    public Assistant Assistant = Sheogorath;
+    public Assistant Narrator = Werner;
+
+    private List<Assistant> Assistants = new()
+    {
+        Sheogorath,
+        Werner
+    };
 
     public TwitchIrcBot twitch = new(ServerConfig.Twitch);
     public ElevenLabs elevenlabs = new(ServerConfig.ElevenLabs);
@@ -165,6 +176,34 @@ public class Server
     {
         var fileUrl = await discord.UploadFile(imagePath);
         return fileUrl;
+    }
+
+    public void SetAssistant(string name)
+    {
+        var newAssistant = Assistants.Find((assistant) => string.Equals(assistant.Name, name, StringComparison.InvariantCultureIgnoreCase));
+        if (newAssistant != null)
+        {
+            Narrator = newAssistant;
+            log.Info($"Set Narrator to {name}");
+        }
+        else
+        {
+            log.Error($"Could not set Narrator to {name}");
+        }
+    }
+
+    public void SetNarrator(string name)
+    {
+        var newAssistant = Assistants.Find((assistant) => string.Equals(assistant.Name, name, StringComparison.InvariantCultureIgnoreCase));
+        if (newAssistant != null)
+        {
+            Assistant = newAssistant;
+            log.Info($"Set Assistant to {name}");
+        }
+        else
+        {
+            log.Error($"Could not set Assistant to {name}");
+        }
     }
 
     private Server()

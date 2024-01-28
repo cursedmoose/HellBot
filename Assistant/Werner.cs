@@ -29,9 +29,9 @@ namespace TwitchBot.Assistant
             throw new NotImplementedException();
         }
 
-        public override void CleanUp()
+        public override Task CleanUp()
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public override Task<bool> ConcludePoll(string title, string winner)

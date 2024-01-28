@@ -51,7 +51,7 @@ namespace TwitchBot.Assistant
         public abstract Task<int> RollDice(int diceMax = 20);
 
 
-        public abstract void CleanUp();
+        public abstract Task CleanUp();
 
         public void PlayTts(string message)
         {

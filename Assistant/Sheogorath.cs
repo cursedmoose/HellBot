@@ -39,7 +39,7 @@ namespace TwitchBot.Assistant
             return string.Format(PersonaPrompts.All[choice], Name);
         }
 
-        public override async void CleanUp()
+        public override async Task CleanUp()
         {
             await DeleteAllRewards();
         }

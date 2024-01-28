@@ -1,4 +1,4 @@
-﻿namespace TwitchBot.CommandLine.Commands
+﻿namespace TwitchBot.CommandLine.Commands.ServerOptions
 {
     internal class HealthCheck : ServerCommand
     {
@@ -9,7 +9,7 @@
 
         public override void Handle(Server server, string command)
         {
-            var AI_Status = server.Assistant.IsRunning() 
+            var AI_Status = server.Assistant.IsRunning()
                 ? "[Assistant] is running"
                 : "[Assistant] is NOT running";
             Log.Info(AI_Status);
