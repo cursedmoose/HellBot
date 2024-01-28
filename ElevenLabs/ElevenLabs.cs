@@ -15,6 +15,16 @@ namespace TwitchBot.ElevenLabs
         public const string MODEL_NORMAL = "eleven_monolingual_v1";
         public const string MODEL_BEST = "eleven_multilingual_v2";
 
+        public static readonly Dictionary<string, string> KnownModels = new()
+        {
+            { "best", MODEL_BEST },
+            { "normal", MODEL_NORMAL },
+            { "fastest", MODEL_TURBO },
+            { "eleven_turbo_v2", "eleven_turbo_v2" },
+            { "eleven_monolingual_v1", "eleven_monolingual_v1" },
+            { "eleven_multilingual_v2", "eleven_multilingual_v2" }
+        };
+
         record VoiceSettings(
             float Stability = 0.33f,
             float Similarity_boost = 0.66f,
@@ -25,6 +35,8 @@ namespace TwitchBot.ElevenLabs
 
         readonly string CHOSEN_MODEL = MODEL_BEST;
         readonly string CHOSEN_API = TTS_API_LATENCY_OPTIMIZED;
+        public string API_MODEL { get; private set; } = MODEL_BEST;
+        public string STREAM_MODEL { get; private set; } = MODEL_TURBO;
 
         readonly HttpClient client;
         public readonly long charactersStartedAt;
@@ -163,6 +175,30 @@ namespace TwitchBot.ElevenLabs
         public void StreamTts(VoiceProfile profile, string tts, ObsSceneId? obs = null)
         {
             Task.Run(() => RunTtsStreamTask(profile, tts, obs));
+        }
+
+        public void ChangeApiModel(string model)
+        {
+            try
+            {
+                API_MODEL = KnownModels[model];
+            }
+            catch
+            {
+                log.Error($"Unknown model {model}");
+            }
+        }
+
+        public void ChangeStreamModel(string model)
+        {
+            try
+            {
+                STREAM_MODEL = KnownModels[model];
+            }
+            catch
+            {
+                log.Error($"Unknown model {model}");
+            }
         }
 
     }
