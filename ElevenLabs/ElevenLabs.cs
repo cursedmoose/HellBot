@@ -38,6 +38,9 @@ namespace TwitchBot.ElevenLabs
         public string API_MODEL { get; private set; } = MODEL_BEST;
         public string STREAM_MODEL { get; private set; } = MODEL_TURBO;
 
+        public bool ShouldRemoveStartPattern = true;
+        public string START_PATTERN = @"^(\w)+\:";
+
         readonly HttpClient client;
         public readonly long charactersStartedAt;
         public static long CharactersUsed { get; private set; } = 0;
@@ -157,7 +160,13 @@ namespace TwitchBot.ElevenLabs
 
         private string buildStreamArgs(string inputString)
         {
-            string[] sentences = Regex.Split(inputString, @"(?<=[\.!\?])\s+");
+            var cleanedInput = inputString;
+            if (ShouldRemoveStartPattern)
+            {
+                cleanedInput = Regex.Replace(inputString, START_PATTERN, "");
+            }
+
+            string[] sentences = Regex.Split(cleanedInput, @"(?<=[\.!\?])\s+");
             List<string> sentence_arguments = new List<string>();
 
             foreach (string sentence in sentences)
