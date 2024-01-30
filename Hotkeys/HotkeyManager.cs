@@ -7,9 +7,37 @@ namespace TwitchBot.Hotkeys
     {
         public static event EventHandler<HotKeyEventArgs> HotKeyPressed;
 
-        private static Hotkey AltF1 = new(Keys.F1, KeyModifiers.Alt);
-        private static Hotkey AltF2 = new(Keys.F2, KeyModifiers.Alt);
+        public static Dictionary<HotkeyCommand, RegisteredHotkey> RegisteredHotkeys = new();
 
+        public static Hotkey CaptureNewHotKey()
+        {
+            var newKey = Console.ReadKey();
+            Console.WriteLine($"Pressed: {newKey.Key}+{newKey.Modifiers}");
+            var convertedHotkey = new Hotkey((Keys)newKey.Key, newKey.Modifiers.toKeyModifiers());
+            Console.WriteLine($"Converted: {convertedHotkey.Keys}+{convertedHotkey.Modifiers}");
+
+            return convertedHotkey;
+        }
+
+        private static KeyModifiers toKeyModifiers(this ConsoleModifiers modifiers)
+        {
+            KeyModifiers keyMods = 0;
+
+            if (modifiers.HasFlag(ConsoleModifiers.Shift)) {
+                keyMods |= KeyModifiers.Shift;
+            }
+            if (modifiers.HasFlag(ConsoleModifiers.Alt))
+            {
+                keyMods |= KeyModifiers.Alt;
+            }
+            if (modifiers.HasFlag(ConsoleModifiers.Control))
+            {
+                keyMods |= KeyModifiers.Control;
+            }
+
+
+            return keyMods;
+        }
 
         public static int RegisterHotKey(Keys key, KeyModifiers modifiers)
         {
@@ -24,34 +52,56 @@ namespace TwitchBot.Hotkeys
             return RegisterHotKey(hotkey.Keys, hotkey.Modifiers);
         }
 
+        public static int RegisterHotKey(HotkeyCommand command, Hotkey hotkey)
+        {
+            var hotkeyId = RegisterHotKey(hotkey);
+            var newHotkey = new RegisteredHotkey(hotkeyId, hotkey);
+            if (RegisteredHotkeys.ContainsKey(command))
+            {
+                UnregisterHotKey(RegisteredHotkeys[command].Id);
+                RegisteredHotkeys[command] = newHotkey;
+            }
+            else 
+            {
+                RegisteredHotkeys.Add(command, newHotkey);
+            }
+
+            return hotkeyId;
+        }
+
         public static void Initialize()
         {
-            RegisterHotKey(AltF1);
-            RegisterHotKey(AltF2);
+            RegisterHotKey(HotkeyCommand.SelectScreenRegion, new(Keys.Space, KeyModifiers.Control));
+            RegisterHotKey(HotkeyCommand.CaptureScreenRegion, new(Keys.Space, KeyModifiers.Alt));
             HotKeyPressed += new EventHandler<HotKeyEventArgs>(HotKeyManager_HotKeyPressed);
-            
         }
         private static async void HotKeyManager_HotKeyPressed(object? sender, HotKeyEventArgs e)
         {
             Hotkey hotkeyPressed = new(Keys: e.Key, Modifiers: e.Modifiers);
             Console.WriteLine($"Keys Pressed: {hotkeyPressed.Modifiers}+{hotkeyPressed.Keys}");
-            if (hotkeyPressed == AltF1)
+            var selectedCommand = RegisteredHotkeys.FirstOrDefault((hotkey) => hotkey.Value.Hotkey == hotkeyPressed).Key;
+            Console.WriteLine($"Selected Command: {selectedCommand}");
+
+            switch (selectedCommand)
             {
-                Console.WriteLine("Selecting screen region...");
-                Server.Instance.screen.SelectScreenRegion();
-            }
-            else if (hotkeyPressed == AltF2)
-            {
-                if (Server.Instance.screen.SelectedRegionArea > 9)
-                {
-                    Console.WriteLine("Reading selected screen region...");
-                    Server.Instance.screen.TakeScreenRegion();
-                    await Server.Instance.Narrator.ReadImage(ImageFiles.Region);
-                }
-                else
-                {
-                    Console.WriteLine("[HotkeyManager] Warning: Screen Area too small to take a picture. Please select one first.");
-                }
+                case HotkeyCommand.None:
+                    break;
+                case HotkeyCommand.SelectScreenRegion:
+                    Console.WriteLine("Selecting screen region...");
+                    Server.Instance.screen.SelectScreenRegion();
+                    break;
+                case HotkeyCommand.CaptureScreenRegion:
+                    if (Server.Instance.screen.SelectedRegionArea > 9)
+                    {
+                        Console.WriteLine("Reading selected screen region...");
+                        Server.Instance.screen.TakeScreenRegion();
+                        await Server.Instance.Narrator.ReadImage(ImageFiles.Region);
+                    }
+                    else
+                    {
+                        Console.WriteLine("[HotkeyManager] Warning: Screen Area too small to take a picture. Please select one first.");
+                    }
+                    break;
             }
         }
 
@@ -163,5 +213,13 @@ namespace TwitchBot.Hotkeys
         NoRepeat = 0x4000
     }
 
+    public enum HotkeyCommand
+    {
+        None = 0,
+        SelectScreenRegion,
+        CaptureScreenRegion
+    }
+
     public record Hotkey(Keys Keys, KeyModifiers Modifiers);
+    public record RegisteredHotkey(int Id, Hotkey Hotkey);
 }
