@@ -5,6 +5,7 @@ namespace TwitchBot.OCR
     public class TesseractImageReader : ImageTextReader
     {
         TesseractEngine tesseract;
+        private readonly Logger log = new("Tesseract");
 
         public TesseractImageReader()
         {
@@ -14,7 +15,7 @@ namespace TwitchBot.OCR
         {
             return await Task.Run(() =>
             {
-                Console.WriteLine($"Reading text from Image...");
+                log.Debug($"Reading text from Image...");
                 using (var page = tesseract.Process(image))
                 {
                     return page.GetText();
@@ -32,7 +33,7 @@ namespace TwitchBot.OCR
                     var bitmap = new Bitmap(fs);
                     using (var page = tesseract.Process(bitmap))
                     {
-                        Console.WriteLine($"Reading text from {filePath}...");
+                        log.Debug($"Reading text from {filePath}...");
                         return page.GetText();
                     }
                 }

@@ -7,11 +7,7 @@ namespace TwitchBot.ElevenLabs
     internal class TtsPlayer
     {
         static int counter;
-        private static void Log(string message)
-        {
-            var timestamp = DateTime.Now.ToString(Server.LOG_FORMAT);
-            Console.WriteLine($"{timestamp} [PlayTTS] {message}");
-        }
+        static readonly Logger Log = new("PlayTTS");
 
         public static void PlayResponseStream(Stream responseStream)
         {
@@ -42,17 +38,17 @@ namespace TwitchBot.ElevenLabs
                         soundPlayer.Stream.Position = 0;
                     }
                     timer.Stop();
-                    Log($"[MSG-{messageId}] mp3 decode: {timer.ElapsedMilliseconds}ms");
+                    Log.Debug($"[MSG-{messageId}] mp3 decode: {timer.ElapsedMilliseconds}ms");
                     timer.Restart();
                     soundPlayer.PlaySync();
                     timer.Stop();
-                    Log($"[MSG-{messageId}] mp3 length: {timer.ElapsedMilliseconds}ms");
+                    Log.Info($"[MSG-{messageId}] mp3 length: {timer.ElapsedMilliseconds}ms");
 
                 }
             }
             catch (Exception e)
             {
-                Log($"[MSG-{messageId}] Caught exception trying to decode+play audio stream: {e.Message}");
+                Log.Error($"[MSG-{messageId}] Caught exception trying to decode+play audio stream: {e.Message}");
             }
         }
     }

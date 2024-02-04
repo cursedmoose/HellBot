@@ -37,7 +37,7 @@ namespace TwitchBot.SpeechToText
                 try
                 {
                     var command = e.Result.Text.Replace("hey", "").Replace("hellbot", "").Replace("madgod", "").Replace("sheogorath", "").Trim();
-                    Console.WriteLine($"Confidence: {e.Result.Confidence}%, trying to {command} ({++Accepts} / {Accepts + Rejections})");
+                    Log.Debug($"Confidence: {e.Result.Confidence}%, trying to {command} ({++Accepts} / {Accepts + Rejections})");
                     if (command.Contains("say hello")) 
                     {
                         await Server.Instance.chatgpt.GetResponse(Server.Instance.Assistant.Persona, "hello");

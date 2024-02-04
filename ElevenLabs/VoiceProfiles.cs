@@ -45,6 +45,7 @@ namespace TwitchBot.ElevenLabs
     public static class VoiceProfiles
     {
         const string ConfigFile = "voice";
+        private static readonly Logger log = new("VoiceProfiles");
 
         public static readonly VoiceProfile DagothUr = new(Voices.DagothUr, 0.33f, 0.66f);
         public static readonly VoiceProfile Maiq = new(Voices.Maiq, 0.25f, 0.25f);
@@ -79,7 +80,7 @@ namespace TwitchBot.ElevenLabs
             foreach (string admin in Permissions.Admin)
             {
                 var profile = LoadVoiceProfileFromConfig(admin, DrunkMale);
-                Console.WriteLine($"[VoiceProfiles] Loaded voice {profile.Voice.VoiceName} for {admin}");
+                log.Info($"[VoiceProfiles] Loaded voice {profile.Voice.VoiceName} for {admin}");
             }
         }
 

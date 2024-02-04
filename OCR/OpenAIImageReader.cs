@@ -5,13 +5,14 @@ namespace TwitchBot.OCR
     public class OpenAIImageReader : ImageTextReader
     {
         ChatGpt.ChatGpt gpt;
+        private readonly Logger log = new("OpenAI-Vision");
         public OpenAIImageReader(ChatGpt.ChatGpt chatgpt)
         {
             gpt = chatgpt;
         }
         public async Task<string> ReadText(Bitmap image)
         {
-            Console.WriteLine($"Reading text from Image...");
+            log.Debug($"Reading text from Image...");
             var imageFile = SaveImageLocally(image);
             return await ReadText(imageFile);
         }

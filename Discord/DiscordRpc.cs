@@ -7,6 +7,7 @@ namespace TwitchBot.Discord
     public class DiscordRpc
     {
         readonly DiscordRpcClient client;
+        readonly Logger log = new("DiscordRpc");
         public DiscordRpc()
         {
             client = new DiscordRpcClient(applicationID: Bot.APPLICATION_ID, autoEvents: true, pipe: 0)
@@ -16,12 +17,12 @@ namespace TwitchBot.Discord
 
             client.OnReady += (sender, msg) =>
             {
-                Console.WriteLine("Connected to discord with user {0}", msg.User.Username);
+                log.Info($"Connected to discord with user {msg.User.Username}");
             };
 
             client.OnPresenceUpdate += (sender, msg) =>
             {
-                Console.WriteLine("Presence has been updated! ");
+                log.Debug("Presence has been updated!");
             };
 
 

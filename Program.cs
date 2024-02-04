@@ -3,7 +3,6 @@ using TwitchBot.Twitch;
 using TwitchBot.ElevenLabs;
 using TwitchBot.Discord;
 using TwitchBot.ChatGpt;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using TwitchBot.Assistant;
 using TwitchBot.OBS;
@@ -23,9 +22,11 @@ using TwitchBot.OCR;
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
 var log = new Logger("MAIN");
+Logger.Level = ConsoleLogLevel.Info;
 
 log.Info("~~~~~~~~~~~~~");
 log.Info("Hello, World!");
+log.Info($"Logging configured to {Logger.Level}");
 
 Server server = Server.Instance;
 VoiceProfiles.LoadProfiles();
@@ -110,7 +111,6 @@ public class ServerConfig
 
 public class Server
 {
-    public static readonly CultureInfo LOG_FORMAT = new("en-GB");
     public static readonly Regex WEBSITE_REGEX = new("[(http(s)?):\\/\\/(www\\.)?a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)", RegexOptions.IgnoreCase);
     public static readonly Regex EMOTE_REGEX = new("cursed99");
 

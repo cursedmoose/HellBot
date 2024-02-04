@@ -9,12 +9,14 @@ namespace TwitchBot.Hotkeys
 
         public static Dictionary<HotkeyCommand, RegisteredHotkey> RegisteredHotkeys = new();
 
+        private static Logger log = new("HotkeyManager");
+
         public static Hotkey CaptureNewHotKey()
         {
             var newKey = Console.ReadKey();
-            Console.WriteLine($"Pressed: {newKey.Key}+{newKey.Modifiers}");
+            log.Debug($"Pressed: {newKey.Key}+{newKey.Modifiers}");
             var convertedHotkey = new Hotkey((Keys)newKey.Key, newKey.Modifiers.toKeyModifiers());
-            Console.WriteLine($"Converted: {convertedHotkey.Keys}+{convertedHotkey.Modifiers}");
+            log.Debug($"Converted: {convertedHotkey.Keys}+{convertedHotkey.Modifiers}");
 
             return convertedHotkey;
         }
@@ -78,28 +80,28 @@ namespace TwitchBot.Hotkeys
         private static async void HotKeyManager_HotKeyPressed(object? sender, HotKeyEventArgs e)
         {
             Hotkey hotkeyPressed = new(Keys: e.Key, Modifiers: e.Modifiers);
-            Console.WriteLine($"Keys Pressed: {hotkeyPressed.Modifiers}+{hotkeyPressed.Keys}");
+            log.Debug($"Keys Pressed: {hotkeyPressed.Modifiers}+{hotkeyPressed.Keys}");
             var selectedCommand = RegisteredHotkeys.FirstOrDefault((hotkey) => hotkey.Value.Hotkey == hotkeyPressed).Key;
-            Console.WriteLine($"Selected Command: {selectedCommand}");
+            log.Info($"Handling Command: {selectedCommand}");
 
             switch (selectedCommand)
             {
                 case HotkeyCommand.None:
                     break;
                 case HotkeyCommand.SelectScreenRegion:
-                    Console.WriteLine("Selecting screen region...");
+                    log.Info("Selecting screen region...");
                     Server.Instance.screen.SelectScreenRegion();
                     break;
                 case HotkeyCommand.CaptureScreenRegion:
                     if (Server.Instance.screen.SelectedRegionArea > 9)
                     {
-                        Console.WriteLine("Reading selected screen region...");
+                        log.Info("Reading selected screen region...");
                         Server.Instance.screen.TakeScreenRegion();
                         await Server.Instance.Narrator.ReadImage(ImageFiles.Region);
                     }
                     else
                     {
-                        Console.WriteLine("[HotkeyManager] Warning: Screen Area too small to take a picture. Please select one first.");
+                        log.Error("[HotkeyManager] Warning: Screen Area too small to take a picture. Please select one first.");
                     }
                     break;
             }
