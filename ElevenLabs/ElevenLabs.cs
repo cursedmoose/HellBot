@@ -39,7 +39,8 @@ namespace TwitchBot.ElevenLabs
         public string STREAM_MODEL { get; private set; } = MODEL_TURBO;
 
         public bool ShouldRemoveStartPattern = true;
-        public string START_PATTERN = @"^(\w)+\:";
+        public readonly Regex START_PATTERN_REGEX = new(@"^[\w\s'-]+\:");
+        public readonly Regex WHITESPACE_REGEX = new(@"\s{2,}");
 
         readonly HttpClient client;
         public readonly long charactersStartedAt;
@@ -130,6 +131,7 @@ namespace TwitchBot.ElevenLabs
             cleanedString = Server.WEBSITE_REGEX.Replace(cleanedString, "").Trim();
             cleanedString = Server.EMOTE_REGEX.Replace(cleanedString, "").Trim();
             cleanedString = cleanedString.Replace("*", "").Trim();
+            cleanedString = WHITESPACE_REGEX.Replace(cleanedString, "").Trim();
             return cleanedString;
         }
 
@@ -142,6 +144,7 @@ namespace TwitchBot.ElevenLabs
         {
             var program_arguments = string.Join(" ", "/C python ElevenLabs/labs.py", API_KEY, profile.Voice.VoiceId, MODEL_TURBO);
             var tts_arguments = buildStreamArgs(tts);
+            log.Info($"[{profile.Voice.VoiceName}]: {tts_arguments}");
             var all_arguments = string.Join(" ", program_arguments, tts_arguments);
 
             Process process = new Process();
@@ -160,22 +163,27 @@ namespace TwitchBot.ElevenLabs
 
         private string buildStreamArgs(string inputString)
         {
-            var cleanedInput = inputString;
-            if (ShouldRemoveStartPattern)
-            {
-                cleanedInput = Regex.Replace(inputString, START_PATTERN, "");
-            }
-
-            string[] sentences = Regex.Split(cleanedInput, @"(?<=[\.!\?])\s+");
+            string[] sentences = Regex.Split(inputString, @"(?<=[\.!\?])\s+");
             List<string> sentence_arguments = new List<string>();
 
             foreach (string sentence in sentences)
             {
-                var cleanSentence = sentence
+                var cleanSentence = sentence;
+                if (ShouldRemoveStartPattern)
+                {
+                    cleanSentence = START_PATTERN_REGEX.Replace(cleanSentence, "").Trim();
+                }
+
+                cleanSentence = cleanSentence
                     .Replace("\n", " ")
                     .Replace("\"", "\\\"")
                     .Replace("|", "I");
-                sentence_arguments.Add(string.Join("", "\"", cleanSentence, "\""));
+
+                cleanSentence = WHITESPACE_REGEX.Replace(cleanSentence, " ").Trim();
+                if (cleanSentence.Length > 0)
+                {
+                    sentence_arguments.Add(string.Join("", "\"", cleanSentence, "\""));
+                }
             }
 
             return string.Join(" ", sentence_arguments.ToArray());

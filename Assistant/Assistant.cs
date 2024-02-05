@@ -208,5 +208,14 @@ namespace TwitchBot.Assistant
             log.Info($"Model time: {stopwatch.ElapsedMilliseconds}ms");
             StreamTts(text);
         }
+
+        public async Task ReadImage(Bitmap image)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var text = await Server.Instance.imageText.ReadText(image);
+            stopwatch.Stop();
+            log.Info($"Model time: {stopwatch.ElapsedMilliseconds}ms");
+            StreamTts(text);
+        }
     }
 }

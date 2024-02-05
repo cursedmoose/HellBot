@@ -1,5 +1,4 @@
 ﻿using System.Drawing.Imaging;
-using System.Windows.Forms;
 
 namespace TwitchBot.ScreenCapture
 {
@@ -7,19 +6,21 @@ namespace TwitchBot.ScreenCapture
     {
         readonly Logger log = new("ScreenCapturer");
         private ClipboardScraper scraper;
-        private ScreenRegionSelector selectorForm;
-        private Rectangle selectedRegion; // = new Rectangle(0, 0, 100, 100);
-
-        public int SelectedRegionArea
+        private List<Rectangle> screenRegions = new()
         {
-            get { return selectedRegion.Height * selectedRegion.Width; }
+            new(0, 0, 0, 0),
+            new(0, 0, 0, 0),
+            new(0, 0, 0, 0)
+        };
+
+        public int SelectedRegionArea(int regionIndex)
+        {
+            return screenRegions[regionIndex].Height * screenRegions[regionIndex].Width;
         }
 
         public ScreenCapturer()
         {
             scraper = new(CaptureScreen());
-            selectorForm = new ScreenRegionSelector(CaptureScreen());
-            selectedRegion = new Rectangle(0, 0, 0, 0);
         }
 
         private Bitmap CaptureScreen()
@@ -32,12 +33,12 @@ namespace TwitchBot.ScreenCapture
             return bmp;
         }
 
-        private Bitmap CaptureScreenRegion()
+        private Bitmap CaptureScreenRegion(int regionIndex)
         {
-            Bitmap bmp = new(selectedRegion.Width, selectedRegion.Height);
+            Bitmap bmp = new(screenRegions[regionIndex].Width, screenRegions[regionIndex].Height);
             using (Graphics g = Graphics.FromImage(bmp))
             {
-                g.CopyFromScreen(selectedRegion.Left, selectedRegion.Top, 0, 0, selectedRegion.Size);
+                g.CopyFromScreen(screenRegions[regionIndex].Left, screenRegions[regionIndex].Top, 0, 0, screenRegions[regionIndex].Size);
             }
             return bmp;
         }
@@ -53,15 +54,21 @@ namespace TwitchBot.ScreenCapture
             return filePath;
         }
 
-        public string TakeScreenRegion()
+        public string TakeScreenRegion(int regionIndex)
         {
             var filePath = "images/screenshots/region.png";
-            var img = CaptureScreenRegion();
+            var img = CaptureScreenRegion(regionIndex);
             using (var fs = new FileStream(filePath, FileMode.Create))
             {
                 img.Save(fs, ImageFormat.Png);
             }
             return filePath;
+        }
+
+        public Bitmap GetScreenRegion(int regionIndex)
+        {
+            var img = CaptureScreenRegion(regionIndex);
+            return img;
         }
 
         public bool ClipboardHasNewImage()
@@ -91,27 +98,19 @@ namespace TwitchBot.ScreenCapture
             return;
         }
 
-        public void SelectScreenRegion()
+        public void SelectScreenRegion(int regionIndex)
         {
             Task mytask = Task.Run(() =>
             {
-                selectorForm = new ScreenRegionSelector(CaptureScreen());
-                selectorForm.ShowDialog();
+                var form = new ScreenRegionSelector(CaptureScreen(), regionIndex, screenRegions);
+                form.ShowDialog();
             });
-            var screen = CaptureScreen();
-            var graphics = Graphics.FromImage(screen);
-            graphics.CopyFromScreen(0, 0, 0, 0, screen.Size);
-
-            using (MemoryStream s = new MemoryStream())
-            {
-                screen.Save(s, ImageFormat.Bmp);
-            }
         }
 
-        public void SetScreenRegion(Rectangle rect)
+        public void SetScreenRegion(Rectangle rect, int regionIndex = 0)
         {
-            selectedRegion = rect;
-            log.Info($"Set selectedRegion to {rect.Location}{rect.Size.Width}x{rect.Size.Height}");
+            screenRegions[regionIndex] = rect;
+            log.Info($"Set selectedRegion[{regionIndex}] to {rect.Location}{rect.Size.Width}x{rect.Size.Height}");
         }
     }
 }

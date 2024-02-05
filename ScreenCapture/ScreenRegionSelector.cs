@@ -1,5 +1,4 @@
-﻿using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
+﻿using System.Drawing.Imaging;
 
 namespace TwitchBot.ScreenCapture
 {
@@ -10,11 +9,18 @@ namespace TwitchBot.ScreenCapture
         int mouseSelectY;
         int selectWidth;
         int selectHeight;
-        private Brush selectBrush;
+        private List<Brush> selectBrushes = new()
+        {
+            Brushes.Yellow,
+            Brushes.Red,
+            Brushes.Blue
+        };
         private Image screen;
+        private int regionIndex;
+        private List<Rectangle> regions;
 
         bool hasStartedDrawing = false;
-        public ScreenRegionSelector(Image screen)
+        public ScreenRegionSelector(Image screen, int regionIndex, List<Rectangle> selectedRegions)
         {
             InitializeComponent();
             Top = 0;
@@ -34,9 +40,11 @@ namespace TwitchBot.ScreenCapture
             pictureBox.MouseMove += PictureBox_MouseMove;
             pictureBox.MouseUp += PictureBox_MouseUp;
             pictureBox.BackColor = Color.Transparent;
-            selectBrush = Brushes.Yellow;
+            pictureBox.LoadCompleted += DrawScreenRegions;
             Controls.Add(pictureBox);
             this.screen = screen;
+            this.regionIndex = regionIndex;
+            this.regions = selectedRegions;
         }
 
         private void ScreenRegionSelector_Load(object sender, EventArgs e)
@@ -47,17 +55,20 @@ namespace TwitchBot.ScreenCapture
                 pictureBox.Size = new Size(this.Width, this.Height);
             }
             Cursor = Cursors.Cross;
+            DrawScreenRegions(sender, e);
         }
 
         private void PictureBox_MouseMove(object? sender, MouseEventArgs e)
         {
+            DrawScreenRegions(sender, e);
+
             if (hasStartedDrawing)
             {
                 pictureBox.Refresh();
+                DrawScreenRegions(sender, e);
                 selectWidth = e.X - mouseSelectX;
                 selectHeight = e.Y - mouseSelectY;
-                pictureBox.CreateGraphics().FillRectangle(selectBrush, mouseSelectX, mouseSelectY, selectWidth, selectHeight);
-
+                pictureBox.CreateGraphics().FillRectangle(selectBrushes[regionIndex], mouseSelectX, mouseSelectY, selectWidth, selectHeight);
             }
         }
 
@@ -68,13 +79,14 @@ namespace TwitchBot.ScreenCapture
                 if (e.Button == MouseButtons.Left)
                 {
                     pictureBox.Refresh();
+                    DrawScreenRegions(sender, e);
                     selectWidth = e.X - mouseSelectX;
                     selectHeight = e.Y - mouseSelectY;
-                    pictureBox.CreateGraphics().FillRectangle(selectBrush, mouseSelectX, mouseSelectY, selectWidth, selectHeight);
+                    pictureBox.CreateGraphics().FillRectangle(selectBrushes[regionIndex], mouseSelectX, mouseSelectY, selectWidth, selectHeight);
 
                 }
                 hasStartedDrawing = false;
-                SaveToClipboard();
+                SaveScreenRegion();
             }
         }
 
@@ -88,18 +100,31 @@ namespace TwitchBot.ScreenCapture
                     mouseSelectY = e.Y;
                 }
                 pictureBox.Refresh();
+                DrawScreenRegions(sender, e);
                 hasStartedDrawing = true;
             }
         }
 
-        private void SaveToClipboard()
+        private void SaveScreenRegion()
         {
             if (selectWidth > 0)
             {
                 Rectangle rect = new Rectangle(mouseSelectX, mouseSelectY, selectWidth, selectHeight);
-                Server.Instance.screen.SetScreenRegion(rect);
+                Server.Instance.screen.SetScreenRegion(rect, regionIndex);
             }
             this.Hide();
+        }
+
+        private void DrawScreenRegions(object? sender, EventArgs e)
+        {
+            for (int i = 0; i < regions.Count; i++) 
+            { 
+                if (i != regionIndex)
+                {
+                    var region = regions[i];
+                    pictureBox.CreateGraphics().FillRectangle(selectBrushes[i], region.Left, region.Top, region.Width, region.Height);
+                }
+            }
         }
     }
 }
