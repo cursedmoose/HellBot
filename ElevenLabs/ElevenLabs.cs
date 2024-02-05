@@ -41,6 +41,7 @@ namespace TwitchBot.ElevenLabs
         public bool ShouldRemoveStartPattern = true;
         public readonly Regex START_PATTERN_REGEX = new(@"^[\w\s'-]+\:");
         public readonly Regex WHITESPACE_REGEX = new(@"\s{2,}");
+        private List<string> previousSentences = new();
 
         readonly HttpClient client;
         public readonly long charactersStartedAt;
@@ -144,6 +145,11 @@ namespace TwitchBot.ElevenLabs
         {
             var program_arguments = string.Join(" ", "/C python ElevenLabs/labs.py", API_KEY, profile.Voice.VoiceId, MODEL_TURBO);
             var tts_arguments = buildStreamArgs(tts);
+            if (tts_arguments.Length <= 0) 
+            {
+                log.Info("No TTS args were left after cleaning.");
+            }
+
             log.Info($"[{profile.Voice.VoiceName}]: {tts_arguments}");
             var all_arguments = string.Join(" ", program_arguments, tts_arguments);
 
@@ -169,22 +175,31 @@ namespace TwitchBot.ElevenLabs
             foreach (string sentence in sentences)
             {
                 var cleanSentence = sentence;
-                if (ShouldRemoveStartPattern)
-                {
-                    cleanSentence = START_PATTERN_REGEX.Replace(cleanSentence, "").Trim();
-                }
 
                 cleanSentence = cleanSentence
                     .Replace("\n", " ")
                     .Replace("\"", "\\\"")
                     .Replace("|", "I");
 
-                cleanSentence = WHITESPACE_REGEX.Replace(cleanSentence, " ").Trim();
-                if (cleanSentence.Length > 0)
+                if (ShouldRemoveStartPattern)
                 {
-                    sentence_arguments.Add(string.Join("", "\"", cleanSentence, "\""));
+                    cleanSentence = START_PATTERN_REGEX.Replace(cleanSentence, "").Trim();
+                }
+
+                cleanSentence = WHITESPACE_REGEX.Replace(cleanSentence, " ").Trim();
+                if (cleanSentence.Length > 1)
+                {
+                    var sentence_arg = string.Join("", "\"", cleanSentence, "\"");
+                    if (previousSentences.Contains(sentence_arg))
+                    {
+                        log.Debug("Found duplicate sentence arg. Should I Remove??");
+                    }
+
+                    sentence_arguments.Add(sentence_arg);
                 }
             }
+
+            previousSentences = sentence_arguments;
 
             return string.Join(" ", sentence_arguments.ToArray());
         }

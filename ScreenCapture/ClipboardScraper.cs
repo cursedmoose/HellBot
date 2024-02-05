@@ -19,17 +19,7 @@
                     if (Clipboard.ContainsImage())
                     {
                         var clipboardImage = Clipboard.GetImage();
-
-                        var newHash = GetHash(clipboardImage);
-                        var oldHash = GetHash(previousImage);
-
-                        int equalElements = newHash.Zip(oldHash, (i, j) => i == j).Count(eq => eq);
-                        log.Info($"Images differ by {equalElements} pixels");
-
-                        if (equalElements <= 256)
-                        {
-                            hasNewImage = true;
-                        }
+                        hasNewImage = true;
                     }
                 });
             clipboardThread.SetApartmentState(ApartmentState.STA);
