@@ -71,7 +71,8 @@ namespace TwitchBot.Assistant
 
         public void StreamTts(string message)
         {
-            Server.Instance.elevenlabs.StreamTts(Voice, message, Obs);
+            var cleanedMessage = Server.Instance.elevenlabs.CleanStringForTts(message);
+            Server.Instance.elevenlabs.StreamTts(Voice, cleanedMessage, Obs);
         }
 
         public async Task Chatter()
@@ -91,7 +92,7 @@ namespace TwitchBot.Assistant
         public async void ReactToImage(string imageUrl, string prompt = "give exciting commentary on this image")
         {
             var reaction = await Server.Instance.chatgpt.GetResponseFromImagePrompt(Persona, prompt, imageUrl);
-            PlayTts(reaction);
+            StreamTts(reaction);
         }
 
         public async void ReactToGameStateAndCurrentScreen(string gameState)
@@ -127,12 +128,19 @@ namespace TwitchBot.Assistant
             
         }
 
-        public async Task ReactToCurrentScreen()
+        public async Task ReactToCurrentScreen(string prompt = "")
         {
+            var reactionPrompt = prompt;
+
+            if (string.IsNullOrEmpty(prompt))
+            {
+                reactionPrompt = Prompts.Reactions.Random();
+            }
+
             if (Discord.DiscordBot.IsEnabled())
             {
                 var fileUrl = await Server.Instance.TakeAndUploadScreenshot();
-                ReactToImage(fileUrl);
+                ReactToImage(fileUrl, reactionPrompt);
             }
             else
             {
@@ -216,6 +224,12 @@ namespace TwitchBot.Assistant
             stopwatch.Stop();
             log.Info($"Model time: {stopwatch.ElapsedMilliseconds}ms");
             StreamTts(text);
+        }
+
+        public async void AskAnotherAssistant(Assistant otherAssisant, string prompt)
+        {
+            var options = new ChatGptOptions(1.33, 2, 2);
+            await Server.Instance.chatgpt.GetResponse(otherAssisant.Name, "prompt", options);
         }
     }
 }

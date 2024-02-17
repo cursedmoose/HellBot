@@ -15,6 +15,8 @@ namespace TwitchBot.Twitch
             var obsImage = ObsScenes.GetImageSource(chat.Username);
             if (voiceProfile != null && chat.Message.Length <= 256)
             {
+                Server.Instance.elevenlabs.StreamTts(voiceProfile, chat.Message);
+                /* Untested, so commented.
                 Task.Factory.StartNew(() =>
                 {
                     try
@@ -27,7 +29,7 @@ namespace TwitchBot.Twitch
                     {
                         log.Info("Failed to play sound due to " + ex.Message);
                     }
-                });
+                });*/
             }
             else
             {
@@ -40,6 +42,8 @@ namespace TwitchBot.Twitch
             var voiceProfile = VoiceProfiles.GetRumorVoiceProfile();
             if (voiceProfile != null && rumor.Message.Length <= 128)
             {
+                Server.Instance.elevenlabs.StreamTts(voiceProfile, rumor.Message);
+                /*
                 Task.Factory.StartNew(() =>
                 {
                     try
@@ -50,7 +54,7 @@ namespace TwitchBot.Twitch
                     {
                         log.Info("Failed to play sound due to " + ex.Message);
                     }
-                });
+                });*/
             }
             else
             {

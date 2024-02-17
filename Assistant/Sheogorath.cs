@@ -28,6 +28,7 @@ namespace TwitchBot.Assistant
                 Actions.CreateReward,
                 Actions.PaintPicture,
                 Actions.ReactToScreen,
+                Actions.RequestNarration
             };
 
         private static DateTime LastPollTime = DateTime.MinValue;
@@ -35,8 +36,7 @@ namespace TwitchBot.Assistant
 
         public override string GetSystemPersona()
         {
-            var choice = Random.Next(0, PersonaPrompts.All.Count);
-            return string.Format(PersonaPrompts.All[choice], Name);
+            return string.Format(Prompts.Personas.Random(), Name);
         }
 
         public override async Task CleanUp()
@@ -64,7 +64,7 @@ namespace TwitchBot.Assistant
                         await ChangeTitle();
                         break;
                     case Actions.RunPoll:
-                        if (LastPollTime.AddMinutes(5) < time)
+                        if (LastPollTime.AddMinutes(15) < time)
                         {
                             LastPollTime = time;
                             await CreatePoll();
@@ -98,20 +98,23 @@ namespace TwitchBot.Assistant
                         await PaintPicture();
                         break;
                     case Actions.ReactToScreen:
-                        await ReactToCurrentScreen();
+                        await ReactToCurrentScreen("tell me do to something crazy in this video game. limit 12 words.");
+                        break;
+                    case Actions.RequestNarration:
+                        StreamTts($"Hey {Server.Instance.Narrator.Name}, what's going on here?");
+                        await Server.Instance.Narrator.ReactToCurrentScreen();
                         break;
                 }
             }
             else
             {
-                var bored = Random.Next(3) == 0;
-                if (bored)
+                switch (Random.Next(3))
                 {
-                    await Chatter();
-                }
-                else
-                {
-                    await ReactToCurrentScreen();
+                    case 0:
+                    case 1:
+                        await Chatter(); break;
+                    case 2: 
+                        await ReactToCurrentScreen(); break;
                 }
             }
 
@@ -164,7 +167,7 @@ namespace TwitchBot.Assistant
             log.Info(response);
 
             Poll poll = PollParser.parsePoll(response);
-            PlayTts(Poll.GetPollAnnouncement());
+            StreamTts(Poll.GetPollAnnouncement());
             return await Server.Instance.twitch.CreatePoll(
                 title: poll.Title,
                 choices: poll.Choices
@@ -188,14 +191,14 @@ namespace TwitchBot.Assistant
             });
             var response = await Server.Instance.chatgpt.GetResponseText(Persona, messages);
             log.Info(response);
-            PlayTts(response);
+            StreamTts(response);
 
             return true;
         }
 
         public override async Task<bool> ConcludePoll(string title, string winner)
         {
-            PlayTts("The results are in...");
+            StreamTts("The results are in...");
             var prompt = String.Format(Poll.PollEndPrompt, title, winner);
             await Server.Instance.chatgpt.GetResponse(Persona, prompt);
             return true;
@@ -231,7 +234,7 @@ namespace TwitchBot.Assistant
             var currentGame = await Server.Instance.twitch.GetCurrentGame();
             var prompt = $"new title for my \"{currentGame}\" stream. limit 5 words.";
             var newTitle = await Server.Instance.chatgpt.GetResponseText(Persona, prompt);
-            PlayTts($"How about a new stream title? Maybe... {newTitle}!");
+            StreamTts($"How about a new stream title? Maybe... {newTitle}!");
             Server.Instance.twitch.ChangeTitle(newTitle);
 
             return true;
@@ -310,7 +313,7 @@ namespace TwitchBot.Assistant
 
         public async Task PaintPicture()
         {
-            PlayTts("Let's paint a picture!");
+            StreamTts("Let's paint a picture!");
 
             var getPrompt = "make an image prompt. limit 5 words";
             var imagePrompt = await Server.Instance.chatgpt.GetResponseText(Persona, getPrompt);
@@ -358,7 +361,7 @@ namespace TwitchBot.Assistant
             diceResultScene.Enable();
             var text = await Server.Instance.chatgpt.GetResponseText(Persona, $"react to me rolling a {result} out of {diceMax}. limit 15 words");
             ObsScenes.DiceMain.Enable();
-            PlayTts(text);
+            StreamTts(text);
             ObsScenes.DiceMain.Disable();
             diceResultScene.Disable();
 

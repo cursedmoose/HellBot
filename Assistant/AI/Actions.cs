@@ -15,6 +15,7 @@
         EnableSlowMode,
         EnableEmoteOnlyMode,
         PaintPicture,
-        Commemorate
+        Commemorate,
+        RequestNarration,
     }
 }

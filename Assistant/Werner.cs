@@ -16,17 +16,17 @@ namespace TwitchBot.Assistant
 
         public override Task<bool> AnnouncePoll(string title, List<string> options)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
 
         public override Task<bool> ChangeTitle()
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
 
         public override Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
 
         public override Task CleanUp()
@@ -36,57 +36,57 @@ namespace TwitchBot.Assistant
 
         public override Task<bool> ConcludePoll(string title, string winner)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
 
         public override Task<bool> CreatePoll(string topic)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
 
         public override string GetSystemPersona()
         {
-            throw new NotImplementedException();
+            return "Werner Herzog";
         }
 
         public override Task<int> RollDice(int diceMax = 20)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(1);
         }
 
         public override Task<bool> RunAd(int adSeconds = 5)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
 
         public override void WelcomeBack(string gameTitle)
         {
-            throw new NotImplementedException();
+            return;
         }
 
         public override void WelcomeFollower(string username)
         {
-            throw new NotImplementedException();
+            return;
         }
 
         public override void WelcomeSubscriber(string username, int length)
         {
-            throw new NotImplementedException();
+            return;
         }
 
         protected override Task AI()
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         protected override Task AI_On_Start()
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         protected override Task AI_On_Stop()
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
     }
 }

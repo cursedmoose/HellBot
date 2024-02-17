@@ -135,6 +135,8 @@ public class Server
     public ObsClient obs = new(ServerConfig.Obs);
     public SpeechToText speech = new(ServerConfig.Speech);
     public ImageTextReader imageText = new TesseractImageReader();
+    // public ImageTextReader imageText = new OpenAIImageReader(new());
+
     public HttpClient web = new();
     public FileGenerator file = new();
     public ScreenCapturer screen = new();
