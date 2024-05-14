@@ -512,7 +512,7 @@ namespace TwitchBot.Twitch
         #endregion API Hooks
 
         #region EventSub Handlers
-        private async void EventSub_OnConnected(object? sender, WebsocketConnectedArgs e)
+        private async Task EventSub_OnConnected(object? sender, WebsocketConnectedArgs e)
         {
             log.Info("EventSub Connected. ~~~~~~~~~~~~~~~");
             if (!e.IsRequestedReconnect)
@@ -569,7 +569,7 @@ namespace TwitchBot.Twitch
             }
         }
 
-        private async void EventSub_OnDisconnected(object? sender, EventArgs e)
+        private async Task EventSub_OnDisconnected(object? sender, EventArgs e)
         {
             log.Info($"EventSub Disconnected. ~~~~~~~~~~~~~~~ Retry?");
             while (!await events.ReconnectAsync())
@@ -579,31 +579,34 @@ namespace TwitchBot.Twitch
             }
         }
 
-        private void EventSub_OnReconnect(object? sender, EventArgs e)
+        private Task EventSub_OnReconnect(object? sender, EventArgs e)
         {
             log.Info($"Websocket {events.SessionId} reconnected");
+            return Task.CompletedTask;
         }
-        private void EventSub_OnChannelFollow(object? sender, ChannelFollowArgs e)
+        private Task EventSub_OnChannelFollow(object? sender, ChannelFollowArgs e)
         {
             var eventData = e.Notification.Payload.Event;
             log.Info($"{eventData.UserName} followed {eventData.BroadcasterUserName} at {eventData.FollowedAt}");
             Server.Instance.Assistant.WelcomeFollower(eventData.UserName);
+            return Task.CompletedTask;
         }
 
 
-        private void EventSub_OnPollBegin(object? sender, ChannelPollBeginArgs e)
+        private Task EventSub_OnPollBegin(object? sender, ChannelPollBeginArgs e)
         {
             var eventData = e.Notification.Payload.Event;
             log.Info($"Poll started: {eventData.Title}");
             log.Info($"{eventData.Choices[0].Title}");
             Server.Instance.Assistant.AnnouncePoll(eventData.Title, eventData.Choices.Select(choice => choice.Title).ToList());
+            return Task.CompletedTask;
         }
 
-        private void EventSub_OnPollEnd(object? sender, ChannelPollEndArgs e)
+        private Task EventSub_OnPollEnd(object? sender, ChannelPollEndArgs e)
         {
             var eventData = e.Notification.Payload.Event;
 
-            if (eventLog[eventData.Id] != null) { return; }
+            if (eventLog[eventData.Id] != null) { return Task.CompletedTask; }
             eventLog.Add(eventData.Id, "end", DateTime.Now.AddMinutes(5));
 
             log.Info($"Poll ended: {eventData.Title}");
@@ -613,9 +616,10 @@ namespace TwitchBot.Twitch
                 log.Info($"{choice.Title}: {choice.Votes}");
             }
             Server.Instance.Assistant.ConcludePoll(eventData.Title, eventData.Choices.MaxBy(it => it.Votes).Title);
+            return Task.CompletedTask;
         }
 
-        private async void EventSub_OnChannelPointsRedeemed(object? sender, ChannelPointsCustomRewardRedemptionArgs e)
+        private async Task EventSub_OnChannelPointsRedeemed(object? sender, ChannelPointsCustomRewardRedemptionArgs e)
         {
             var eventData = e.Notification.Payload.Event;
             log.Info($"{eventData.UserName} redeemed {eventData.Reward.Title}");
@@ -633,11 +637,13 @@ namespace TwitchBot.Twitch
                     Message: $"a huge waste of {eventData.Reward.Cost} sweet rolls")
                 );
             }
+            return;
         }
 
-        private void EventSub_Error(object? sender, ErrorOccuredArgs e)
+        private Task EventSub_Error(object? sender, ErrorOccuredArgs e)
         {
             log.Info($"Error from EventSub: {e.Exception} - {e.Message}");
+            return Task.CompletedTask;
         }
         #endregion EventSub Handlers
     }
