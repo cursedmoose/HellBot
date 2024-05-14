@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using TwitchBot.Assistant.AI;
 using TwitchBot.ChatGpt;
 using TwitchBot.Discord;
 using TwitchBot.ElevenLabs;
@@ -49,6 +50,8 @@ namespace TwitchBot.Assistant
         public abstract Task<bool> RunAd(int adSeconds = 5);
 
         public abstract Task<int> RollDice(int diceMax = 20);
+
+        protected Dictionary<Actions, Func<Task>> AI_Actions = new();
 
 
         public abstract Task CleanUp();

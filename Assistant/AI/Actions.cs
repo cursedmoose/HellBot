@@ -1,6 +1,6 @@
 ﻿namespace TwitchBot.Assistant.AI
 {
-    internal enum Actions
+    public enum Actions
     {
         None,
         Chat,

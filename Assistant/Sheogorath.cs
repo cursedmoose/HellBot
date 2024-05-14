@@ -16,7 +16,14 @@ namespace TwitchBot.Assistant
                 sceneId: ObsScenes.Sheogorath
             )
         {
-
+            AI_Actions.Add(Actions.Ban, Chatter);
+            AI_Actions.Add(Actions.Chat, Chatter);
+            AI_Actions.Add(Actions.ChangeTitle, Chatter);
+            AI_Actions.Add(Actions.RunPoll, Chatter);
+            AI_Actions.Add(Actions.CreateReward, Chatter);
+            AI_Actions.Add(Actions.PaintPicture, Chatter);
+            AI_Actions.Add(Actions.ReactToScreen, Chatter);
+            AI_Actions.Add(Actions.RequestNarration, () => { return ReactToCurrentScreen(); } );
         }
 
         readonly List<Actions> AI_CAPABILITIES = new()
@@ -98,7 +105,7 @@ namespace TwitchBot.Assistant
                         await PaintPicture();
                         break;
                     case Actions.ReactToScreen:
-                        await ReactToCurrentScreen("tell me do to something crazy in this video game. limit 12 words.");
+                        await ReactToCurrentScreen();
                         break;
                     case Actions.RequestNarration:
                         StreamTts($"Hey {Server.Instance.Narrator.Name}, what's going on here?");

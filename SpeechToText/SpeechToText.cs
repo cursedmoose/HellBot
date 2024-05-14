@@ -65,7 +65,7 @@ namespace TwitchBot.SpeechToText
         static Grammar CreateHellbotGrammar()
         {
             // Create a grammar for finding services in different cities.  
-            Choices hellbot = new Choices(new string[] { "hellbot", "sheogorath", "madgod" });
+            Choices hellbot = new Choices(new string[] { "hellbot", "sheogorath", "madgod", "werner", "verner" });
             Choices hellbotCommands = new Choices(new string[] { "what is this", "roll dice" });
 
             GrammarBuilder findServices = new GrammarBuilder("hey");

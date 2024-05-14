@@ -101,7 +101,7 @@ public class ServerConfig
     public static readonly bool ENABLED = true;
     public static readonly bool DISABLED = false;
 
-    public static readonly bool Twitch = DISABLED;
+    public static readonly bool Twitch = ENABLED;
     public static readonly bool ElevenLabs = ENABLED;
     public static readonly bool Discord = ENABLED;
     public static readonly bool ChatGpt = ENABLED;
