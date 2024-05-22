@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Web;
 using TwitchBot.Assistant.AI;
 using TwitchBot.ChatGpt;
 using TwitchBot.Discord;
@@ -76,6 +77,13 @@ namespace TwitchBot.Assistant
         {
             var cleanedMessage = Server.Instance.elevenlabs.CleanStringForTts(message);
             Server.Instance.elevenlabs.StreamTts(Voice, cleanedMessage, Obs);
+        }
+
+        public async Task RespondToPrompt(string prompt)
+        {
+            var options = new ChatGptOptions(1.33, 2, 2);
+            await Server.Instance.chatgpt.GetResponse(Persona, prompt, options);
+            return;
         }
 
         public async Task Chatter()

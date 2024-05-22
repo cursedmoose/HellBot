@@ -77,7 +77,7 @@ namespace TwitchBot.ChatGpt
         {
             ChatGptOptions api_params = options ?? ChatGptOptions.Default;
             var chatRequest = new ChatRequest(
-                model: Model.GPT4,
+                model: "gpt-4o", //Model.GPT4,
                 messages: messages,
                 temperature: api_params.Temperature,
                 presencePenalty: api_params.PresencePenalty,
@@ -210,7 +210,7 @@ namespace TwitchBot.ChatGpt
             ChatGptOptions api_params = ChatGptOptions.Vision;
             var chatRequest = new ChatRequest(
                 messages: messages,
-                model: "gpt-4-vision-preview",
+                model: "gpt-4o",
                 temperature: api_params.Temperature,
                 presencePenalty: api_params.PresencePenalty,
                 frequencyPenalty: api_params.FrequencyPenalty,
