@@ -19,6 +19,7 @@ using TwitchBot.ScreenCapture;
 using TwitchBot.Hotkeys;
 using TwitchBot.OCR;
 using TwitchBot.EyeTracking;
+using TwitchBot.EEG;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -108,7 +109,8 @@ public class ServerConfig
     public static readonly bool ChatGpt = DISABLED;
     public static readonly bool Obs = DISABLED;
     public static readonly bool Speech = DISABLED;
-    public static readonly bool EyeTracker = ENABLED;
+    public static readonly bool EyeTracker = DISABLED;
+    public static readonly bool BrainTracker = ENABLED;
 }
 
 public class Server
@@ -139,6 +141,7 @@ public class Server
     public ImageTextReader imageText = new TesseractImageReader();
     // public ImageTextReader imageText = new OpenAIImageReader(new());
     public TobiiEyeTracker eyetracker = new(ServerConfig.EyeTracker);
+    public MuseMonitor brain = new(ServerConfig.BrainTracker);
 
     public HttpClient web = new();
     public FileGenerator file = new();

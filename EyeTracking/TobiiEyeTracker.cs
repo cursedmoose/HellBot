@@ -66,7 +66,7 @@ namespace TwitchBot.EyeTracking
             log.Info(e.ToString());
         }
 
-        private static void EyeTracker_LogReceived(object sender, LogEventArgs e)
+        private static void EyeTracker_LogReceived(object? sender, LogEventArgs e)
         {
             Console.WriteLine("\nSource: {0}\nLevel: {1}\nMessage: \"{2}\" Time Stamp: \"{3}\"", e.Source, e.Level, e.Message, e.SystemTimeStamp);
         }
