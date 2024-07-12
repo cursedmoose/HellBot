@@ -20,6 +20,7 @@ using TwitchBot.Hotkeys;
 using TwitchBot.OCR;
 using TwitchBot.EyeTracking;
 using TwitchBot.EEG;
+using TwitchBot.AWS;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -103,14 +104,15 @@ public class ServerConfig
     public static readonly bool ENABLED = true;
     public static readonly bool DISABLED = false;
 
-    public static readonly bool Twitch = DISABLED;
-    public static readonly bool ElevenLabs = DISABLED;
-    public static readonly bool Discord = DISABLED;
-    public static readonly bool ChatGpt = DISABLED;
-    public static readonly bool Obs = DISABLED;
+    public static readonly bool Twitch = ENABLED;
+    public static readonly bool ElevenLabs = ENABLED;
+    public static readonly bool Discord = ENABLED;
+    public static readonly bool ChatGpt = ENABLED;
+    public static readonly bool Obs = ENABLED;
     public static readonly bool Speech = DISABLED;
     public static readonly bool EyeTracker = DISABLED;
-    public static readonly bool BrainTracker = ENABLED;
+    public static readonly bool BrainTracker = DISABLED;
+    public static readonly bool Aws = ENABLED;
 }
 
 public class Server
@@ -142,6 +144,7 @@ public class Server
     // public ImageTextReader imageText = new OpenAIImageReader(new());
     public TobiiEyeTracker eyetracker = new(ServerConfig.EyeTracker);
     public MuseMonitor brain = new(ServerConfig.BrainTracker);
+    public AwsClient aws = new(ServerConfig.Aws);
 
     public HttpClient web = new();
     public FileGenerator file = new();

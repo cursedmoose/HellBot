@@ -14,19 +14,20 @@ namespace TwitchBot.SpeechToText
         public SpeechToText(bool enabled)
         {
             recognizer = new(new CultureInfo("en-US"));
-            
-            Log.Info("Configuring Speech Recognition Engine..");
-            var grammar = CreateHellbotGrammar();
-            recognizer.LoadGrammar(grammar);
-            var werner = CreateWernerGrammar();
-            recognizer.LoadGrammar(werner);
-
-            recognizer.SpeechRecognized += onSpeechRecognized;
-            recognizer.SpeechDetected += onSpeechDetected;
-            recognizer.SetInputToDefaultAudioDevice();
 
             if (enabled)
             {
+                Log.Info("Configuring Speech Recognition Engine..");
+                var grammar = CreateHellbotGrammar();
+                recognizer.LoadGrammar(grammar);
+                var werner = CreateWernerGrammar();
+                recognizer.LoadGrammar(werner);
+
+                recognizer.SpeechRecognized += onSpeechRecognized;
+                recognizer.SpeechDetected += onSpeechDetected;
+                recognizer.SetInputToDefaultAudioDevice();
+
+
                 Log.Info("Starting Speech Recognition Engine..");
                 recognizer.RecognizeAsync(RecognizeMode.Multiple);
             }
@@ -90,7 +91,7 @@ namespace TwitchBot.SpeechToText
 
         static Grammar CreateHellbotGrammar()
         {
-            Choices hellbot = new Choices(new string[] { "hellbot", "sheogorath", "madgod"});
+            Choices hellbot = new Choices(new string[] { "hellbot", "sheogorath", "madgod" });
             Choices hellbotCommands = new Choices(new string[] { "what is this", "roll dice" });
 
 

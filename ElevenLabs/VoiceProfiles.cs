@@ -79,11 +79,14 @@ namespace TwitchBot.ElevenLabs
 
         public static void LoadProfiles()
         {
+            int voicesLoaded = 0;
             foreach (string admin in Permissions.Admin)
             {
                 var profile = LoadVoiceProfileFromConfig(admin, DrunkMale);
-                log.Info($"[VoiceProfiles] Loaded voice {profile.Voice.VoiceName} for {admin}");
+                log.Debug($"Loaded voice {profile.Voice.VoiceName} for {admin}");
+                voicesLoaded++;
             }
+            log.Info($"Loaded {voicesLoaded}/{Permissions.Admin.Count} Voice Profiles.");
         }
 
         public static VoiceProfile? GetVoiceProfile(string username)

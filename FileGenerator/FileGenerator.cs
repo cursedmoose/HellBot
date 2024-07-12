@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using TwitchBot.Config;
 
 namespace TwitchBot.FileGenerator
 {
@@ -39,6 +40,7 @@ namespace TwitchBot.FileGenerator
             }
             File.Copy(sourceFile, latest, true);
             CopyImageToJekyll(agent, sourceFile);
+            CopyImageToS3(sourceFile);
 
             return imageReference;
         }
@@ -51,6 +53,12 @@ namespace TwitchBot.FileGenerator
 
             File.Copy(origin, copyTo, true);
         }
+
+        private async void CopyImageToS3(string origin)
+        {
+            await Server.Instance.aws.UploadToS3(origin, origin);
+        }
+
         private void CopyImageToJekyll(Agent agent, string origin)
         {
             var directoryPath = Path.Combine(WSL_PATH, ASSETS, IMAGES, agent.Type, agent.Name.ToLower());
@@ -66,6 +74,8 @@ namespace TwitchBot.FileGenerator
             var date = DateTime.Now;
             var fileDate = date.ToString("yyyy-MM-dd");
             var sourceFile = Path.Combine("_posts", $"{fileDate}-{post.Type}-{post.Image}.markdown");
+            var imageTarget = AwsConfig.CloudfrontDomain + $"/{IMAGES}/{agent.Type}/{agent.Name.ToLower()}/{post.Image}.png";
+            var oldImageTarget = "/{ASSETS}/{IMAGES}/{agent.Type}/{agent.Name.ToLower()}/{post.Image}.png";
             Directory.CreateDirectory("_posts");
             File.WriteAllText(
                 path: sourceFile,
@@ -77,7 +87,7 @@ namespace TwitchBot.FileGenerator
                 $"author: {agent.Name.ToLower()}\r\n" +
                 $"title: {agent.Name}'s {post.Title}\r\n" +
                 $"reward: {post.Title}\r\n" +
-                $"image: \"/{ASSETS}/{IMAGES}/{agent.Type}/{agent.Name.ToLower()}/{post.Image}.png\"\r\n" +
+                $"image: {imageTarget}\r\n" +
                 "---\r\n" +
                 $"{post.Message}"
             );
