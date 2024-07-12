@@ -77,12 +77,12 @@ namespace TwitchBot.ElevenLabs
             CreateVoiceProfileConfig(TwitchConfig.Admins.Dlique, Moira);
         }
 
-        public static void LoadProfiles()
+        public static async void LoadProfiles()
         {
             int voicesLoaded = 0;
             foreach (string admin in Permissions.Admin)
             {
-                var profile = LoadVoiceProfileFromConfig(admin, DrunkMale);
+                var profile = await LoadVoiceProfileFromConfig(admin, DrunkMale);
                 log.Debug($"Loaded voice {profile.Voice.VoiceName} for {admin}");
                 voicesLoaded++;
             }
@@ -119,10 +119,10 @@ namespace TwitchBot.ElevenLabs
             return profile;
         }
 
-        public static VoiceProfile LoadVoiceProfileFromConfig(string username, VoiceProfile orDefaultTo)
+        public static async Task<VoiceProfile> LoadVoiceProfileFromConfig(string username, VoiceProfile orDefaultTo)
         {
             var agent = new FileGenerator.FileGenerator.UserAgent(username);
-            VoiceProfile? profile = Server.Instance.file.LoadAgentConfig<VoiceProfile>(agent, ConfigFile);
+            VoiceProfile? profile = await Server.Instance.file.LoadAgentConfig<VoiceProfile>(agent, ConfigFile);
             if (profile != null)
             {
                 Profiles[username] = profile;

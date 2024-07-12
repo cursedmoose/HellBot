@@ -21,8 +21,7 @@ namespace TwitchBot.Twitch.Commands
             }
             else if (subCommand.StartsWith("reset", CompareBy))
             {
-                HandleResetVoice(message.Username);
-                SendVoiceSettings(client, message);
+                HandleResetVoice(client, message);
             }
             else
             {
@@ -60,9 +59,11 @@ namespace TwitchBot.Twitch.Commands
             VoiceProfiles.CreateVoiceProfileConfig(username, voiceProfile);
         }
 
-        private void HandleResetVoice(string username)
+        private async void HandleResetVoice(TwitchIrcBot client, ChatMessage message)
         {
-            var voiceProfile = VoiceProfiles.LoadVoiceProfileFromConfig(username, VoiceProfiles.DrunkMale);
+            var username = message.Username;
+            var voiceProfile = await VoiceProfiles.LoadVoiceProfileFromConfig(username, VoiceProfiles.DrunkMale);
+
             if (VoiceProfiles.Profiles.ContainsKey(username))
             {
                 VoiceProfiles.Profiles[username] = voiceProfile;
@@ -71,6 +72,7 @@ namespace TwitchBot.Twitch.Commands
             {
                 VoiceProfiles.Profiles.Add(username, voiceProfile);
             }
+            SendVoiceSettings(client, message);
         }
 
         private void HandleSetVoiceParams(string username, int stability, int similarity, int style)

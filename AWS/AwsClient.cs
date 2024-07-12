@@ -17,8 +17,15 @@ namespace TwitchBot.AWS
             log.Info($"Configured S3 Client for {S3.Config.RegionEndpoint}");
         }
 
+        public bool IsEnabled()
+        {
+            return Enabled;
+        }
+
         public async Task<bool> ListS3BucketObjects()
         {
+            if (!Enabled) { return false; }
+
             try
             {
                 var request = new ListObjectsV2Request
@@ -50,6 +57,8 @@ namespace TwitchBot.AWS
 
         public async Task<bool> UploadToS3(string localFilePath, string s3fileName)
         {
+            if (!Enabled) { return false; }
+
             var request = new PutObjectRequest
             {
                 BucketName = AwsConfig.HellbotBucket,
@@ -60,6 +69,23 @@ namespace TwitchBot.AWS
             var response = await S3.PutObjectAsync(request);
             log.Info($"S3 Response: {response.HttpStatusCode}");
             return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
+
+        public async Task<string> ReadFromS3(string s3fileName)
+        {
+            if (!Enabled) { return ""; }
+
+            var request = new GetObjectRequest
+            {
+                BucketName = AwsConfig.HellbotBucket,
+                Key = s3fileName,
+            };
+
+            using var response = await S3.GetObjectAsync(request);
+            using var reader = new StreamReader(response.ResponseStream);
+            var text = reader.ReadToEnd();
+
+            return text;
         }
     }
 }

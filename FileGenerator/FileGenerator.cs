@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using TwitchBot.AWS;
 using TwitchBot.Config;
 
 namespace TwitchBot.FileGenerator
@@ -9,9 +10,10 @@ namespace TwitchBot.FileGenerator
         private const string ASSETS = "assets";
         private const string IMAGES = "images";
         private const string CONFIG = "config";
+        private readonly AwsClient Aws = Server.Instance.aws;
         public FileGenerator() 
         {
-
+            
         }
 
         protected readonly Logger log = new("File");
@@ -40,7 +42,7 @@ namespace TwitchBot.FileGenerator
             }
             File.Copy(sourceFile, latest, true);
             CopyImageToJekyll(agent, sourceFile);
-            CopyImageToS3(sourceFile);
+            CopyToS3(sourceFile);
 
             return imageReference;
         }
@@ -54,9 +56,9 @@ namespace TwitchBot.FileGenerator
             File.Copy(origin, copyTo, true);
         }
 
-        private async void CopyImageToS3(string origin)
+        private async void CopyToS3(string origin)
         {
-            await Server.Instance.aws.UploadToS3(origin, origin);
+            await Aws.UploadToS3(origin, origin);
         }
 
         private void CopyImageToJekyll(Agent agent, string origin)
@@ -107,17 +109,27 @@ namespace TwitchBot.FileGenerator
             log.Info($"Creating {fullPath}");
             Directory.CreateDirectory(agentDirectory);
             File.WriteAllText(fullPath, JsonSerializer.Serialize(configData, jsonOptions));
+            CopyToS3(fullPath);
             return fullPath;
         }
         
-        public T? LoadAgentConfig<T>(Agent agent, string configType)
+        public async Task<T?> LoadAgentConfig<T>(Agent agent, string configType)
         {
             var agentDirectory = Path.Combine(CONFIG, agent.Type, agent.Name);
             var fullPath = Path.Combine(agentDirectory, configType.ToLower() + ".json");
             try
             {
-                var jsonString = File.ReadAllText(fullPath);
-                return JsonSerializer.Deserialize<T>(jsonString, jsonOptions);
+                var jsonString = await Aws.ReadFromS3(fullPath);
+
+                if (jsonString != null)
+                {
+                    return JsonSerializer.Deserialize<T>(jsonString, jsonOptions);
+                }
+                else
+                {
+                    jsonString = File.ReadAllText(fullPath);
+                    return JsonSerializer.Deserialize<T>(jsonString, jsonOptions);
+                }
             }
             catch (Exception ex) 
             {
