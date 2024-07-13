@@ -77,7 +77,7 @@ namespace TwitchBot.ElevenLabs
             CreateVoiceProfileConfig(TwitchConfig.Admins.Dlique, Moira);
         }
 
-        public static async void LoadProfiles()
+        public static async Task LoadProfiles()
         {
             int voicesLoaded = 0;
             foreach (string admin in Permissions.Admin)
@@ -85,6 +85,7 @@ namespace TwitchBot.ElevenLabs
                 var profile = await LoadVoiceProfileFromConfig(admin, DrunkMale);
                 log.Debug($"Loaded voice {profile.Voice.VoiceName} for {admin}");
                 voicesLoaded++;
+                log.Debug($"Loaded {voicesLoaded}/{Permissions.Admin.Count} Voice Profiles.");
             }
             log.Info($"Loaded {voicesLoaded}/{Permissions.Admin.Count} Voice Profiles.");
         }

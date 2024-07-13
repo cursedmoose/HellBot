@@ -10,8 +10,8 @@ namespace TwitchBot.FileGenerator
         private const string ASSETS = "assets";
         private const string IMAGES = "images";
         private const string CONFIG = "config";
-        private readonly AwsClient Aws = Server.Instance.aws;
-        public FileGenerator() 
+        //private readonly AwsClient Aws = Server.Instance.aws;
+        public FileGenerator()
         {
             
         }
@@ -58,7 +58,7 @@ namespace TwitchBot.FileGenerator
 
         private async void CopyToS3(string origin)
         {
-            await Aws.UploadToS3(origin, origin);
+            await Server.Instance.aws.UploadToS3(origin, origin);
         }
 
         private void CopyImageToJekyll(Agent agent, string origin)
@@ -115,11 +115,12 @@ namespace TwitchBot.FileGenerator
         
         public async Task<T?> LoadAgentConfig<T>(Agent agent, string configType)
         {
-            var agentDirectory = Path.Combine(CONFIG, agent.Type, agent.Name);
-            var fullPath = Path.Combine(agentDirectory, configType.ToLower() + ".json");
+            var agentDirectory = string.Join("/", CONFIG, agent.Type, agent.Name); // Path.Combine(CONFIG, agent.Type, agent.Name);
+            var fullPath = string.Join("/", agentDirectory, configType.ToLower() + ".json"); // Path.Combine(agentDirectory, configType.ToLower() + ".json");
+
             try
             {
-                var jsonString = await Aws.ReadFromS3(fullPath);
+                var jsonString = await Server.Instance.aws.ReadFromS3(fullPath);
 
                 if (jsonString != null)
                 {

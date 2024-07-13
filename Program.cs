@@ -134,6 +134,7 @@ public class Server
         Werner
     };
 
+    public AwsClient aws = new(ServerConfig.Aws);
     public TwitchIrcBot twitch = new(ServerConfig.Twitch);
     public ElevenLabs elevenlabs = new(ServerConfig.ElevenLabs);
     public DiscordBot discord = new(ServerConfig.Discord);
@@ -144,7 +145,6 @@ public class Server
     // public ImageTextReader imageText = new OpenAIImageReader(new());
     public TobiiEyeTracker eyetracker = new(ServerConfig.EyeTracker);
     public MuseMonitor brain = new(ServerConfig.BrainTracker);
-    public AwsClient aws = new(ServerConfig.Aws);
 
     public HttpClient web = new();
     public FileGenerator file = new();

@@ -1,4 +1,6 @@
-﻿namespace TwitchBot.CommandLine.Commands.ServerOptions
+﻿using TwitchBot.ElevenLabs;
+
+namespace TwitchBot.CommandLine.Commands.ServerOptions
 {
     internal class StartSubroutine : ServerCommand
     {
@@ -7,7 +9,7 @@
         public StartSubroutine() : base("start")
         {
             ComponentsNeedingStartup.Add("assistant", Server.Instance.Assistant.StartAI);
-            ComponentsNeedingStartup.Add("scraper", Server.Instance.screen.StartScraper); 
+            ComponentsNeedingStartup.Add("scraper", Server.Instance.screen.StartScraper);
         }
 
         public override void Handle(Server server, string command)
