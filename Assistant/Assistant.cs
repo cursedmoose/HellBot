@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Web;
 using TwitchBot.Assistant.AI;
 using TwitchBot.ChatGpt;
 using TwitchBot.Discord;
@@ -28,18 +27,32 @@ namespace TwitchBot.Assistant
         public ObsSceneId Obs { get; private set; }
         protected readonly Logger log;
         protected readonly Random Random = new Random();
-
+        protected Dictionary<Actions, DateTime> LastActionTimes = new();
         public readonly FileGenerator.FileGenerator.Agent Agent;
-
         private bool AI_Running = false;
-        public abstract string GetSystemPersona();
+        public virtual string GetSystemPersona()
+        {
+            return Name;
+        }
 
         public string Persona { get { return GetSystemPersona(); } }
 
-        public abstract void WelcomeBack(string gameTitle);
+        public virtual async void WelcomeBack(string gameTitle)
+        {
+            log.Info($"Oh, welcome back to {gameTitle}...");
+            var welcomeBack = $"welcome me back to {gameTitle}";
+            await Server.Instance.chatgpt.GetResponse(Persona, welcomeBack);
+        }
 
-        public abstract void WelcomeFollower(string username);
-        public abstract void WelcomeSubscriber(string username, int length);
+        public virtual async void WelcomeFollower(string username)
+        {
+            await Server.Instance.chatgpt.GetResponse(Persona, $"welcome new follower \"{username}\"");
+        }
+
+        public virtual async void WelcomeSubscriber(string username, int length)
+        {
+            await Server.Instance.chatgpt.GetResponse(Persona, $"thank \"{username}\" for subscribing for {length} months");
+        }
 
         public abstract Task<bool> ChangeTitle();
         public abstract Task<bool> CreatePoll(string topic);
@@ -48,12 +61,20 @@ namespace TwitchBot.Assistant
         public abstract Task<bool> ConcludePoll(string title, string winner);
 
         public abstract Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost);
-        public abstract Task<bool> RunAd(int adSeconds = 5);
+        public virtual async Task<bool> RunAd(int adSeconds = 5)
+        {
+            var run = "announce that it is time for an ad";
+            await Server.Instance.chatgpt.GetResponse(Persona, run);
+            ObsScenes.Ads.Enable();
+            await Server.Instance.twitch.RunAd(adSeconds);
+            await Task.Delay((adSeconds + 10) * 1000);
+            ObsScenes.Ads.Disable();
+            var end = "announce that the ad is over";
+            await Server.Instance.chatgpt.GetResponse(Persona, end);
 
+            return true;
+        }
         public abstract Task<int> RollDice(int diceMax = 20);
-
-        protected Dictionary<Actions, Func<Task>> AI_Actions = new();
-
 
         public abstract Task CleanUp();
 
@@ -137,6 +158,11 @@ namespace TwitchBot.Assistant
                 ReactToGameStateAndCurrentScreen(twitchState.GameName);
             }
             
+        }
+
+        public async Task ReactToCurrentScreen()
+        {
+            await ReactToCurrentScreen("");
         }
 
         public async Task ReactToCurrentScreen(string prompt = "")

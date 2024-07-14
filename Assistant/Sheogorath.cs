@@ -16,30 +16,25 @@ namespace TwitchBot.Assistant
                 sceneId: ObsScenes.Sheogorath
             )
         {
-            AI_Actions.Add(Actions.Ban, Chatter);
-            AI_Actions.Add(Actions.Chat, Chatter);
-            AI_Actions.Add(Actions.ChangeTitle, Chatter);
-            AI_Actions.Add(Actions.RunPoll, Chatter);
-            AI_Actions.Add(Actions.CreateReward, Chatter);
-            AI_Actions.Add(Actions.PaintPicture, Chatter);
-            AI_Actions.Add(Actions.ReactToScreen, Chatter);
-            AI_Actions.Add(Actions.RequestNarration, () => { return ReactToCurrentScreen(); } );
-        }
-
-        readonly List<Actions> AI_CAPABILITIES = new()
+            Mischief[Actions.RunPoll] = TryRunPoll;
+            Mischief[Actions.CreateReward] = TryCreateReward;
+            Mischief[Actions.PaintPicture] = PaintPicture;
+            Mischief[Actions.ReactToScreen] = ReactToCurrentScreen;
+            Mischief[Actions.RequestNarration] = async () =>
             {
-                // Actions.Ban,
-                // Actions.Chat,
-                // Actions.ChangeTitle,
-                Actions.RunPoll,
-                Actions.CreateReward,
-                Actions.PaintPicture,
-                Actions.ReactToScreen,
-                Actions.RequestNarration
+                StreamTts($"Hey {Server.Instance.Narrator.Name}, what's going on here?");
+                await Server.Instance.Narrator.ReactToCurrentScreen();
             };
+
+            Mayhem[Actions.None] = () => { return Task.CompletedTask; };
+            Mayhem[Actions.Chat] = Chatter;
+            Mayhem[Actions.ReactToScreen] = ReactToCurrentScreen;
+        }
 
         private static DateTime LastPollTime = DateTime.MinValue;
         private static readonly Dictionary<string, string> rewardsCreated = new();
+        public Dictionary<Actions, Func<Task>> Mischief = new();
+        public Dictionary<Actions, Func<Task>> Mayhem = new();
 
         public override string GetSystemPersona()
         {
@@ -57,76 +52,58 @@ namespace TwitchBot.Assistant
             var mischief = Random.Next(3) == 0;
             if (mischief)
             {
-                var actionToTake = AI_CAPABILITIES[Random.Next(AI_CAPABILITIES.Count)];
-                log.Info($"Mischief!: {actionToTake}");
-                switch (actionToTake)
-                {
-                    case Actions.Ban:
-                        await BanRandomUser();
-                        break;
-                    case Actions.Chat:
-                        await Chatter();
-                        break;
-                    case Actions.ChangeTitle:
-                        await ChangeTitle();
-                        break;
-                    case Actions.RunPoll:
-                        if (LastPollTime.AddMinutes(15) < time)
-                        {
-                            LastPollTime = time;
-                            await CreatePoll();
-                        }
-                        else
-                        {
-                            log.Info("Poll is on cooldown!");
-                        }
-                        break;
-                    case Actions.CreateReward:
-                        if (rewardsCreated.Count <= 0)
-                        {
-                            await CreateReward();
-                            log.Info($"{rewardsCreated.Count} rewards available!");
-                        }
-                        else
-                        {
-                            if (Random.Next(5) == 0)
-                            {
-                                await CreateReward();
-                                log.Info($"{rewardsCreated.Count} rewards available!");
-                            }
-                            else
-                            {
-                                await DeleteReward();
-                                log.Info($"{rewardsCreated.Count} rewards available!");
-                            }
-                        }
-                        break;
-                    case Actions.PaintPicture:
-                        await PaintPicture();
-                        break;
-                    case Actions.ReactToScreen:
-                        await ReactToCurrentScreen();
-                        break;
-                    case Actions.RequestNarration:
-                        StreamTts($"Hey {Server.Instance.Narrator.Name}, what's going on here?");
-                        await Server.Instance.Narrator.ReactToCurrentScreen();
-                        break;
-                }
+                var actionToTake = Mischief.ElementAt(Random.Next(Mischief.Count));
+                log.Info($"Mischief!: {actionToTake.Key}");
+                await actionToTake.Value();
+                LastActionTimes[actionToTake.Key] = DateTime.Now;
             }
             else
             {
-                switch (Random.Next(3))
-                {
-                    case 0:
-                    case 1:
-                        await Chatter(); break;
-                    case 2: 
-                        await ReactToCurrentScreen(); break;
-                }
+                var actionToTake = Mayhem.ElementAt(Random.Next(Mischief.Count));
+                log.Info($"Mayhem!: {actionToTake.Key}");
+                await actionToTake.Value();
+                LastActionTimes[actionToTake.Key] = DateTime.Now;
             }
 
             await Task.Delay(300 * 1_000);
             return;
+        }
+
+        private async Task TryRunPoll()
+        {
+            DateTime lastPollTime = DateTime.MinValue;
+            LastActionTimes.TryGetValue(Actions.RunPoll, out lastPollTime);
+
+            if (lastPollTime.AddMinutes(15) < DateTime.Now)
+            {
+                await CreatePoll();
+            }
+            else
+            {
+                log.Info("Poll is on cooldown!");
+            }
+        }
+
+        private async Task TryCreateReward()
+        {
+            if (rewardsCreated.Count <= 0)
+            {
+                await CreateReward();
+                log.Info($"{rewardsCreated.Count} rewards available!");
+            }
+            else
+            {
+                if (Random.Next(5) == 0)
+                {
+                    await CreateReward();
+                    log.Info($"{rewardsCreated.Count} rewards available!");
+                }
+                else
+                {
+                    await DeleteReward();
+                    log.Info($"{rewardsCreated.Count} rewards available!");
+                }
+            }
         }
 
         protected override async Task AI_On_Start()
@@ -146,6 +123,11 @@ namespace TwitchBot.Assistant
                 persona: Persona
             );
             return;
+        }
+
+        public async Task<bool> CreatePoll()
+        {
+            return await CreatePoll("");
         }
 
         public override async Task<bool> CreatePoll(string topic = "")
@@ -209,24 +191,6 @@ namespace TwitchBot.Assistant
             var prompt = String.Format(Poll.PollEndPrompt, title, winner);
             await Server.Instance.chatgpt.GetResponse(Persona, prompt);
             return true;
-        }
-
-
-        public override async void WelcomeBack(string gameTitle)
-        {
-            log.Info($"Oh, welcome back to {gameTitle}...");
-            var welcomeBack = $"welcome me back to {gameTitle}";
-            await Server.Instance.chatgpt.GetResponse(Persona, welcomeBack);
-        }
-
-        public override async void WelcomeFollower(string username)
-        {
-            await Server.Instance.chatgpt.GetResponse(Persona, $"welcome new follower \"{username}\"");
-        }
-
-        public override async void WelcomeSubscriber(string username, int length)
-        {
-            await Server.Instance.chatgpt.GetResponse(Persona, $"thank \"{username}\" for subscribing for {length} months");
         }
 
         public override async Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost)

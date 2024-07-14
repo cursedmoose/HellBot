@@ -44,34 +44,9 @@ namespace TwitchBot.Assistant
             return Task.FromResult(false);
         }
 
-        public override string GetSystemPersona()
-        {
-            return "Werner Herzog";
-        }
-
         public override Task<int> RollDice(int diceMax = 20)
         {
             return Task.FromResult(1);
-        }
-
-        public override Task<bool> RunAd(int adSeconds = 5)
-        {
-            return Task.FromResult(false);
-        }
-
-        public override void WelcomeBack(string gameTitle)
-        {
-            return;
-        }
-
-        public override void WelcomeFollower(string username)
-        {
-            return;
-        }
-
-        public override void WelcomeSubscriber(string username, int length)
-        {
-            return;
         }
 
         protected override Task AI()

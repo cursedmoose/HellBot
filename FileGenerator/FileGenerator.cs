@@ -10,7 +10,6 @@ namespace TwitchBot.FileGenerator
         private const string ASSETS = "assets";
         private const string IMAGES = "images";
         private const string CONFIG = "config";
-        //private readonly AwsClient Aws = Server.Instance.aws;
         public FileGenerator()
         {
             
@@ -77,7 +76,6 @@ namespace TwitchBot.FileGenerator
             var fileDate = date.ToString("yyyy-MM-dd");
             var sourceFile = Path.Combine("_posts", $"{fileDate}-{post.Type}-{post.Image}.markdown");
             var imageTarget = AwsConfig.CloudfrontDomain + $"/{IMAGES}/{agent.Type}/{agent.Name.ToLower()}/{post.Image}.png";
-            var oldImageTarget = "/{ASSETS}/{IMAGES}/{agent.Type}/{agent.Name.ToLower()}/{post.Image}.png";
             Directory.CreateDirectory("_posts");
             File.WriteAllText(
                 path: sourceFile,
