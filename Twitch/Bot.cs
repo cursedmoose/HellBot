@@ -29,6 +29,10 @@ using TwitchLib.Api.Helix.Models.Channels.GetChannelInformation;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Helix.Models.ChannelPoints.CreateCustomReward;
 using TwitchLib.Api.Helix.Models.Ads;
+using TwitchLib.Api.Helix.Models.Predictions.CreatePrediction;
+using TwitchLib.Api.Helix.Models.Predictions;
+using OutcomeOption = TwitchLib.Api.Helix.Models.Predictions.CreatePrediction.Outcome;
+using TwitchLib.EventSub.Websockets.Handler.Channel.Predictions;
 
 namespace TwitchBot.Twitch
 {
@@ -43,6 +47,8 @@ namespace TwitchBot.Twitch
 
         Helix API { get { return api.Helix; } }
         Auth Auth { get { return api.Auth; } }
+
+        public Prediction? CurrentPrediction = null;
 
         internal readonly List<CommandHandler> commands;
         readonly MemoryCache eventLog = new("Events");
@@ -72,6 +78,7 @@ namespace TwitchBot.Twitch
                 "moderator:read:chatters",
                 "moderator:read:followers",
                 "channel:manage:polls",
+                "channel:manage:predictions",
                 "channel:manage:redemptions",
                 "channel:manage:broadcast",
                 "channel:manage:redemptions",
@@ -116,10 +123,11 @@ namespace TwitchBot.Twitch
             TwitchAPI api = new();
             api.Settings.ClientId = AccountInfo.API_CLIENT_ID;
             api.Settings.Scopes = new List<AuthScopes>() {
-            AuthScopes.Helix_Moderator_Read_Chatters,
-            AuthScopes.Helix_Moderator_Read_Followers,
-            AuthScopes.Helix_Channel_Manage_Polls
-        };
+                AuthScopes.Helix_Moderator_Read_Chatters,
+                AuthScopes.Helix_Moderator_Read_Followers,
+                AuthScopes.Helix_Channel_Manage_Polls,
+                AuthScopes.Helix_Channel_Manage_Predictions,
+            };
             return api;
         }
 
@@ -154,11 +162,14 @@ namespace TwitchBot.Twitch
             sp.AddService(EventSubSocket.GetType(), EventSubSocket);
             ILogger<EventSubWebsocketClient> logger = new NullLogger<EventSubWebsocketClient>();
             List<INotificationHandler> handlers = new()
-        {
-            new ChannelPointsCustomRewardRedemptionAddHandler(),
-            new ChannelPollBeginHandler(),
-            new ChannelPollEndHandler(),
-        };
+            {
+                new ChannelPointsCustomRewardRedemptionAddHandler(),
+                new ChannelPollBeginHandler(),
+                new ChannelPollEndHandler(),
+                new ChannelPredictionBeginHandler(),
+                new ChannelPredictionLockBeginHandler(),
+                new ChannelPredictionEndHandler(),
+            };
 
             EventSubWebsocketClient events = new(logger, handlers, sp, EventSubSocket);
             events.WebsocketConnected += EventSub_OnConnected;
@@ -166,10 +177,18 @@ namespace TwitchBot.Twitch
             events.WebsocketReconnected += EventSub_OnReconnect;
             events.ErrorOccurred += EventSub_Error;
 
+            events.ChannelAdBreakBegin += EventSub_OnAdBreakBegin;
+            events.ChannelFollow += EventSub_OnChannelFollow;
             events.ChannelPollBegin += EventSub_OnPollBegin;
             events.ChannelPollEnd += EventSub_OnPollEnd;
+
             events.ChannelPointsCustomRewardRedemptionAdd += EventSub_OnChannelPointsRedeemed;
-            events.ChannelFollow += EventSub_OnChannelFollow;
+
+            events.ChannelPredictionBegin += EventSub_OnPredictionStarted;
+            events.ChannelPredictionLock += EventSub_OnPredictionLocked;
+            events.ChannelPredictionEnd += EventSub_OnPredictionEnded;
+
+            // events.ChannelUpdate += // TODO: React to channel title, category updates
 
             log.Info("Event sub initialized.");
             return events;
@@ -509,6 +528,71 @@ namespace TwitchBot.Twitch
             return false;
         }
 
+        public async Task<bool> CreatePrediction(string title, List<string> choices)
+        {
+            if (!Enabled) { return false; }
+
+            if (!client.IsConnected || string.IsNullOrWhiteSpace(title) || choices.Count <= 0)
+            {
+                log.Info($"Client: {client.IsConnected} | Title: {title} | Choices: {choices.Count}");
+                return false;
+            }
+
+            List<OutcomeOption> outcomes = new();
+            foreach (string choice in choices)
+            {
+                outcomes.Add(new() { Title = choice });
+            }
+
+            var request = new CreatePredictionRequest
+            {
+                BroadcasterId = AccountInfo.USER_ID,
+                PredictionWindowSeconds = 60,
+                Title = title,
+                Outcomes = outcomes.ToArray()
+            };
+
+            log.Info("Creating Prediction...");
+            try
+            {
+                var response = await API.Predictions.CreatePredictionAsync(request);
+                CurrentPrediction = response.Data[0];
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Could not run prediction due to {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> ResolvePrediction(int predictionOptionWinner)
+        {
+            if (!Enabled) { return false; }
+            if (CurrentPrediction == null) { return false; }
+
+            var winningOutcome = CurrentPrediction.Outcomes[predictionOptionWinner];
+
+            log.Info("Ending Prediction...");
+            try
+            {
+                await API.Predictions.EndPredictionAsync(
+                    broadcasterId: AccountInfo.USER_ID,
+                    id: CurrentPrediction.Id,
+                    status: PredictionEndStatus.RESOLVED,
+                    winningOutcomeId: winningOutcome.Id
+                );
+
+                CurrentPrediction = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Could not run prediction due to {ex.Message}");
+                return false;
+            }
+        }
+
         #endregion API Hooks
 
         #region EventSub Handlers
@@ -566,6 +650,39 @@ namespace TwitchBot.Twitch
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
                 );
+
+                await API.EventSub.CreateEventSubSubscriptionAsync(
+                    type: "channel.prediction.begin",
+                    version: "1",
+                    condition: new Dictionary<string, string>()
+                    {
+                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                    },
+                    method: EventSubTransportMethod.Websocket,
+                    websocketSessionId: events.SessionId
+                );
+
+                await API.EventSub.CreateEventSubSubscriptionAsync(
+                    type: "channel.prediction.lock",
+                    version: "1",
+                    condition: new Dictionary<string, string>()
+                    {
+                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                    },
+                    method: EventSubTransportMethod.Websocket,
+                    websocketSessionId: events.SessionId
+                );
+
+                await API.EventSub.CreateEventSubSubscriptionAsync(
+                    type: "channel.prediction.end",
+                    version: "1",
+                    condition: new Dictionary<string, string>()
+                    {
+                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                    },
+                    method: EventSubTransportMethod.Websocket,
+                    websocketSessionId: events.SessionId
+                );
             }
         }
 
@@ -589,6 +706,12 @@ namespace TwitchBot.Twitch
             var eventData = e.Notification.Payload.Event;
             log.Info($"{eventData.UserName} followed {eventData.BroadcasterUserName} at {eventData.FollowedAt}");
             Server.Instance.Assistant.WelcomeFollower(eventData.UserName);
+            return Task.CompletedTask;
+        }
+
+        private Task EventSub_OnAdBreakBegin(object? sender, ChannelAdBreakBeginArgs e)
+        {
+            log.Info($"Ad break has begun.");
             return Task.CompletedTask;
         }
 
@@ -638,6 +761,29 @@ namespace TwitchBot.Twitch
                 );
             }
             return;
+        }
+
+        private async Task EventSub_OnPredictionStarted(object? sender, ChannelPredictionBeginArgs e)
+        {
+            var prediction = e.Notification.Payload.Event;
+            log.Info($"Prediction Started: {prediction.Title}");
+            await Server.Instance.Assistant.AnnouncePrediction(prediction);
+        }
+
+        private async Task EventSub_OnPredictionLocked(object? sender, ChannelPredictionLockArgs e)
+        {
+            var prediction = e.Notification.Payload.Event;
+            log.Info($"Prediction Locked: {prediction.Title}");
+            log.Info($"#1 choice: {prediction.Outcomes.MaxBy(outcome => outcome.ChannelPoints).Title}");
+            await Server.Instance.Assistant.AnnouncePredictionLocked(prediction);
+        }
+
+        private async Task EventSub_OnPredictionEnded(object? sender, ChannelPredictionEndArgs e)
+        {
+            var prediction = e.Notification.Payload.Event;
+            log.Info($"Prediction Ended: {prediction.Title}");
+            log.Info($"Winning outcome: {prediction.Outcomes.Where(outcome => outcome.Id == prediction.WinningOutcomeId).First().Title}");
+            await Server.Instance.Assistant.ConcludePrediction(prediction);
         }
 
         private Task EventSub_Error(object? sender, ErrorOccuredArgs e)

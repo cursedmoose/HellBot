@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using TwitchBot.Assistant.AI;
 using TwitchBot.ChatGpt;
 using TwitchBot.Discord;
@@ -6,6 +7,8 @@ using TwitchBot.ElevenLabs;
 using TwitchBot.OBS.Scene;
 using TwitchBot.ScreenCapture;
 using TwitchLib.Client.Models;
+using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
+using static TwitchBot.ChatGpt.ChatGpt;
 
 namespace TwitchBot.Assistant
 {
@@ -58,6 +61,48 @@ namespace TwitchBot.Assistant
 
         public abstract Task<bool> AnnouncePoll(string title, List<string> options);
         public abstract Task<bool> ConcludePoll(string title, string winner);
+
+        public virtual async Task<bool> AnnouncePrediction(ChannelPredictionBegin prediction)
+        {
+            StringBuilder predictionMessageBuilder = new();
+            predictionMessageBuilder.Append($"Title:{prediction.Title}\r\n");
+            for (int x = 0; x < prediction.Outcomes.Length; x++)
+            {
+                predictionMessageBuilder.Append($"Option {x + 1}: {prediction.Outcomes[x].Title}\r\n");
+            }
+
+            string pollMessage = predictionMessageBuilder.ToString();
+
+            var messages = ConvertToMessages(new List<string>() {
+                    pollMessage,
+                    "announce the prediction. limit 25 words",
+            });
+            var response = await Server.Instance.chatgpt.GetResponseText(Persona, messages);
+            StreamTts(response);
+
+            return true;
+        }
+
+        public virtual async Task<bool> AnnouncePredictionLocked(ChannelPredictionLock prediction)
+        {
+            string message = $"announce that voting is closed for \"{prediction.Title}\"";
+            await Server.Instance.chatgpt.GetResponse(Persona, message);
+
+            //var response = await Server.Instance.chatgpt.GetResponseText(Persona, message);
+            //StreamTts(response);
+
+            return true;
+        }
+
+        public virtual async Task<bool> ConcludePrediction(ChannelPredictionEnd predictionResult)
+        {
+            var winningOutcome = predictionResult.Outcomes.Where(outcome => outcome.Id == predictionResult.WinningOutcomeId).First();
+            var totalPointsWagered = predictionResult.Outcomes.Sum(outcome => outcome.ChannelPoints);
+            var prompt = $"the prediction \"{predictionResult.Title}\" ended. \"{winningOutcome.Title}\" was the result. ";
+            // var winnersPrompt = $"{winningOutcome.TopPredictors[0]?.UserName} and {winningOutcome.Users - 1} others won {totalPointsWagered} points";
+            await Server.Instance.chatgpt.GetResponse(Persona, prompt);
+            return true;
+        }
 
         public virtual async Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost)
         {

@@ -42,7 +42,7 @@ namespace TwitchBot.SpeechToText
 
         private async void onSpeechDetected(object? sender, SpeechDetectedEventArgs e)
         {
-            Log.Info("detected speech.");
+            Log.Debug("detected speech.");
         }
 
         public bool IsTalking()
@@ -57,14 +57,14 @@ namespace TwitchBot.SpeechToText
 
         private async void onAudioStateChange(object? sender, AudioStateChangedEventArgs e)
         {
-            Log.Info($"onAudioStateChange. {e.AudioState}");
+            Log.Debug($"onAudioStateChange. {e.AudioState}");
             CurrentAudioState = e.AudioState;
         }
 
         public async void onSpeechRecognized(object? sender, SpeechRecognizedEventArgs e)
         {
-            Log.Info("recognized speech. ");
-            Log.Info($"Grammar: {e.Result.Grammar.Name}, Confidence: {e.Result.Confidence}");
+            Log.Debug("recognized speech. ");
+            Log.Debug($"Grammar: {e.Result.Grammar.Name}, Confidence: {e.Result.Confidence}");
 
             if (e.Result.Semantics.ContainsKey("command"))
             {
