@@ -106,25 +106,6 @@ namespace TwitchBot.Assistant
             }
         }
 
-        protected override async Task AI_On_Start()
-        {
-            await Server.Instance.chatgpt.GetResponse(
-                chatPrompt: $"welcome back",
-                persona: Persona
-            );
-            await Task.Delay(15 * 1_000);
-            return;
-        }
-
-        protected override async Task AI_On_Stop()
-        {
-            await Server.Instance.chatgpt.GetResponse(
-                chatPrompt: $"goodbye",
-                persona: Persona
-            );
-            return;
-        }
-
         public async Task<bool> CreatePoll()
         {
             return await CreatePoll("");
@@ -189,13 +170,6 @@ namespace TwitchBot.Assistant
         {
             StreamTts("The results are in...");
             var prompt = String.Format(Poll.PollEndPrompt, title, winner);
-            await Server.Instance.chatgpt.GetResponse(Persona, prompt);
-            return true;
-        }
-
-        public override async Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost)
-        {
-            var prompt = $"react to \"{byUsername}\" redeeming channel reward \"{rewardTitle}\"";
             await Server.Instance.chatgpt.GetResponse(Persona, prompt);
             return true;
         }
@@ -299,7 +273,7 @@ namespace TwitchBot.Assistant
             {
                 ObsScenes.LastImage.Enable();
                 log.Info($"Major announcement: {announcement}");
-                PlayTts(announcement);
+                StreamTts(announcement);
                 Server.Instance.twitch.Respond($"\"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(imagePrompt)}\": {image}");
                 Server.Instance.file.PostToWebsite(Agent, new FileGenerator.FileGenerator.Post("painting", imagePrompt, imageFile, announcement));
             }
@@ -320,59 +294,5 @@ namespace TwitchBot.Assistant
 
             return true;
         }
-
-        public override async Task<int> RollDice(int diceMax = 20)
-        {
-            foreach (var scene in ObsScenes.AllDice)
-            {
-                scene.Disable();
-            }
-            var result = Random.Next(1, diceMax + 1);
-            var diceResultScene = ObsScenes.AllDice[result - 1];
-            diceResultScene.Enable();
-            var text = await Server.Instance.chatgpt.GetResponseText(Persona, $"react to me rolling a {result} out of {diceMax}. limit 15 words");
-            ObsScenes.DiceMain.Enable();
-            StreamTts(text);
-            ObsScenes.DiceMain.Disable();
-            diceResultScene.Disable();
-
-            return result;
-        }
-
-        private string GetDiceReactionString(int result)
-        {
-            return result switch
-            {
-                >= 20 => GetDiceReaction20(),
-                >= 13 => $"Nice, you rolled a {result}",
-                <= 1 => "Haha only a 1! What a loser!",
-                <= 8 => GetDiceReactionBad(result),
-                _ => $"{result}!"
-            };
-        }
-
-        private string GetDiceReaction20()
-        {
-            var Reactions = new List<string>()
-            {
-                "Holy cowabunga a 20!",
-                "Wow!! A 20!!!"
-            };
-
-            return Reactions[Random.Next(Reactions.Count)];
-        }
-
-        private string GetDiceReactionBad(int result)
-        {
-            var Reactions = new List<string>()
-            {
-                "Aw, you only rolled a {0}",
-                "{0}. You stink.",
-                "Uh oh, only a {0}"
-            };
-
-            return string.Format(Reactions[Random.Next(Reactions.Count)], result);
-        }
-
     }
 }

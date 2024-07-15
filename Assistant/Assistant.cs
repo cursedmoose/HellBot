@@ -34,7 +34,6 @@ namespace TwitchBot.Assistant
         {
             return Name;
         }
-
         public string Persona { get { return GetSystemPersona(); } }
 
         public virtual async void WelcomeBack(string gameTitle)
@@ -60,7 +59,12 @@ namespace TwitchBot.Assistant
         public abstract Task<bool> AnnouncePoll(string title, List<string> options);
         public abstract Task<bool> ConcludePoll(string title, string winner);
 
-        public abstract Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost);
+        public virtual async Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost)
+        {
+            var prompt = $"react to \"{byUsername}\" redeeming channel reward \"{rewardTitle}\"";
+            await Server.Instance.chatgpt.GetResponse(Persona, prompt);
+            return true;
+        }
         public virtual async Task<bool> RunAd(int adSeconds = 5)
         {
             var run = "announce that it is time for an ad";
@@ -74,7 +78,23 @@ namespace TwitchBot.Assistant
 
             return true;
         }
-        public abstract Task<int> RollDice(int diceMax = 20);
+        public virtual async Task<int> RollDice(int diceMax = 20)
+        {
+            foreach (var scene in ObsScenes.AllDice)
+            {
+                scene.Disable();
+            }
+            var result = Random.Next(1, diceMax + 1);
+            var diceResultScene = ObsScenes.AllDice[result - 1];
+            diceResultScene.Enable();
+            var text = await Server.Instance.chatgpt.GetResponseText(Persona, $"react to me rolling a {result} out of {diceMax}. limit 15 words");
+            ObsScenes.DiceMain.Enable();
+            StreamTts(text);
+            ObsScenes.DiceMain.Disable();
+            diceResultScene.Disable();
+
+            return result;
+        }
 
         public abstract Task CleanUp();
 
@@ -91,6 +111,15 @@ namespace TwitchBot.Assistant
                     TtsPlayer.PlayResponseStream(responseStream);
                     Obs.Disable();
                 }
+            }
+        }
+
+        public async Task WaitForSilence()
+        {
+            while (Server.Instance.speech.IsTalking())
+            {
+                log.Debug("Waiting for silence...");
+                await Task.Delay(250);
             }
         }
 
@@ -186,8 +215,24 @@ namespace TwitchBot.Assistant
         }
 
         protected abstract Task AI();
-        protected abstract Task AI_On_Start();
-        protected abstract Task AI_On_Stop();
+        protected virtual async Task AI_On_Start()
+        {
+            await Server.Instance.chatgpt.GetResponse(
+                chatPrompt: $"welcome back",
+                persona: Persona
+            );
+            await Task.Delay(15 * 1_000);
+            return;
+        }
+
+        protected virtual async Task AI_On_Stop()
+        {
+            await Server.Instance.chatgpt.GetResponse(
+                chatPrompt: $"goodbye",
+                persona: Persona
+            );
+            return;
+        }
         private async Task Run_AI()
         {
             do {

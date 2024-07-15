@@ -13,30 +13,13 @@ namespace TwitchBot.Assistant
         {
 
         }
-
-        public override Task<bool> AnnouncePoll(string title, List<string> options)
-        {
-            return Task.FromResult(false);
-        }
-
-        public override Task<bool> ChangeTitle()
-        {
-            return Task.FromResult(false);
-        }
-
-        public override Task<bool> ChannelRewardClaimed(string byUsername, string rewardTitle, int cost)
-        {
-            return Task.FromResult(false);
-        }
-
-        public override Task CleanUp()
+        protected override Task AI()
         {
             return Task.CompletedTask;
         }
-
-        public override Task<bool> ConcludePoll(string title, string winner)
+        public override Task CleanUp()
         {
-            return Task.FromResult(false);
+            return Task.CompletedTask;
         }
 
         public override Task<bool> CreatePoll(string topic)
@@ -44,24 +27,19 @@ namespace TwitchBot.Assistant
             return Task.FromResult(false);
         }
 
-        public override Task<int> RollDice(int diceMax = 20)
+        public override Task<bool> AnnouncePoll(string title, List<string> options)
         {
-            return Task.FromResult(1);
+            return Task.FromResult(false);
         }
 
-        protected override Task AI()
+        public override Task<bool> ConcludePoll(string title, string winner)
         {
-            return Task.CompletedTask;
-        }
+            return Task.FromResult(false);
+        }   
 
-        protected override Task AI_On_Start()
+        public override Task<bool> ChangeTitle()
         {
-            return Task.CompletedTask;
-        }
-
-        protected override Task AI_On_Stop()
-        {
-            return Task.CompletedTask;
+            return Task.FromResult(false);
         }
     }
 }
