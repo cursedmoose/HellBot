@@ -141,7 +141,7 @@ namespace TwitchBot.ElevenLabs
             return SubscriptionInfo.call(client);
         }
 
-        private void RunTtsStreamTask(VoiceProfile profile, string tts, ObsSceneId? obs)
+        private async void RunTtsStreamTask(VoiceProfile profile, string tts, ObsSceneId? obs)
         {
             var program_arguments = string.Join(" ", "/C python ElevenLabs/labs.py", API_KEY, profile.Voice.VoiceId, MODEL_TURBO);
             var tts_arguments = buildStreamArgs(tts);
@@ -158,6 +158,7 @@ namespace TwitchBot.ElevenLabs
             process.StartInfo.Arguments = all_arguments;
             process.StartInfo.CreateNoWindow = false;
 
+            await Server.Instance.Assistant.WaitForSilence();
             lock (Assistant.Assistant.TtsLock)
             {
                 obs?.Enable();

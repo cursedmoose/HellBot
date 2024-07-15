@@ -11,6 +11,8 @@ namespace TwitchBot.SpeechToText
         public int Rejections { get; private set; } = 0;
         public int Accepts { get; private set; } = 0;
 
+        private AudioState CurrentAudioState = AudioState.Silence;
+
         public SpeechToText(bool enabled)
         {
             recognizer = new(new CultureInfo("en-US"));
@@ -25,9 +27,14 @@ namespace TwitchBot.SpeechToText
 
                 recognizer.SpeechRecognized += onSpeechRecognized;
                 recognizer.SpeechDetected += onSpeechDetected;
+                recognizer.AudioStateChanged += onAudioStateChange;
+
+                recognizer.InitialSilenceTimeout = TimeSpan.FromSeconds(1.5);
+                recognizer.BabbleTimeout = TimeSpan.FromSeconds(1.5);
+                recognizer.EndSilenceTimeout = TimeSpan.FromSeconds(1.5);
+                recognizer.EndSilenceTimeoutAmbiguous = TimeSpan.FromSeconds(1.5);
+
                 recognizer.SetInputToDefaultAudioDevice();
-
-
                 Log.Info("Starting Speech Recognition Engine..");
                 recognizer.RecognizeAsync(RecognizeMode.Multiple);
             }
@@ -36,6 +43,22 @@ namespace TwitchBot.SpeechToText
         private async void onSpeechDetected(object? sender, SpeechDetectedEventArgs e)
         {
             Log.Info("detected speech.");
+        }
+
+        public bool IsTalking()
+        {
+            return CurrentAudioState == AudioState.Speech;
+        }
+
+        public bool IsSilent()
+        {
+            return !IsTalking();
+        }
+
+        private async void onAudioStateChange(object? sender, AudioStateChangedEventArgs e)
+        {
+            Log.Info($"onAudioStateChange. {e.AudioState}");
+            CurrentAudioState = e.AudioState;
         }
 
         public async void onSpeechRecognized(object? sender, SpeechRecognizedEventArgs e)

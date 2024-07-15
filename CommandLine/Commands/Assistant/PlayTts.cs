@@ -10,7 +10,7 @@
         public override void Handle(Server server, string command)
         {
             var prompt = StripCommandFromMessage(command);
-            server.Assistant.PlayTts(prompt);
+            server.Assistant.StreamTts(prompt);
         }
     }
 }

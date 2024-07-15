@@ -63,7 +63,7 @@ namespace TwitchBot.ChatGpt
             try
             {
                 var result = await RequestResponseText(messages, options);
-                Server.Instance.Assistant.PlayTts(result);
+                Server.Instance.Assistant.StreamTts(result);
                 return result;
             }
             catch (Exception e)
