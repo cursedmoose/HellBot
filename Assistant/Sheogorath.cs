@@ -1,10 +1,8 @@
 ﻿using System.Globalization;
-using System.Text;
 using TwitchBot.Assistant.AI;
 using TwitchBot.Assistant.Polls;
 using TwitchBot.ElevenLabs;
 using TwitchBot.OBS.Scene;
-using static TwitchBot.ChatGpt.ChatGpt;
 
 namespace TwitchBot.Assistant
 {
@@ -142,36 +140,6 @@ namespace TwitchBot.Assistant
                 title: poll.Title,
                 choices: poll.Choices
             );
-        }
-
-        public override async Task<bool> AnnouncePoll(string title, List<string> options)
-        {
-            StringBuilder pollMessageBuilder = new();
-            pollMessageBuilder.Append($"Title:{title}\r\n");
-            for (int x = 0; x < options.Count; x++)
-            {
-                pollMessageBuilder.Append($"Option {x + 1}: {options[x]}\r\n");
-            }
-
-            string pollMessage = pollMessageBuilder.ToString();
-
-            var messages = ConvertToMessages(new List<string>() {
-                    pollMessage,
-                    Poll.PollAnnounce
-            });
-            var response = await Server.Instance.chatgpt.GetResponseText(Persona, messages);
-            log.Info(response);
-            StreamTts(response);
-
-            return true;
-        }
-
-        public override async Task<bool> ConcludePoll(string title, string winner)
-        {
-            StreamTts("The results are in...");
-            var prompt = String.Format(Poll.PollEndPrompt, title, winner);
-            await Server.Instance.chatgpt.GetResponse(Persona, prompt);
-            return true;
         }
 
         public override async Task<bool> ChangeTitle()

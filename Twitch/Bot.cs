@@ -716,20 +716,20 @@ namespace TwitchBot.Twitch
         }
 
 
-        private Task EventSub_OnPollBegin(object? sender, ChannelPollBeginArgs e)
+        private async Task EventSub_OnPollBegin(object? sender, ChannelPollBeginArgs e)
         {
             var eventData = e.Notification.Payload.Event;
             log.Info($"Poll started: {eventData.Title}");
             log.Info($"{eventData.Choices[0].Title}");
-            Server.Instance.Assistant.AnnouncePoll(eventData.Title, eventData.Choices.Select(choice => choice.Title).ToList());
-            return Task.CompletedTask;
+            await Server.Instance.Assistant.AnnouncePoll(eventData.Title, eventData.Choices.Select(choice => choice.Title).ToList());
+            return;
         }
 
-        private Task EventSub_OnPollEnd(object? sender, ChannelPollEndArgs e)
+        private async Task EventSub_OnPollEnd(object? sender, ChannelPollEndArgs e)
         {
             var eventData = e.Notification.Payload.Event;
 
-            if (eventLog[eventData.Id] != null) { return Task.CompletedTask; }
+            if (eventLog[eventData.Id] != null) { return; }
             eventLog.Add(eventData.Id, "end", DateTime.Now.AddMinutes(5));
 
             log.Info($"Poll ended: {eventData.Title}");
@@ -738,8 +738,8 @@ namespace TwitchBot.Twitch
             {
                 log.Info($"{choice.Title}: {choice.Votes}");
             }
-            Server.Instance.Assistant.ConcludePoll(eventData.Title, eventData.Choices.MaxBy(it => it.Votes).Title);
-            return Task.CompletedTask;
+            await Server.Instance.Assistant.ConcludePoll(eventData.Title, eventData.Choices.MaxBy(it => it.Votes).Title);
+            return;
         }
 
         private async Task EventSub_OnChannelPointsRedeemed(object? sender, ChannelPointsCustomRewardRedemptionArgs e)
