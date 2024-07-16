@@ -1,13 +1,13 @@
-﻿using OBSWebsocketDotNet;
-using OBSWebsocketDotNet.Communication;
+﻿using OBSWebsocketDotNet.Communication;
 using OBSWebsocketDotNet.Types.Events;
 using TwitchBot.OBS.Scene;
+using TwitchBot.OBS.Websocket;
 
 namespace TwitchBot.OBS
 {
     public class ObsClient
     {
-        private readonly OBSWebsocket obs;
+        private readonly HellbotObsWebsocket obs;
         private readonly static Logger log = new("OBS");
         public readonly bool Enabled = true;
 
@@ -15,14 +15,23 @@ namespace TwitchBot.OBS
         {
             Enabled = enabled;
 
-            obs = new OBSWebsocket();
+            obs = new HellbotObsWebsocket();
+
             obs.Connected += OnConnect;
             obs.Disconnected += OnDisconnect;
             obs.SceneItemEnableStateChanged += OnSceneChange;
 
             if (Enabled)
             {
-                obs.ConnectAsync("ws://localhost:4455/", "");
+                log.Info("Connecting to OBS...");
+                try
+                {
+                    obs.ConnectAsync("ws://localhost:4455/", null);
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"{ex}");
+                }
             }
         }
 
