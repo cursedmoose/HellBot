@@ -11,11 +11,12 @@
             {
                 if (int.TryParse(timeString, out int AdTime))
                 {
-                    await server.Assistant.RunAd(AdTime);
+                    await Server.Instance.twitch.RunAd(AdTime);
+
                 }
                 else
                 {
-                    await server.Assistant.RunAd(180);
+                    await Server.Instance.twitch.RunAd(180);
                 }
             }
             catch (Exception e)

@@ -138,12 +138,12 @@ namespace TwitchBot.Assistant
             await Server.Instance.chatgpt.GetResponse(Persona, prompt);
             return true;
         }
-        public virtual async Task<bool> RunAd(int adSeconds = 5)
+
+        public virtual async Task<bool> AnnounceAd(int adSeconds = 5)
         {
-            var run = "announce that it is time for an ad";
+            var run = $"announce that it is time for {adSeconds} seconds of ads";
             await Server.Instance.chatgpt.GetResponse(Persona, run);
             ObsScenes.Ads.Enable();
-            await Server.Instance.twitch.RunAd(adSeconds);
             await Task.Delay((adSeconds + 10) * 1000);
             ObsScenes.Ads.Disable();
             var end = "announce that the ad is over";

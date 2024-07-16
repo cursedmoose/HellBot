@@ -33,6 +33,8 @@ using TwitchLib.Api.Helix.Models.Predictions.CreatePrediction;
 using TwitchLib.Api.Helix.Models.Predictions;
 using OutcomeOption = TwitchLib.Api.Helix.Models.Predictions.CreatePrediction.Outcome;
 using TwitchLib.EventSub.Websockets.Handler.Channel.Predictions;
+using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
+using TwitchBot.Twitch.NotificationHandlers;
 
 namespace TwitchBot.Twitch
 {
@@ -82,6 +84,7 @@ namespace TwitchBot.Twitch
                 "channel:manage:redemptions",
                 "channel:manage:broadcast",
                 "channel:manage:redemptions",
+                "channel:read:ads",
                 "channel:edit:commercial"
             };
 
@@ -127,6 +130,8 @@ namespace TwitchBot.Twitch
                 AuthScopes.Helix_Moderator_Read_Followers,
                 AuthScopes.Helix_Channel_Manage_Polls,
                 AuthScopes.Helix_Channel_Manage_Predictions,
+                AuthScopes.Channel_Commercial,
+                AuthScopes.Helix_Channel_Edit_Commercial
             };
             return api;
         }
@@ -169,6 +174,7 @@ namespace TwitchBot.Twitch
                 new ChannelPredictionBeginHandler(),
                 new ChannelPredictionLockBeginHandler(),
                 new ChannelPredictionEndHandler(),
+                new ChannelAdBreakBeginHandler(),
             };
 
             EventSubWebsocketClient events = new(logger, handlers, sp, EventSubSocket);
@@ -178,6 +184,7 @@ namespace TwitchBot.Twitch
             events.ErrorOccurred += EventSub_Error;
 
             events.ChannelAdBreakBegin += EventSub_OnAdBreakBegin;
+
             events.ChannelFollow += EventSub_OnChannelFollow;
             events.ChannelPollBegin += EventSub_OnPollBegin;
             events.ChannelPollEnd += EventSub_OnPollEnd;
@@ -683,6 +690,17 @@ namespace TwitchBot.Twitch
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
                 );
+
+                await API.EventSub.CreateEventSubSubscriptionAsync(
+                    type: "channel.ad_break.begin",
+                    version: "1",
+                    condition: new Dictionary<string, string>()
+                    {
+                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                    },
+                    method: EventSubTransportMethod.Websocket,
+                    websocketSessionId: events.SessionId
+                );
             }
         }
 
@@ -709,10 +727,12 @@ namespace TwitchBot.Twitch
             return Task.CompletedTask;
         }
 
-        private Task EventSub_OnAdBreakBegin(object? sender, ChannelAdBreakBeginArgs e)
+        private async Task EventSub_OnAdBreakBegin(object? sender, ChannelAdBreakBeginArgs e)
         {
-            log.Info($"Ad break has begun.");
-            return Task.CompletedTask;
+            var adInfo = e.Notification.Payload.Event;
+            log.Info($"{adInfo.DurationSeconds}s Ad break has begun. ");
+            await Server.Instance.Assistant.AnnounceAd(adInfo.DurationSeconds);
+            return;
         }
 
 

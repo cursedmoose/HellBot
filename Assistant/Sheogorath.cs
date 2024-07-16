@@ -249,12 +249,11 @@ namespace TwitchBot.Assistant
 
         }
 
-        public override async Task<bool> RunAd(int adSeconds = 5)
+        public override async Task<bool> AnnounceAd(int adSeconds = 5)
         {
             var run = "apologize that it is time for an ad";
             await Server.Instance.chatgpt.GetResponse(Persona, run);
             ObsScenes.Ads.Enable();
-            await Server.Instance.twitch.RunAd(adSeconds);
             await Task.Delay((adSeconds + 10) * 1000);
             ObsScenes.Ads.Disable();
             var end = "rejoice that the ad is over";
