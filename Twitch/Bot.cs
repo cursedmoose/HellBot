@@ -33,8 +33,9 @@ using TwitchLib.Api.Helix.Models.Predictions.CreatePrediction;
 using TwitchLib.Api.Helix.Models.Predictions;
 using OutcomeOption = TwitchLib.Api.Helix.Models.Predictions.CreatePrediction.Outcome;
 using TwitchLib.EventSub.Websockets.Handler.Channel.Predictions;
-using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 using TwitchBot.Twitch.NotificationHandlers;
+using TwitchBot.Twitch.Model;
+using TwitchLib.EventSub.Websockets.Handler.Channel;
 
 namespace TwitchBot.Twitch
 {
@@ -51,6 +52,7 @@ namespace TwitchBot.Twitch
         Auth Auth { get { return api.Auth; } }
 
         public Prediction? CurrentPrediction = null;
+        public ChannelInfo? CurrentChannelInfo = null;
 
         internal readonly List<CommandHandler> commands;
         readonly MemoryCache eventLog = new("Events");
@@ -94,6 +96,7 @@ namespace TwitchBot.Twitch
                 client?.Connect();
                 StartApi(scopes).GetAwaiter().GetResult();
                 events?.ConnectAsync();
+                CurrentChannelInfo = ChannelInfo.FromChannelInformation(GetStreamInfo().GetAwaiter().GetResult());
             }
         }
 
@@ -168,6 +171,7 @@ namespace TwitchBot.Twitch
             ILogger<EventSubWebsocketClient> logger = new NullLogger<EventSubWebsocketClient>();
             List<INotificationHandler> handlers = new()
             {
+                new ChannelUpdateHandler(),
                 new ChannelPointsCustomRewardRedemptionAddHandler(),
                 new ChannelPollBeginHandler(),
                 new ChannelPollEndHandler(),
@@ -195,7 +199,7 @@ namespace TwitchBot.Twitch
             events.ChannelPredictionLock += EventSub_OnPredictionLocked;
             events.ChannelPredictionEnd += EventSub_OnPredictionEnded;
 
-            // events.ChannelUpdate += // TODO: React to channel title, category updates
+            events.ChannelUpdate += EventSub_OnChannelUpdate;
 
             log.Info("Event sub initialized.");
             return events;
@@ -268,7 +272,7 @@ namespace TwitchBot.Twitch
             }
             else
             {
-                PlayRumorTts(sender, e);
+                // PlayRumorTts(sender, e);
             }
 
             if (!Permissions.IsUserInGroup(e.ChatMessage.Username, PermissionGroup.Admin)) // lol admins can't get banned 
@@ -328,7 +332,15 @@ namespace TwitchBot.Twitch
         {
             if (Enabled)
             {
-                tts.PlayRumor(e.ChatMessage);
+                tts.PlayRumor(e.ChatMessage.Message);
+            }
+        }
+
+        private void PlayRumorTts(string message)
+        {
+            if (Enabled)
+            {
+                tts.PlayRumor(message);
             }
         }
         #endregion Tts
@@ -618,8 +630,19 @@ namespace TwitchBot.Twitch
                     version: "2",
                     condition: new Dictionary<string, string>()
                     {
-                    { "broadcaster_user_id", AccountInfo.USER_ID },
-                    { "moderator_user_id", AccountInfo.USER_ID },
+                        { "broadcaster_user_id", AccountInfo.USER_ID },
+                        { "moderator_user_id", AccountInfo.USER_ID },
+                    },
+                    method: EventSubTransportMethod.Websocket,
+                    websocketSessionId: events.SessionId
+                );
+
+                await API.EventSub.CreateEventSubSubscriptionAsync(
+                    type: "channel.update",
+                    version: "2",
+                    condition: new Dictionary<string, string>()
+                    {
+                        { "broadcaster_user_id", AccountInfo.USER_ID },
                     },
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
@@ -630,7 +653,7 @@ namespace TwitchBot.Twitch
                     version: "1",
                     condition: new Dictionary<string, string>()
                     {
-                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                        { "broadcaster_user_id", AccountInfo.USER_ID },
                     },
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
@@ -641,7 +664,7 @@ namespace TwitchBot.Twitch
                     version: "1",
                     condition: new Dictionary<string, string>()
                     {
-                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                        { "broadcaster_user_id", AccountInfo.USER_ID },
                     },
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
@@ -652,7 +675,7 @@ namespace TwitchBot.Twitch
                     version: "1",
                     condition: new Dictionary<string, string>()
                     {
-                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                        { "broadcaster_user_id", AccountInfo.USER_ID },
                     },
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
@@ -663,7 +686,7 @@ namespace TwitchBot.Twitch
                     version: "1",
                     condition: new Dictionary<string, string>()
                     {
-                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                        { "broadcaster_user_id", AccountInfo.USER_ID },
                     },
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
@@ -674,7 +697,7 @@ namespace TwitchBot.Twitch
                     version: "1",
                     condition: new Dictionary<string, string>()
                     {
-                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                        { "broadcaster_user_id", AccountInfo.USER_ID },
                     },
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
@@ -685,7 +708,7 @@ namespace TwitchBot.Twitch
                     version: "1",
                     condition: new Dictionary<string, string>()
                     {
-                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                        { "broadcaster_user_id", AccountInfo.USER_ID },
                     },
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
@@ -696,7 +719,7 @@ namespace TwitchBot.Twitch
                     version: "1",
                     condition: new Dictionary<string, string>()
                     {
-                    { "broadcaster_user_id", AccountInfo.USER_ID },
+                        { "broadcaster_user_id", AccountInfo.USER_ID },
                     },
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
@@ -765,20 +788,28 @@ namespace TwitchBot.Twitch
         private async Task EventSub_OnChannelPointsRedeemed(object? sender, ChannelPointsCustomRewardRedemptionArgs e)
         {
             var eventData = e.Notification.Payload.Event;
-            log.Info($"{eventData.UserName} redeemed {eventData.Reward.Title}");
-            await Server.Instance.Assistant.ChannelRewardClaimed(eventData.UserName, eventData.Reward.Title, eventData.Reward.Cost);
-            var reward = await Server.Instance.chatgpt.GetImage(eventData.Reward.Title);
-            if (reward != null)
+            log.Info($"{eventData.UserName} redeemed \"{eventData.Reward.Title}\": {eventData.UserInput}");
+
+            if (eventData.Reward.Title == "Start a Rumor")
             {
-                Respond($"@{eventData.UserName}: {reward}");
-                var agent = new FileGenerator.FileGenerator.Agent("user", eventData.UserName);
-                var imageFile = await Server.Instance.file.SaveImage(reward, agent);
-                Server.Instance.file.PostToWebsite(agent, new FileGenerator.FileGenerator.Post(
-                    Type:"reward",
-                    Title: eventData.Reward.Title,
-                    Image: imageFile, 
-                    Message: $"a huge waste of {eventData.Reward.Cost} sweet rolls")
-                );
+                PlayRumorTts(eventData.UserInput);
+            }
+            else
+            {
+                await Server.Instance.Assistant.ChannelRewardClaimed(eventData.UserName, eventData.Reward.Title, eventData.Reward.Cost);
+                var reward = await Server.Instance.chatgpt.GetImage(eventData.Reward.Title);
+                if (reward != null)
+                {
+                    Respond($"@{eventData.UserName}: {reward}");
+                    var agent = new FileGenerator.FileGenerator.Agent("user", eventData.UserName);
+                    var imageFile = await Server.Instance.file.SaveImage(reward, agent);
+                    Server.Instance.file.PostToWebsite(agent, new FileGenerator.FileGenerator.Post(
+                        Type:"reward",
+                        Title: eventData.Reward.Title,
+                        Image: imageFile, 
+                        Message: $"a huge waste of {eventData.Reward.Cost} sweet rolls")
+                    );
+                }
             }
             return;
         }
@@ -804,6 +835,16 @@ namespace TwitchBot.Twitch
             log.Info($"Prediction Ended: {prediction.Title}");
             log.Info($"Winning outcome: {prediction.Outcomes.Where(outcome => outcome.Id == prediction.WinningOutcomeId).First().Title}");
             await Server.Instance.Assistant.ConcludePrediction(prediction);
+        }
+
+        private async Task EventSub_OnChannelUpdate(object? sender, ChannelUpdateArgs e)
+        {
+            var update = ChannelInfo.FromChannelUpdate(e.Notification.Payload.Event);
+
+            log.Info($"Old: {CurrentChannelInfo}");
+            log.Info($"New: {update}");
+            await Server.Instance.Assistant.RespondToChannelUpdate(CurrentChannelInfo, update);
+            CurrentChannelInfo = update;
         }
 
         private Task EventSub_Error(object? sender, ErrorOccuredArgs e)

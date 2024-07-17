@@ -15,6 +15,7 @@ namespace TwitchBot.Twitch.NotificationHandlers
 
         public void Handle(EventSubWebsocketClient client, string jsonString, JsonSerializerOptions serializerOptions)
         {
+            Console.WriteLine("[AdBreakHandler] received handle request");
             try
             {
                 EventSubNotification<ChannelAdBreakBegin> eventSubNotification = JsonSerializer.Deserialize<EventSubNotification<ChannelAdBreakBegin>>(jsonString.AsSpan(), serializerOptions);

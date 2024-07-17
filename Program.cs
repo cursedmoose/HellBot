@@ -109,10 +109,12 @@ public class ServerConfig
     public static readonly bool Discord = ENABLED;
     public static readonly bool ChatGpt = ENABLED;
     public static readonly bool Obs = ENABLED;
-    public static readonly bool Speech = DISABLED;
+    public static readonly bool Speech = ENABLED;
+    public static readonly bool Aws = ENABLED;
+
+    // Experimental
     public static readonly bool EyeTracker = DISABLED;
     public static readonly bool BrainTracker = DISABLED;
-    public static readonly bool Aws = ENABLED;
 }
 
 public class Server

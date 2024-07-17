@@ -37,28 +37,16 @@ namespace TwitchBot.Twitch
             }
         }
 
-        public void PlayRumor(ChatMessage rumor)
+        public void PlayRumor(string rumor)
         {
             var voiceProfile = VoiceProfiles.GetRumorVoiceProfile();
-            if (voiceProfile != null && rumor.Message.Length <= 128)
+            if (voiceProfile != null)
             {
-                Server.Instance.elevenlabs.StreamTts(voiceProfile, rumor.Message);
-                /*
-                Task.Factory.StartNew(() =>
-                {
-                    try
-                    {
-                        Server.Instance.elevenlabs.PlayTts(rumor.Message, voiceProfile);
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Info("Failed to play sound due to " + ex.Message);
-                    }
-                });*/
+                Server.Instance.elevenlabs.StreamTts(voiceProfile, rumor);
             }
             else
             {
-                log.Info($"Message length was too long for tts: {rumor.Message.Length} / 128");
+                log.Error($"Failed to load a voice profile!");
             }
         }
     }

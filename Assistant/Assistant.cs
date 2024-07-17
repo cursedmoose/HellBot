@@ -7,6 +7,7 @@ using TwitchBot.Discord;
 using TwitchBot.ElevenLabs;
 using TwitchBot.OBS.Scene;
 using TwitchBot.ScreenCapture;
+using TwitchBot.Twitch.Model;
 using TwitchLib.Client.Models;
 using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 using static TwitchBot.ChatGpt.ChatGpt;
@@ -285,6 +286,21 @@ namespace TwitchBot.Assistant
             {
                 log.Error("Could not react to current screen as discord is disabled.");
             }
+        }
+
+        public async Task RespondToChannelUpdate(ChannelInfo oldInfo, ChannelInfo newInfo)
+        {
+            if (oldInfo.GameName != newInfo.GameName)
+            {
+                await RespondToPrompt($"I've changed from playing {oldInfo.GameName} to playing {newInfo.GameName}");
+            }
+            else if (oldInfo.Title != newInfo.Title)
+            {
+                await RespondToPrompt($"I've changed the title from {oldInfo.Title} to {newInfo.Title}");
+            }
+
+
+            return;
         }
 
         protected abstract Task AI();
