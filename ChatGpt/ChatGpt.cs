@@ -7,6 +7,7 @@ using OpenAI.Models;
 using static TwitchBot.Config.ChatGptConfig;
 using static TwitchBot.Config.DiscordConfig;
 using Message = OpenAI.Chat.Message;
+using TwitchBot.Twitch.Model;
 
 namespace TwitchBot.ChatGpt
 {
@@ -146,7 +147,7 @@ namespace TwitchBot.ChatGpt
             return await RequestResponses(chatPrompts, options);
         }
 
-        public async Task<string> GetImage(string imagePrompt, ChatMessage? message = null)
+        public async Task<string> GetImage(string imagePrompt, TwitchUser? forUser = null)
         {
             log.Info($"Generating image: {imagePrompt}");
             var results = await openAI.ImagesEndPoint.GenerateImageAsync(
@@ -163,8 +164,8 @@ namespace TwitchBot.ChatGpt
             Server.Instance.discord.PostMessage(Channel.JustMe.IMAGES, $"\"{title}\":");
             Server.Instance.discord.PostMessage(Channel.JustMe.IMAGES, $"{shortUrl}");
 
-            if (message != null) {
-                Server.Instance.twitch.RespondTo(message, $"{title}: {shortUrl}");
+            if (forUser != null) {
+                Server.Instance.twitch.RespondTo(forUser, $"{title}: {shortUrl}");
             }
 
             return shortUrl;

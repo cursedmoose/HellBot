@@ -51,8 +51,9 @@ namespace TwitchBot.Twitch
         Helix API { get { return api.Helix; } }
         Auth Auth { get { return api.Auth; } }
 
-        public Prediction? CurrentPrediction = null;
         public ChannelInfo? CurrentChannelInfo = null;
+        public Prediction? CurrentPrediction = null;
+        public Commemoration? CurrentCommemoration = null;
 
         internal readonly List<CommandHandler> commands;
         readonly MemoryCache eventLog = new("Events");
@@ -216,12 +217,16 @@ namespace TwitchBot.Twitch
             api.Settings.AccessToken = resp.AccessToken;
             var user = (await API.Users.GetUsersAsync()).Users[0];
             Console.WriteLine($"Authorization success!\n\nUser: {user.DisplayName}\nScopes: {string.Join(", ", resp.Scopes)}");
-
         }
 
         public void RespondTo(ChatMessage message, string withMessage)
         {
             client.SendMessage(message.Channel, withMessage);
+        }
+
+        public void RespondTo(TwitchUser user, string withMessage)
+        {
+            client.SendMessage(user.Channel, withMessage);
         }
 
         public void Respond(string withMessage)
@@ -793,6 +798,17 @@ namespace TwitchBot.Twitch
             if (eventData.Reward.Title == "Start a Rumor")
             {
                 PlayRumorTts(eventData.UserInput);
+            }
+            else if (eventData.Reward.Title == "Commemorate")
+            {
+                // Begin a Commemoration
+                CurrentCommemoration = new(eventData.UserInput, new(eventData.UserName, AccountInfo.CHANNEL));
+                // Count Votes
+                CurrentCommemoration.Start();
+                await Task.Delay(60 * 1_000);
+                CurrentCommemoration.Stop();
+                await Server.Instance.Assistant.Commemorate(CurrentCommemoration.Event, CurrentCommemoration.Organizer, CurrentCommemoration.Observers);
+                CurrentCommemoration = null;
             }
             else
             {

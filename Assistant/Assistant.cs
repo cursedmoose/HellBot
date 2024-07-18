@@ -356,20 +356,20 @@ namespace TwitchBot.Assistant
             return;
         }
 
-        public async Task Commemorate(string excitingEvent, ChatMessage? requester = null)
+        public async Task Commemorate(string excitingEvent, TwitchUser requester, ICollection<TwitchUser> commemorators)
         {
             var image = await Server.Instance.chatgpt.GetImage(excitingEvent, requester);
-            var agent = requester == null
-                ? Agent
-                : new FileGenerator.FileGenerator.Agent("user", requester.DisplayName);
+            var agent = new FileGenerator.FileGenerator.Agent("user", requester.UserName);
             var imageFile = await Server.Instance.file.SaveImage(image, agent);
+            var headline = $"{requester.UserName} and {commemorators.Count} others commemorate {excitingEvent}";
 
             if (image != null)
             {
                 ObsScenes.LastImage.Enable();
             }
+
             var commentary = await Server.Instance.chatgpt.GetResponse(
-                chatPrompt: $"commemorate  {excitingEvent}",
+                chatPrompt: $"commemorate {excitingEvent} with {requester.UserName} and {commemorators.Count} others",
                 persona: Persona
             );
 

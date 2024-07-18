@@ -1,26 +1,34 @@
-﻿using TwitchLib.Client.Models;
+﻿using TwitchBot.Twitch.Model;
+using TwitchLib.Client.Models;
 
 namespace TwitchBot.Twitch.Commands
 {
     internal class CommemerateEvent : CommandHandler
     {
-        public CommemerateEvent() : base(command: "!commemorate", users: PermissionGroup.Admin)
+        public CommemerateEvent() : base(command: "!commemorate", users: PermissionGroup.User)
         {
             Aliases.Add("!commemoration");
         }
 
         public override bool MeetsCommandRequirements(ChatMessage message)
         {
-            return Server.Instance.chatgpt.Enabled;
+            if (Server.Instance.twitch.Enabled && Server.Instance.chatgpt.Enabled && Server.Instance.elevenlabs.Enabled)
+            {
+                return Server.Instance.twitch.CurrentCommemoration != null && Server.Instance.twitch.CurrentCommemoration.InProgress();
+            }
+
+            return false;
         }
 
-        public override async void Handle(TwitchIrcBot client, ChatMessage message)
+        public override void Handle(TwitchIrcBot client, ChatMessage message)
         {
-            var imageRequest = StripCommandFromMessage(message);
-
-            if (imageRequest.Length > 0)
+            if (Server.Instance.twitch.CurrentCommemoration != null && Server.Instance.twitch.CurrentCommemoration.InProgress())
             {
-                await Server.Instance.Assistant.Commemorate(imageRequest, message);
+                var user = TwitchUser.FromChatMessage(message);
+                if (user.UserName != Server.Instance.twitch.CurrentCommemoration.Organizer.UserName)
+                {
+                    Server.Instance.twitch.CurrentCommemoration.Observers.Add(TwitchUser.FromChatMessage(message));
+                }
             }
         }
     }
