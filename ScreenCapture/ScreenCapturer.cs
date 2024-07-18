@@ -47,6 +47,7 @@ namespace TwitchBot.ScreenCapture
         {
             var filePath = "images/screenshots/latest.png";
             var img = CaptureScreen();
+            // If this is erroring, you're probably calling it twice.
             using (var fs = new FileStream(filePath, FileMode.Create))
             {
                 img.Save(fs, ImageFormat.Png);

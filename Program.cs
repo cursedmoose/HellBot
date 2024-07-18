@@ -21,6 +21,7 @@ using TwitchBot.OCR;
 using TwitchBot.EyeTracking;
 using TwitchBot.EEG;
 using TwitchBot.AWS;
+using TwitchBot.Elgato;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -104,17 +105,25 @@ public class ServerConfig
     public static readonly bool ENABLED = true;
     public static readonly bool DISABLED = false;
 
-    public static readonly bool Twitch = ENABLED;
-    public static readonly bool ElevenLabs = ENABLED;
-    public static readonly bool Discord = ENABLED;
-    public static readonly bool ChatGpt = ENABLED;
-    public static readonly bool Obs = ENABLED;
-    public static readonly bool Speech = ENABLED;
+    public static readonly bool PRODUCTION = true;
+    public static readonly bool DEVELOPMENT = true;
+    public static readonly bool EXPERIMENTAL = false;
+
+
     public static readonly bool Aws = ENABLED;
 
+    public static readonly bool Twitch = PRODUCTION;
+    public static readonly bool ElevenLabs = PRODUCTION;
+    public static readonly bool Discord = PRODUCTION;
+    public static readonly bool ChatGpt = PRODUCTION;
+    public static readonly bool Obs = PRODUCTION;
+    public static readonly bool Speech = PRODUCTION;
+
+    public static readonly bool StreamDeck = DEVELOPMENT;
+
     // Experimental
-    public static readonly bool EyeTracker = DISABLED;
-    public static readonly bool BrainTracker = DISABLED;
+    public static readonly bool EyeTracker = EXPERIMENTAL;
+    public static readonly bool BrainTracker = EXPERIMENTAL;
 }
 
 public class Server
@@ -147,6 +156,7 @@ public class Server
     // public ImageTextReader imageText = new OpenAIImageReader(new());
     public TobiiEyeTracker eyetracker = new(ServerConfig.EyeTracker);
     public MuseMonitor brain = new(ServerConfig.BrainTracker);
+    public StreamDeck streamDeck = new(ServerConfig.StreamDeck);
 
     public HttpClient web = new();
     public FileGenerator file = new();
