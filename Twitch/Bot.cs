@@ -36,6 +36,7 @@ using TwitchLib.EventSub.Websockets.Handler.Channel.Predictions;
 using TwitchBot.Twitch.NotificationHandlers;
 using TwitchBot.Twitch.Model;
 using TwitchLib.EventSub.Websockets.Handler.Channel;
+using TwitchLib.Api.Helix.Models.ChannelPoints.UpdateCustomRewardRedemptionStatus;
 
 namespace TwitchBot.Twitch
 {
@@ -86,7 +87,6 @@ namespace TwitchBot.Twitch
                 "channel:manage:predictions",
                 "channel:manage:redemptions",
                 "channel:manage:broadcast",
-                "channel:manage:redemptions",
                 "channel:read:ads",
                 "channel:edit:commercial"
             };
@@ -134,6 +134,7 @@ namespace TwitchBot.Twitch
                 AuthScopes.Helix_Moderator_Read_Followers,
                 AuthScopes.Helix_Channel_Manage_Polls,
                 AuthScopes.Helix_Channel_Manage_Predictions,
+                AuthScopes.Helix_Channel_Manage_Redemptions,
                 AuthScopes.Channel_Commercial,
                 AuthScopes.Helix_Channel_Edit_Commercial
             };
@@ -613,6 +614,34 @@ namespace TwitchBot.Twitch
             catch (Exception ex)
             {
                 log.Error($"Could not run prediction due to {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateRedemptionStatus(string rewardId, string redemptionId, bool completed)
+        {
+            if (!Enabled) { return false; }
+
+            var newStatus = completed ? CustomRewardRedemptionStatus.FULFILLED : CustomRewardRedemptionStatus.CANCELED;
+            var redemptionIds = new List<string>() { redemptionId };
+
+            try
+            {
+                var response = await API.ChannelPoints.UpdateRedemptionStatusAsync(
+                    broadcasterId: AccountInfo.USER_ID,
+                    rewardId: rewardId,
+                    redemptionIds: redemptionIds,
+                    request: new UpdateCustomRewardRedemptionStatusRequest
+                    {
+                        Status = newStatus,
+                    }
+                );
+                log.Info($"{response.Data}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Could not run update reward due to {ex.Message}");
                 return false;
             }
         }
