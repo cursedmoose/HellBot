@@ -50,17 +50,33 @@ namespace TwitchBot.Assistant
             var mischief = Random.Next(3) == 0;
             if (mischief)
             {
-                var actionToTake = Mischief.ElementAt(Random.Next(Mischief.Count));
-                log.Info($"Mischief!: {actionToTake.Key}");
-                await actionToTake.Value();
-                LastActionTimes[actionToTake.Key] = DateTime.Now;
+                try
+                {
+                    var actionToTake = Mischief.ElementAt(Random.Next(Mischief.Count));
+                    log.Info($"Mischief!: {actionToTake.Key}");
+                    await actionToTake.Value();
+                    LastActionTimes[actionToTake.Key] = DateTime.Now;
+                }
+                catch(Exception ex)
+                {
+                    log.Error($"Could not do Mischief because of {ex.Message}");
+                }
             }
             else
             {
-                var actionToTake = Mayhem.ElementAt(Random.Next(Mischief.Count));
-                log.Info($"Mayhem!: {actionToTake.Key}");
-                await actionToTake.Value();
-                LastActionTimes[actionToTake.Key] = DateTime.Now;
+                try
+                {
+                    var actionToTake = Mayhem.ElementAt(Random.Next(Mayhem.Count));
+                    log.Info($"Mayhem!: {actionToTake.Key}");
+                    await actionToTake.Value();
+                    LastActionTimes[actionToTake.Key] = DateTime.Now;
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"Could not do Mayhem because of {ex.Message}");
+
+                }
+
             }
 
             await Task.Delay(300 * 1_000);

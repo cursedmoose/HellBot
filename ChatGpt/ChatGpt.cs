@@ -27,6 +27,9 @@ namespace TwitchBot.ChatGpt
         public readonly bool Enabled;
         readonly Logger log = new("ChatGpt");
 
+        readonly string CHATGPT4oMini = "gpt-4o-mini";
+        readonly string CHATGPT4o = "gpt-4o";
+
         public ChatGpt(bool enabled = true)
         {
             openAI = new(openAIAuthentication: new(API_KEY, ORGANIZATION_ID));
@@ -78,7 +81,8 @@ namespace TwitchBot.ChatGpt
         {
             ChatGptOptions api_params = options ?? ChatGptOptions.Default;
             var chatRequest = new ChatRequest(
-                model: "gpt-4o", //Model.GPT4,
+                model: "gpt-4o-mini", //Model.GPT4,
+                //model: "gpt-4o", //Model.GPT4,
                 messages: messages,
                 temperature: api_params.Temperature,
                 presencePenalty: api_params.PresencePenalty,

@@ -303,7 +303,11 @@ namespace TwitchBot.Assistant
             return;
         }
 
-        protected abstract Task AI();
+        protected virtual async Task AI()
+        {
+            log.Info("Incorrectly using this AI");
+            await Task.Delay(300_000);
+        }
         protected virtual async Task AI_On_Start()
         {
             await Server.Instance.chatgpt.GetResponse(
