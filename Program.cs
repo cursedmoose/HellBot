@@ -22,6 +22,7 @@ using TwitchBot.EyeTracking;
 using TwitchBot.EEG;
 using TwitchBot.AWS;
 using TwitchBot.Elgato;
+using TwitchBot.Steam;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -118,8 +119,11 @@ public class ServerConfig
     public static readonly bool ChatGpt = PRODUCTION;
     public static readonly bool Obs = PRODUCTION;
     public static readonly bool Speech = PRODUCTION;
+    public static readonly bool StreamDeck = PRODUCTION;
 
-    public static readonly bool StreamDeck = DEVELOPMENT;
+    public static readonly bool Steam = DEVELOPMENT;
+
+
 
     // Experimental
     public static readonly bool EyeTracker = EXPERIMENTAL;
@@ -157,6 +161,7 @@ public class Server
     public TobiiEyeTracker eyetracker = new(ServerConfig.EyeTracker);
     public MuseMonitor brain = new(ServerConfig.BrainTracker);
     public StreamDeck streamDeck = new(ServerConfig.StreamDeck);
+    public SteamClient steam = new(ServerConfig.Steam);
 
     public HttpClient web = new();
     public FileGenerator file = new();

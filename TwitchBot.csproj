@@ -27,6 +27,7 @@
     <PackageReference Include="Octokit" Version="11.0.1" />
     <PackageReference Include="OpenAI-DotNet" Version="7.7.8" />
     <PackageReference Include="Rug.Osc" Version="1.2.5" />
+    <PackageReference Include="SteamWebAPI2" Version="4.4.1" />
     <PackageReference Include="StreamDeckSharp" Version="6.0.0" />
     <PackageReference Include="System.Runtime.Caching" Version="8.0.0" />
     <PackageReference Include="System.Speech" Version="8.0.0" />
