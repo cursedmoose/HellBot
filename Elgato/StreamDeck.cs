@@ -1,5 +1,6 @@
 ﻿using OpenMacroBoard.SDK;
 using StreamDeckSharp;
+using TwitchBot.Hotkeys;
 using IDeviceContext = OpenMacroBoard.SDK.IDeviceContext;
 using StreamDeckKeyEventArgs = OpenMacroBoard.SDK.KeyEventArgs;
 using StreamDeckSdk = StreamDeckSharp.StreamDeck;
@@ -35,6 +36,11 @@ namespace TwitchBot.Elgato
                 board.SetKeyBitmap(index, defaultIcon);
             }
 
+            board.SetKeyBitmap(13, KeyBitmap.Create.FromRgb(255, 255, 0));
+            board.SetKeyBitmap(14, KeyBitmap.Create.FromRgb(255, 0, 0));
+            board.SetKeyBitmap(15, KeyBitmap.Create.FromRgb(0, 0, 255));
+
+
             log.Info("Listening to Stream Deck Events");
         }
 
@@ -43,6 +49,19 @@ namespace TwitchBot.Elgato
             if (!Enabled) { return; }
 
             log.Info($"Received event: {args.Key} : {args.IsDown}");
+            if (args.IsPressed(13))
+            {
+                await HotKeyManager.ReadScreenRegion(0);
+            }
+            if (args.IsPressed(14))
+            {
+                await HotKeyManager.ReadScreenRegion(1);
+            }
+            if (args.IsPressed(15))
+            {
+                await HotKeyManager.ReadScreenRegion(2);
+            }
+
             if (args.IsPressed(31))
             {
                 await Server.Instance.Narrator.ReactToCurrentScreen();
