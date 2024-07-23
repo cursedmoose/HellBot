@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using TwitchBot.ScreenCapture;
 
 namespace TwitchBot.Hotkeys
 {

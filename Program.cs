@@ -110,7 +110,6 @@ public class ServerConfig
     public static readonly bool DEVELOPMENT = true;
     public static readonly bool EXPERIMENTAL = false;
 
-
     public static readonly bool Aws = ENABLED;
 
     public static readonly bool Twitch = PRODUCTION;
@@ -120,10 +119,7 @@ public class ServerConfig
     public static readonly bool Obs = PRODUCTION;
     public static readonly bool Speech = PRODUCTION;
     public static readonly bool StreamDeck = PRODUCTION;
-
     public static readonly bool Steam = DEVELOPMENT;
-
-
 
     // Experimental
     public static readonly bool EyeTracker = EXPERIMENTAL;
@@ -139,14 +135,16 @@ public class Server
 
     static Assistant Sheogorath = new Sheogorath();
     static Assistant Werner = new Werner();
+    static Assistant God = new God();
 
     public Assistant Assistant = Sheogorath;
     public Assistant Narrator = Werner;
 
-    private List<Assistant> Assistants = new()
+    public List<Assistant> Assistants = new()
     {
         Sheogorath,
-        Werner
+        Werner,
+        God
     };
 
     public AwsClient aws = new(ServerConfig.Aws);
@@ -211,7 +209,7 @@ public class Server
         var newAssistant = Assistants.Find((assistant) => string.Equals(assistant.Name, name, StringComparison.InvariantCultureIgnoreCase));
         if (newAssistant != null)
         {
-            Narrator = newAssistant;
+            Assistant = newAssistant;
             log.Info($"Set Narrator to {name}");
         }
         else
@@ -225,12 +223,12 @@ public class Server
         var newAssistant = Assistants.Find((assistant) => string.Equals(assistant.Name, name, StringComparison.InvariantCultureIgnoreCase));
         if (newAssistant != null)
         {
-            Assistant = newAssistant;
-            log.Info($"Set Assistant to {name}");
+            Narrator = newAssistant;
+            log.Info($"Set Narrator to {name}");
         }
         else
         {
-            log.Error($"Could not set Assistant to {name}");
+            log.Error($"Could not set Narrator to {name}");
         }
     }
 
@@ -239,3 +237,12 @@ public class Server
 
     }
 }
+
+public static class Extensions
+{
+    public static T RandomElement<T>(this List<T> list)
+    {
+        var randomIndex = new Random().Next(list.Count);
+        return list[randomIndex];
+    }
+} 

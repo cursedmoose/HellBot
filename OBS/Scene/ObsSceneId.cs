@@ -29,6 +29,7 @@ namespace TwitchBot.OBS.Scene
         public static readonly ObsSceneId AnnoyingFan = new(Characters, 3);
         public static readonly ObsSceneId Maiq = new(Characters, 4);
         public static readonly ObsSceneId Werner = new(Characters, 6);
+        public static readonly ObsSceneId God = new(Characters, 8);
 
         public static readonly ObsSceneId DiceMain = new(MainScene, 23);
         public static readonly ObsSceneId DiceImage = new(Dice, 2);
