@@ -7,6 +7,7 @@ using TwitchBot.Discord;
 using TwitchBot.ElevenLabs;
 using TwitchBot.OBS.Scene;
 using TwitchBot.ScreenCapture;
+using TwitchBot.Steam;
 using TwitchBot.Twitch.Model;
 using TwitchLib.Client.Models;
 using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
@@ -35,6 +36,7 @@ namespace TwitchBot.Assistant
         protected Dictionary<Actions, DateTime> LastActionTimes = new();
         public readonly FileGenerator.FileGenerator.Agent Agent;
         private bool AI_Running = false;
+        protected AssistantContext<SteamContext> Context_Steam = new(SteamContext.Empty);
         public virtual string GetSystemPersona()
         {
             return Name;
@@ -116,10 +118,6 @@ namespace TwitchBot.Assistant
         {
             string message = $"announce that voting is closed for \"{prediction.Title}\"";
             await Server.Instance.chatgpt.GetResponse(Persona, message);
-
-            //var response = await Server.Instance.chatgpt.GetResponseText(Persona, message);
-            //StreamTts(response);
-
             return true;
         }
 
@@ -128,7 +126,6 @@ namespace TwitchBot.Assistant
             var winningOutcome = predictionResult.Outcomes.Where(outcome => outcome.Id == predictionResult.WinningOutcomeId).First();
             var totalPointsWagered = predictionResult.Outcomes.Sum(outcome => outcome.ChannelPoints);
             var prompt = $"the prediction \"{predictionResult.Title}\" ended. \"{winningOutcome.Title}\" was the result. ";
-            // var winnersPrompt = $"{winningOutcome.TopPredictors[0]?.UserName} and {winningOutcome.Users - 1} others won {totalPointsWagered} points";
             await Server.Instance.chatgpt.GetResponse(Persona, prompt);
             return true;
         }
@@ -237,30 +234,12 @@ namespace TwitchBot.Assistant
             ReactToImage(fileUrl, $"give exciting commentary on me {gameState}");
         }
 
-        public async void ReactToCurrentState()
+        public async void ReactToNewAchievement(string gameName, string achievementName, string description)
         {
-            if (!DiscordBot.IsEnabled())
-            {
-                log.Error("Cannot react to current state without discord running.");
-                return;
-            }
-
-            var fileUrl = await Server.Instance.TakeAndUploadScreenshot();
-            var discord = Task.Run(() => Server.Instance.discord.GetCurrentGameState());
-            var twitch = Task.Run(() => Server.Instance.twitch.GetStreamInfo());
-            await Task.WhenAll(discord, twitch);
-
-            var discordState = discord.GetAwaiter().GetResult();
-            var twitchState = twitch.GetAwaiter().GetResult();
-
-            if (!string.IsNullOrEmpty(discordState))
-            {
-                ReactToGameStateAndCurrentScreen(discordState);
-            } 
-            else {
-                ReactToGameStateAndCurrentScreen(twitchState.GameName);
-            }
-            
+            await Server.Instance.chatgpt.GetResponse(
+                chatPrompt: $"congratulate me for completing the achievement \"{achievementName}\" in {gameName} for {description}",
+                persona: Persona
+            );
         }
 
         public async Task ReactToCurrentScreen()
@@ -308,6 +287,20 @@ namespace TwitchBot.Assistant
             log.Info("Incorrectly using this AI");
             await Task.Delay(300_000);
         }
+
+        private async Task UpdateContext()
+        {
+            Context_Steam.Update(await Server.Instance.steam.GetCurrentSteamContext());
+            await Context_OnUpdate();
+        }
+
+        protected virtual async Task Context_OnUpdate()
+        {
+            log.Info("Incorrectly using this Context");
+            await Task.Delay(300_000);
+            return;
+        }
+
         protected virtual async Task AI_On_Start()
         {
             await Server.Instance.chatgpt.GetResponse(
@@ -343,6 +336,7 @@ namespace TwitchBot.Assistant
                 await AI_On_Start();
                 AI_Running = true;
                 await Task.Run(Run_AI);
+                await Task.Run(UpdateContext);
             }
             return;
         }

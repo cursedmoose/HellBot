@@ -17,5 +17,6 @@
         PaintPicture,
         Commemorate,
         RequestNarration,
+        ReactToSteamContext,
     }
 }

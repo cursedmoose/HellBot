@@ -2,6 +2,7 @@
 using Steam.Models.SteamPlayer;
 using SteamWebAPI2.Interfaces;
 using SteamWebAPI2.Utilities;
+using System.Runtime.InteropServices;
 using TwitchBot.Config;
 
 namespace TwitchBot.Steam
@@ -16,6 +17,8 @@ namespace TwitchBot.Steam
         SteamUser User;
         SteamUserStats UserStats;
         PlayerService PlayerService;
+        IReadOnlyCollection<OwnedGameModel>? OwnedGames;
+
 
         public SteamClient(bool enabled = true)
         {
@@ -24,6 +27,32 @@ namespace TwitchBot.Steam
             User = ApiFactory.CreateSteamWebInterface<SteamUser>(HttpClient);
             UserStats = ApiFactory.CreateSteamWebInterface<SteamUserStats>(HttpClient);
             PlayerService = ApiFactory.CreateSteamWebInterface<PlayerService>(HttpClient);
+        }
+
+        public async Task<SteamContext> GetCurrentSteamContext()
+        {
+            var userInfo = await GetUserInfo();
+
+            if (string.IsNullOrEmpty(userInfo.PlayingGameName))
+            {
+                return SteamContext.Empty;
+            }
+
+            var currentGameName = userInfo.PlayingGameName;
+            var currentGameId = uint.Parse(userInfo.PlayingGameId);
+
+            var achievements = Task.Run(() => GetAchievementsForGame(currentGameId));
+            var currentPlayers = Task.Run(() => GetNumberOfCurrentPlayers(currentGameId));
+            var playtime = Task.Run(() => GetPlaytime(currentGameId));
+            await Task.WhenAll(achievements, currentPlayers, playtime);
+
+            return new SteamContext(
+                UserName: SteamConfig.STEAM_USER,
+                Game: currentGameName,
+                Playtime: await playtime,
+                CurrentPlayers: await currentPlayers,
+                Achievements: await achievements
+            );
         }
 
         public async Task<PlayerSummaryModel> GetUserInfo()
@@ -76,10 +105,29 @@ namespace TwitchBot.Steam
             return recentGames.Data.RecentlyPlayedGames;
         }
 
+        public async Task<SteamPlaytime> GetPlaytime(uint appId)
+        {
+            var ownedGames = await GetOwnedGames();
+            var requestedGame = ownedGames.Where((game) => { return game.AppId == appId; }).First();
+            var last2Weeks = requestedGame.PlaytimeLastTwoWeeks.HasValue ? requestedGame.PlaytimeLastTwoWeeks.Value : TimeSpan.Zero;
+            return new SteamPlaytime(
+                Last2Weeks: last2Weeks,
+                Forever: requestedGame.PlaytimeForever
+            );
+        }
+
         public async Task<IReadOnlyCollection<OwnedGameModel>> GetOwnedGames()
         {
-            var ownedGames = await PlayerService.GetOwnedGamesAsync(SteamConfig.STEAM_USER_ID, true);
-            return ownedGames.Data.OwnedGames;
+            if (OwnedGames != null)
+            {
+                return OwnedGames;
+            }
+            else
+            {
+                var ownedGames = await PlayerService.GetOwnedGamesAsync(SteamConfig.STEAM_USER_ID, true);
+                OwnedGames = ownedGames.Data.OwnedGames;
+                return OwnedGames;
+            }
         }
     }
 }

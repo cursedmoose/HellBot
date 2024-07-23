@@ -18,6 +18,7 @@ namespace TwitchBot.Assistant
             Mischief[Actions.CreateReward] = TryCreateReward;
             Mischief[Actions.PaintPicture] = PaintPicture;
             Mischief[Actions.ReactToScreen] = ReactToCurrentScreen;
+            Mischief[Actions.ReactToSteamContext] = ReactToSteamContext;
             Mischief[Actions.RequestNarration] = async () =>
             {
                 StreamTts($"Hey {Server.Instance.Narrator.Name}, what's going on here?");
@@ -276,6 +277,61 @@ namespace TwitchBot.Assistant
             await Server.Instance.chatgpt.GetResponse(Persona, end);
 
             return true;
+        }
+
+        protected override async Task Context_OnUpdate()
+        {
+            if (Context_Steam.CurrentContext.IsEmpty()) { return; }
+            var newAchievements = Context_Steam.PreviousContext.GetNewAchievements(Context_Steam.CurrentContext);
+
+            if (newAchievements.Count > 0)
+            {
+                var newestAchievement = newAchievements[0];
+                ReactToNewAchievement(Context_Steam.CurrentContext.Game, newestAchievement.Name, newestAchievement.Description);
+            }
+        }
+
+        private async Task ReactToSteamContext()
+        {
+
+            var context = Context_Steam.CurrentContext;
+            if (context.IsEmpty())
+            {
+                await ReactToCurrentScreen();
+            }
+
+            string ante = "";
+            switch (Random.Next(4))
+            {
+                case 0:
+                    ante = $"I have played {context.Playtime.Last2Weeks.TotalHours} hours in the past 2 weeks.";
+                    break;
+                case 1:
+                    ante = $"I have played {context.Playtime.Forever.TotalHours} hours total.";
+                    break;
+                case 2:
+                    ante = $"There are {context.CurrentPlayers} others currently playing, too.";
+                    break;
+                case 3:
+                    var achievementCount = context.Achievements.Count((it) => { return it.Achieved == 1; });
+                    ante = $"I have {achievementCount}/{context.Achievements.Count} achievements.";
+                    break;
+                case 4:
+                    var achievementsNotYetGotten = context.Achievements.Where((it) => { return it.Achieved == 0; }).ToList();
+                    var randomAchievement = achievementsNotYetGotten[Random.Next(achievementsNotYetGotten.Count)];
+                    ante = $"I have not yet gotten the {randomAchievement.Name} achievement for {randomAchievement.Description}";
+                    break;
+            }
+
+            string prompt = $"React to me playing {context.Game}. {ante}";
+            
+
+            await Server.Instance.chatgpt.GetResponse(
+                chatPrompt: $"",
+                persona: Persona
+            );
+
+            return;
         }
     }
 }
