@@ -190,12 +190,13 @@ namespace TwitchBot.EEG
         private MindMonitorPacket Parse(OscPacket packet)
         {
             var data = packet.ToString();
-            var dataChunks = data.Split(",", 3);
+            var dataChunks = data?.Split(",", 3);
 
-            if (dataChunks.Length != 3) {
-                log.Error($"Could not parse {data} as we received {dataChunks.Length} args");
+            if (dataChunks?.Length != 3) {
+                log.Error($"Could not parse {data} as we received {dataChunks?.Length} args");
                 return new MindMonitorPacket("oh", "no", new List<float> { 0f });
-            } else
+            } 
+            else
             {
                 var timestamp = dataChunks[1];
                 var packetData = dataChunks[2].Trim(new char[] { ' ', '{', '}' }).Split(',');

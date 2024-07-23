@@ -1,15 +1,16 @@
 ﻿
+using TwitchBot.Config;
 using TwitchLib.Api.Helix.Models.Channels.GetChannelInformation;
 using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 
 namespace TwitchBot.Twitch.Model
 {
     public record ChannelInfo(
-        string BroadcasterId,
-        string BroadcasterName,
-        string GameName,
-        string GameId,
-        string Title
+        string BroadcasterId = TwitchConfig.AccountInfo.CHANNEL_ID,
+        string BroadcasterName = TwitchConfig.AccountInfo.ACCOUNT_NAME,
+        string GameName = "",
+        string GameId = "",
+        string Title = ""
     )
     {
         public static ChannelInfo FromChannelInformation(ChannelInformation info)

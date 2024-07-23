@@ -10,8 +10,6 @@
         public override void Handle(Server server, string command)
         {
             Log.Info("Using Test Command. Please consider creating a new command instead of relying on this one.");
-            Server.Instance.brain.StartProfiling();
-
         }
     }
 }

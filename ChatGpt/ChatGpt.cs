@@ -81,8 +81,7 @@ namespace TwitchBot.ChatGpt
         {
             ChatGptOptions api_params = options ?? ChatGptOptions.Default;
             var chatRequest = new ChatRequest(
-                model: "gpt-4o-mini", //Model.GPT4,
-                //model: "gpt-4o", //Model.GPT4,
+                model: CHATGPT4oMini,
                 messages: messages,
                 temperature: api_params.Temperature,
                 presencePenalty: api_params.PresencePenalty,

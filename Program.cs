@@ -168,27 +168,10 @@ public class Server
     private static readonly Lazy<Server> lazy = new(() => new Server());
     public static Server Instance { get { return lazy.Value; } }
 
-    public async void SaveImageAs(string webUrl, string filename, string fileExtension = "")
-    {
-        var response = await web.GetAsync(webUrl);
-        var sourceFile = Path.Combine("images", RemoveInvalidChars(filename) + fileExtension);
-        var latest = Path.Combine("images", $".latest{fileExtension}");
-        using (var fs = new FileStream(sourceFile, FileMode.Create))
-        {
-            await response.Content.CopyToAsync(fs);
-        }
-        File.Copy(sourceFile, latest, true);
-    }
-
     public async Task<string> ShortenUrl(string longUrl)
     {
         var response = await web.GetAsync($"https://tinyurl.com/api-create.php?url={longUrl}");
         return await response.Content.ReadAsStringAsync();
-    }
-
-    private static string RemoveInvalidChars(string filename)
-    {
-        return string.Concat(filename.Split(Path.GetInvalidFileNameChars()));
     }
 
     public async Task<string> TakeAndUploadScreenshot()
@@ -210,11 +193,11 @@ public class Server
         if (newAssistant != null)
         {
             Assistant = newAssistant;
-            log.Info($"Set Narrator to {name}");
+            log.Info($"Set Assistant to {name}");
         }
         else
         {
-            log.Error($"Could not set Narrator to {name}");
+            log.Error($"Could not set Assistant to {name}");
         }
     }
 

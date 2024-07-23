@@ -1,4 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿#pragma warning disable 8600, 8602, 8603, 8604, 8618, 8625
+#pragma warning disable SYSLIB0021
+
+using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -2155,7 +2158,7 @@ namespace TwitchBot.OBS.Websocket
         {
             JObject jObject = SendRequest("GetSpecialInputs");
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
-            foreach (KeyValuePair<string, JToken> item in jObject)
+            foreach (KeyValuePair<string, JToken?> item in jObject)
             {
                 string key = item.Key;
                 string value = (string?)item.Value;

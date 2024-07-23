@@ -41,7 +41,8 @@ namespace TwitchBot.ElevenLabs
         {
             var request = buildSubscriptionInfoRequest();
             var response = client.Send(request);
-            var jsonResponse = JsonSerializer.Deserialize<SubscriptionInfoResponse>(response.Content.ReadAsStream());
+            var jsonResponse = JsonSerializer.Deserialize<SubscriptionInfoResponse>(response.Content.ReadAsStream()) 
+                ?? throw new NullReferenceException($"Failed to deserialize {response.Content}");
             return jsonResponse;
         }
 

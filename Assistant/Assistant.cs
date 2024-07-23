@@ -234,7 +234,7 @@ namespace TwitchBot.Assistant
             ReactToImage(fileUrl, $"give exciting commentary on me {gameState}");
         }
 
-        public async void ReactToNewAchievement(string gameName, string achievementName, string description)
+        public async Task ReactToNewAchievement(string gameName, string achievementName, string description)
         {
             await Server.Instance.chatgpt.GetResponse(
                 chatPrompt: $"congratulate me for completing the achievement \"{achievementName}\" in {gameName} for {description}",

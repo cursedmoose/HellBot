@@ -287,7 +287,7 @@ namespace TwitchBot.Assistant
             if (newAchievements.Count > 0)
             {
                 var newestAchievement = newAchievements[0];
-                ReactToNewAchievement(Context_Steam.CurrentContext.Game, newestAchievement.Name, newestAchievement.Description);
+                await ReactToNewAchievement(Context_Steam.CurrentContext.Game, newestAchievement.Name, newestAchievement.Description);
             }
         }
 

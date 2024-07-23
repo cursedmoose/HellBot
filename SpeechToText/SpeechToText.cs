@@ -76,9 +76,13 @@ namespace TwitchBot.SpeechToText
                 try
                 {
                     //var command = e.Result.Text.Replace("hey", "").Replace("hellbot", "").Replace("madgod", "").Replace("sheogorath", "").Trim();
-                    var command = e.Result.Semantics["command"].Value.ToString();
+                    var command = e.Result.Semantics?["command"].Value.ToString();
                     Log.Debug($"Confidence: {e.Result.Confidence}%, trying to {command} ({++Accepts} / {Accepts + Rejections})");
-                    if (command.Contains("say hello"))
+                    if (command == null)
+                    {
+                        Log.Debug("No matching command");
+                    }
+                    else if (command.Contains("say hello"))
                     {
                         await Server.Instance.chatgpt.GetResponse(Server.Instance.Assistant.Persona, "hello");
                     }
@@ -101,7 +105,7 @@ namespace TwitchBot.SpeechToText
                 }
                 catch (Exception ex)
                 {
-
+                    Log.Error($"{ex.Message}");
                 }
             }
             else

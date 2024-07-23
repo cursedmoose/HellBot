@@ -52,7 +52,7 @@ namespace TwitchBot.Twitch
         Helix API { get { return api.Helix; } }
         Auth Auth { get { return api.Auth; } }
 
-        public ChannelInfo? CurrentChannelInfo = null;
+        public ChannelInfo CurrentChannelInfo = new();
         public Prediction? CurrentPrediction = null;
         public Commemoration? CurrentCommemoration = null;
 
@@ -128,7 +128,7 @@ namespace TwitchBot.Twitch
         private TwitchAPI Init_API()
         {
             TwitchAPI api = new();
-            api.Settings.ClientId = AccountInfo.API_CLIENT_ID;
+            api.Settings.ClientId = Secrets.API_CLIENT_ID;
             api.Settings.Scopes = new List<AuthScopes>() {
                 AuthScopes.Helix_Moderator_Read_Chatters,
                 AuthScopes.Helix_Moderator_Read_Followers,
@@ -145,7 +145,7 @@ namespace TwitchBot.Twitch
         {
             ConnectionCredentials credentials = new(
                 twitchUsername: AccountInfo.ACCOUNT_NAME,
-                twitchOAuth: AccountInfo.OAUTH_PASSWORD);
+                twitchOAuth: Secrets.OAUTH_PASSWORD);
             var clientOptions = new ClientOptions
             {
                 MessagesAllowedInPeriod = 750,
@@ -209,12 +209,12 @@ namespace TwitchBot.Twitch
 
         private async Task StartApi(List<string> scopes)
         {
-            var server = new AuthServer(AccountInfo.API_REDIRECT_URL);
-            var codeUrl = AuthServer.GetAuthorizationCodeUrl(AccountInfo.API_CLIENT_ID, AccountInfo.API_REDIRECT_URL, scopes);
+            var server = new AuthServer(Secrets.API_REDIRECT_URL);
+            var codeUrl = AuthServer.GetAuthorizationCodeUrl(Secrets.API_CLIENT_ID, Secrets.API_REDIRECT_URL, scopes);
             Console.WriteLine($"Please authorize here:\n{codeUrl}");
             System.Diagnostics.Process.Start(@"C:\Program Files\Mozilla Firefox\firefox.exe", codeUrl);
             var auth = await server.Listen();
-            var resp = await Auth.GetAccessTokenFromCodeAsync(auth?.Code, AccountInfo.API_CLIENT_SECRET, AccountInfo.API_REDIRECT_URL);
+            var resp = await Auth.GetAccessTokenFromCodeAsync(auth?.Code, Secrets.API_CLIENT_SECRET, Secrets.API_REDIRECT_URL);
             api.Settings.AccessToken = resp.AccessToken;
             var user = (await API.Users.GetUsersAsync()).Users[0];
             Console.WriteLine($"Authorization success!\n\nUser: {user.DisplayName}\nScopes: {string.Join(", ", resp.Scopes)}");
@@ -275,10 +275,6 @@ namespace TwitchBot.Twitch
             if (Permissions.IsUserInGroup(e.ChatMessage.Username, PermissionGroup.Admin) && e.ChatMessage.CustomRewardId == null)
             {
                 PlayTts(sender, e);
-            }
-            else
-            {
-                // PlayRumorTts(sender, e);
             }
 
             if (!Permissions.IsUserInGroup(e.ChatMessage.Username, PermissionGroup.Admin)) // lol admins can't get banned 
@@ -822,7 +818,8 @@ namespace TwitchBot.Twitch
             {
                 log.Info($"{choice.Title}: {choice.Votes}");
             }
-            await Server.Instance.Assistant.ConcludePoll(eventData.Title, eventData.Choices.MaxBy(it => it.Votes).Title);
+            var winner = eventData.Choices.MaxBy(it => it.Votes)?.Title ?? "none of the above";
+            await Server.Instance.Assistant.ConcludePoll(eventData.Title, winner);
             return;
         }
 
@@ -837,9 +834,7 @@ namespace TwitchBot.Twitch
             }
             else if (eventData.Reward.Title == "Commemorate")
             {
-                // Begin a Commemoration
                 CurrentCommemoration = new(eventData.UserInput, new(eventData.UserName, AccountInfo.CHANNEL));
-                // Count Votes
                 CurrentCommemoration.Start();
                 client.SendMessage(AccountInfo.CHANNEL, $"{eventData.UserName} is commemorating \"{eventData.UserInput}\"! Join in the ceremony by typing !commemorate");
                 await Task.Delay(90 * 1_000);
@@ -879,7 +874,6 @@ namespace TwitchBot.Twitch
         {
             var prediction = e.Notification.Payload.Event;
             log.Info($"Prediction Locked: {prediction.Title}");
-            log.Info($"#1 choice: {prediction.Outcomes.MaxBy(outcome => outcome.ChannelPoints).Title}");
             await Server.Instance.Assistant.AnnouncePredictionLocked(prediction);
         }
 

@@ -63,7 +63,7 @@ namespace TwitchBot.EyeTracking
 
         private void EyeTracker_LogEvent(object? Sender, EventArgs e)
         {
-            log.Info(e.ToString());
+            log.Info($"{e}");
         }
 
         private static void EyeTracker_LogReceived(object? sender, LogEventArgs e)
