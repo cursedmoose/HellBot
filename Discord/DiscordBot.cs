@@ -152,7 +152,7 @@ namespace TwitchBot.Discord
                     LastKnownGame = activity.Name;
                     var sanitizedName = activity.Name.Replace("Demo", "").Trim();
                     Server.Instance.twitch.ChangeGame(sanitizedName).GetAwaiter().GetResult();
-                    Server.Instance.Assistant.WelcomeBack(sanitizedName);
+                    // Server.Instance.Assistant.WelcomeBack(sanitizedName);
                 }
             }
 

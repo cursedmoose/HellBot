@@ -131,6 +131,7 @@ namespace TwitchBot.ElevenLabs
             var cleanedString = tts;
             cleanedString = Server.WEBSITE_REGEX.Replace(cleanedString, "").Trim();
             cleanedString = Server.EMOTE_REGEX.Replace(cleanedString, "").Trim();
+            cleanedString = cleanedString.Replace("cursed99", "").Trim();
             cleanedString = cleanedString.Replace("*", "").Trim();
             cleanedString = WHITESPACE_REGEX.Replace(cleanedString, "").Trim();
             return cleanedString;

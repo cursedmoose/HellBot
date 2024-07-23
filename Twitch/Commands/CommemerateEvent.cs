@@ -30,6 +30,10 @@ namespace TwitchBot.Twitch.Commands
                     Server.Instance.twitch.CurrentCommemoration.Observers.Add(TwitchUser.FromChatMessage(message));
                 }
             }
+            else
+            {
+                client.RespondTo(message, "There is no commemoration in progress.");
+            }
         }
     }
 }

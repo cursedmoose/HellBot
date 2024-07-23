@@ -13,9 +13,10 @@ namespace TwitchBot.Twitch
         {
             var voiceProfile = VoiceProfiles.GetVoiceProfile(chat.Username);
             var obsImage = ObsScenes.GetImageSource(chat.Username);
-            if (voiceProfile != null && chat.Message.Length <= 256)
+            var message = Server.Instance.elevenlabs.CleanStringForTts(chat.Message);
+            if (voiceProfile != null && message.Length <= 256)
             {
-                Server.Instance.elevenlabs.StreamTts(voiceProfile, chat.Message);
+                Server.Instance.elevenlabs.StreamTts(voiceProfile, chat.Message, obsImage);
                 /* Untested, so commented.
                 Task.Factory.StartNew(() =>
                 {
@@ -33,7 +34,7 @@ namespace TwitchBot.Twitch
             }
             else
             {
-                log.Error($"Message length was too long for tts: {chat.Message.Length} / 256");
+                log.Error($"Message length was too long for tts: {message.Length} / 256");
             }
         }
 

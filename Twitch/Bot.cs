@@ -272,7 +272,7 @@ namespace TwitchBot.Twitch
 
             log.Info($"{e.ChatMessage.Username} sent message: ${e.ChatMessage.Message}");
 
-            if (Permissions.IsUserInGroup(e.ChatMessage.Username, PermissionGroup.Admin))
+            if (Permissions.IsUserInGroup(e.ChatMessage.Username, PermissionGroup.Admin) && e.ChatMessage.CustomRewardId == null)
             {
                 PlayTts(sender, e);
             }
@@ -758,6 +758,13 @@ namespace TwitchBot.Twitch
                     method: EventSubTransportMethod.Websocket,
                     websocketSessionId: events.SessionId
                 );
+
+                var subscribedEvents = await API.EventSub.GetEventSubSubscriptionsAsync();
+                foreach(var subbedEvent in subscribedEvents.Subscriptions)
+                {
+                    log.Info($"Subscribed to {subbedEvent.Type} ({subbedEvent.Cost})");
+                }
+                log.Info($"Total: {subscribedEvents.Total} ({subscribedEvents.TotalCost})");
             }
         }
 
@@ -834,7 +841,9 @@ namespace TwitchBot.Twitch
                 CurrentCommemoration = new(eventData.UserInput, new(eventData.UserName, AccountInfo.CHANNEL));
                 // Count Votes
                 CurrentCommemoration.Start();
-                await Task.Delay(60 * 1_000);
+                client.SendMessage(AccountInfo.CHANNEL, $"{eventData.UserName} is commemorating \"{eventData.UserInput}\"! Join in the ceremony by typing !commemorate");
+                await Task.Delay(90 * 1_000);
+                client.SendMessage(AccountInfo.CHANNEL, $"{eventData.UserName}'s commemoration of \"{eventData.UserInput}\" is over!");
                 CurrentCommemoration.Stop();
                 await Server.Instance.Assistant.Commemorate(CurrentCommemoration.Event, CurrentCommemoration.Organizer, CurrentCommemoration.Observers);
                 CurrentCommemoration = null;

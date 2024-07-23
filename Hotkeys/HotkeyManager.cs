@@ -119,7 +119,7 @@ namespace TwitchBot.Hotkeys
             }
         }
 
-        private async static Task ReadScreenRegion(int regionIndex)
+        public async static Task ReadScreenRegion(int regionIndex)
         {
             if (Server.Instance.screen.SelectedRegionArea(regionIndex) > 9)
             {
