@@ -1,8 +1,4 @@
-﻿using OpenMacroBoard.SDK;
-using StreamDeckSharp;
-using TwitchBot.Hotkeys;
-using IDeviceContext = OpenMacroBoard.SDK.IDeviceContext;
-using StreamDeckKeyEventArgs = OpenMacroBoard.SDK.KeyEventArgs;
+﻿using StreamDeckKeyEventArgs = OpenMacroBoard.SDK.KeyEventArgs;
 using StreamDeckSdk = StreamDeckSharp.StreamDeck;
 
 namespace TwitchBot.Elgato
@@ -20,26 +16,26 @@ namespace TwitchBot.Elgato
         readonly Logger log = new("StreamDeck");
 
         bool Enabled = false;
-        IDeviceContext Deck;
-        public readonly List<int> StreamDeckIndexesUsed = new List<int>() { 13, 14, 15, 21, 22, 23, 29, 30, 31 };
+        readonly List<int> StreamDeckIndexesUsed = new List<int>() { 13, 14, 15, 21, 22, 23, 29, 30, 31 };
+        Dictionary<int, StreamDeckKey> SteamDeckActions = new()
+        {
+            { 13, StreamDeckKey.ReadScreenRegion1 },
+            { 14, StreamDeckKey.ReadScreenRegion2 },
+            { 15, StreamDeckKey.ReadScreenRegion3 },
+            { 29, StreamDeckKey.Debug },
+            { 31, StreamDeckKey.RequestNarration }
+        };
+
         public StreamDeck(bool enabled = true)
         {
             Enabled = enabled;
-            Deck = DeviceContext.Create().AddListener<StreamDeckListener>();
             var board = StreamDeckSdk.OpenDevice();
             board.KeyStateChanged += HandleKey;
 
-            var defaultIcon = KeyBitmap.Create.FromFile("Elgato/Icons/sweet.png");
-
-            foreach(var index in StreamDeckIndexesUsed)
+            foreach(var action in SteamDeckActions)
             {
-                board.SetKeyBitmap(index, defaultIcon);
+                board.SetKeyBitmap(action.Key, action.Value.Icon); 
             }
-
-            board.SetKeyBitmap(13, KeyBitmap.Create.FromRgb(255, 255, 0));
-            board.SetKeyBitmap(14, KeyBitmap.Create.FromRgb(255, 0, 0));
-            board.SetKeyBitmap(15, KeyBitmap.Create.FromRgb(0, 0, 255));
-
 
             log.Info("Listening to Stream Deck Events");
         }
@@ -48,25 +44,13 @@ namespace TwitchBot.Elgato
         {
             if (!Enabled) { return; }
 
-            log.Info($"Received event: {args.Key} : {args.IsDown}");
-            if (args.IsPressed(13))
+            log.Debug($"Received event: {args.Key} : {args.IsDown}");
+            if (SteamDeckActions.ContainsKey(args.Key) && args.IsPressed(args.Key))
             {
-                await HotKeyManager.ReadScreenRegion(0);
+                await SteamDeckActions[args.Key].Action();
+                return;
             }
-            if (args.IsPressed(14))
-            {
-                await HotKeyManager.ReadScreenRegion(1);
-            }
-            if (args.IsPressed(15))
-            {
-                await HotKeyManager.ReadScreenRegion(2);
-            }
-
-            if (args.IsPressed(31))
-            {
-                await Server.Instance.Narrator.ReactToCurrentScreen();
-            }
-
+            log.Debug($"Unhandled event {args.Key}:{args.IsDown}");
         }
     }
 }
