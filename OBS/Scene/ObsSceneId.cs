@@ -23,6 +23,7 @@ namespace TwitchBot.OBS.Scene
 
         public static readonly ObsSceneId Ads = new(MainScene, 10);
         public static readonly ObsSceneId LastImage = new(MainScene, 18);
+        public static readonly ObsSceneId Commemoration = new(MainScene, 32);
 
         public static readonly ObsSceneId Sheogorath = new(Characters, 1);
         public static readonly ObsSceneId DagothUr = new(Characters, 2);

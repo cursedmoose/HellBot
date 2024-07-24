@@ -1,4 +1,7 @@
-﻿namespace TwitchBot.Twitch.Model
+﻿using OpenAI.Threads;
+using TwitchBot.OBS.Scene;
+
+namespace TwitchBot.Twitch.Model
 {
     internal enum CommemorationStatus
     {
@@ -28,11 +31,14 @@
 
         public void Start()
         {
+            File.WriteAllText("etc/commemoration.txt", $"\"{Event.Trim()}\"     ");
             Status = CommemorationStatus.InProgress;
+            ObsScenes.Commemoration.Enable();
         }
 
         public void Stop()
         {
+            ObsScenes.Commemoration.Disable();
             Status = CommemorationStatus.Ended;
         }
     }

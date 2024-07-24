@@ -594,6 +594,9 @@ namespace TwitchBot.OBS.Websocket
                 case "SceneNameChanged":
                     this.SceneNameChanged?.Invoke(this, new SceneNameChangedEventArgs((string?)body["oldSceneName"], (string?)body["sceneName"]));
                     break;
+                case "InputSettingsChanged":
+
+                    break;
                 default:
                     Console.WriteLine($"Unsupported Event: {eventType}\n{body}");
                     break;
