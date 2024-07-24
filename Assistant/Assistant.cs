@@ -290,8 +290,13 @@ namespace TwitchBot.Assistant
 
         private async Task UpdateContext()
         {
-            Context_Steam.Update(await Server.Instance.steam.GetCurrentSteamContext());
-            await Context_OnUpdate();
+            do
+            {
+                log.Info("Updating Context");
+                Context_Steam.Update(await Server.Instance.steam.GetCurrentSteamContext());
+                await Context_OnUpdate();
+                await Task.Delay(60_000);
+            } while (AI_Running);
         }
 
         protected virtual async Task Context_OnUpdate()
@@ -335,8 +340,8 @@ namespace TwitchBot.Assistant
                 log.Info($"Hello at {DateTime.Now}");
                 await AI_On_Start();
                 AI_Running = true;
-                await Task.Run(Run_AI);
-                await Task.Run(UpdateContext);
+                Task.Run(Run_AI);
+                Task.Run(UpdateContext);
             }
             return;
         }

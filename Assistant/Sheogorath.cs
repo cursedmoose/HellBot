@@ -243,8 +243,6 @@ namespace TwitchBot.Assistant
 
         public async Task PaintPicture()
         {
-            StreamTts("Let's paint a picture!");
-
             var getPrompt = "make an image prompt. limit 5 words";
             var imagePrompt = await Server.Instance.chatgpt.GetResponseText(Persona, getPrompt);
             log.Info($"Got image prompt: {imagePrompt}");

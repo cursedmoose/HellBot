@@ -68,7 +68,7 @@ namespace TwitchBot.SpeechToText
 
             if (e.Result.Semantics.ContainsKey("command"))
             {
-                Log.Info($"Grammar: {e.Result.Grammar.Name}, Semantics: {e.Result.Semantics?["command"]?.Value}, Confidence: {e.Result.Confidence}");
+                Log.Debug($"Grammar: {e.Result.Grammar.Name}, Semantics: {e.Result.Semantics?["command"]?.Value}, Confidence: {e.Result.Confidence}");
             }
 
             if (e.Result.Confidence > 0.94f)
@@ -77,7 +77,7 @@ namespace TwitchBot.SpeechToText
                 {
                     //var command = e.Result.Text.Replace("hey", "").Replace("hellbot", "").Replace("madgod", "").Replace("sheogorath", "").Trim();
                     var command = e.Result.Semantics?["command"].Value.ToString();
-                    Log.Debug($"Confidence: {e.Result.Confidence}%, trying to {command} ({++Accepts} / {Accepts + Rejections})");
+                    Log.Info($"Confidence: {e.Result.Confidence}%, trying to {command} ({++Accepts} / {Accepts + Rejections})");
                     if (command == null)
                     {
                         Log.Debug("No matching command");
@@ -110,7 +110,7 @@ namespace TwitchBot.SpeechToText
             }
             else
             {
-                Log.Info($"[{e.Result.Grammar.Name}] {e.Result.Text} (Confidence: {e.Result.Confidence})");
+                Log.Debug($"[{e.Result.Grammar.Name}] {e.Result.Text} (Confidence: {e.Result.Confidence})");
                 //await Server.Instance.Assistant.RespondToPrompt(e.Result.Text);
                 Rejections++;
             }
