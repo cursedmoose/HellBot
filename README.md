@@ -6,11 +6,17 @@ An AI Assistant for Twitch Streaming
 but too much
 
  ## Integrations
- - Twitch via TwitchLib
- - OpenAI ChatGPT/DallE
- - ElevenLabs
+ - Twitch
+ - OBS
+ - AWS
  - Discord
+ - Elgato Stream Deck
+ - OpenAI
+ - ElevenLabs
  - Github Pages / Jekyll
+ - Tobii Eyetracking (Experimental)
+ - Muse Brainwave Monitor (Experimental)
+
 
 ## Usage
 For when I forget...

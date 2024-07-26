@@ -34,7 +34,6 @@
     <PackageReference Include="System.Windows.Extensions" Version="8.0.0" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
     <PackageReference Include="Tesseract.Drawing" Version="5.2.0" />
-    <PackageReference Include="Tobii.Research.x64" Version="1.11.0.1334" />
     <PackageReference Include="TwitchLib" Version="3.5.3" />
     <PackageReference Include="TwitchLib.Api" Version="3.9.0" />
     <PackageReference Include="TwitchLib.EventSub.Core" Version="2.5.2" />

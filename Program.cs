@@ -119,7 +119,7 @@ public class ServerConfig
     public static readonly bool Obs = PRODUCTION;
     public static readonly bool Speech = PRODUCTION;
     public static readonly bool StreamDeck = PRODUCTION;
-    public static readonly bool Steam = DEVELOPMENT;
+    public static readonly bool Steam = PRODUCTION;
 
     // Experimental
     public static readonly bool EyeTracker = EXPERIMENTAL;
