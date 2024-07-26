@@ -33,12 +33,27 @@ namespace TwitchBot.ScreenCapture
             return bmp;
         }
 
-        private Bitmap CaptureScreenRegion(int regionIndex)
+        private Bitmap CaptureScreenRegionOld(int regionIndex)
         {
             Bitmap bmp = new(screenRegions[regionIndex].Width, screenRegions[regionIndex].Height);
             using (Graphics g = Graphics.FromImage(bmp))
             {
                 g.CopyFromScreen(screenRegions[regionIndex].Left, screenRegions[regionIndex].Top, 0, 0, screenRegions[regionIndex].Size);
+            }
+            return bmp;
+        }
+
+        private Bitmap CaptureScreenRegion(int regionIndex)
+        {
+            return CaptureScreenRegion(screenRegions[regionIndex]);
+        }
+
+        private Bitmap CaptureScreenRegion(Rectangle region)
+        {
+            Bitmap bmp = new(region.Width, region.Height);
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.CopyFromScreen(region.Left, region.Top, 0, 0, region.Size);
             }
             return bmp;
         }
@@ -59,6 +74,17 @@ namespace TwitchBot.ScreenCapture
         {
             var filePath = "images/screenshots/region.png";
             var img = CaptureScreenRegion(regionIndex);
+            using (var fs = new FileStream(filePath, FileMode.Create))
+            {
+                img.Save(fs, ImageFormat.Png);
+            }
+            return filePath;
+        }
+
+        public string TakeScreenRegion(Rectangle rectangle, string fileName = "region_adhoc")
+        {
+            var filePath = $"images/screenshots/{fileName}.png";
+            var img = CaptureScreenRegion(rectangle);
             using (var fs = new FileStream(filePath, FileMode.Create))
             {
                 img.Save(fs, ImageFormat.Png);

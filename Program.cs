@@ -121,8 +121,8 @@ public class ServerConfig
     public static readonly bool StreamDeck = PRODUCTION;
     public static readonly bool Steam = PRODUCTION;
 
+    public static readonly bool EyeTracker = DEVELOPMENT;
     // Experimental
-    public static readonly bool EyeTracker = EXPERIMENTAL;
     public static readonly bool BrainTracker = EXPERIMENTAL;
 }
 

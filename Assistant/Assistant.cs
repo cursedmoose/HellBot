@@ -5,11 +5,11 @@ using TwitchBot.Assistant.Polls;
 using TwitchBot.ChatGpt;
 using TwitchBot.Discord;
 using TwitchBot.ElevenLabs;
+using TwitchBot.EyeTracking;
 using TwitchBot.OBS.Scene;
 using TwitchBot.ScreenCapture;
 using TwitchBot.Steam;
 using TwitchBot.Twitch.Model;
-using TwitchLib.Client.Models;
 using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 using static TwitchBot.ChatGpt.ChatGpt;
 
@@ -256,9 +256,30 @@ namespace TwitchBot.Assistant
                 reactionPrompt = Prompts.Reactions.Random();
             }
 
-            if (Discord.DiscordBot.IsEnabled())
+            if (DiscordBot.IsEnabled())
             {
                 var fileUrl = await Server.Instance.TakeAndUploadScreenshot();
+                ReactToImage(fileUrl, reactionPrompt);
+            }
+            else
+            {
+                log.Error("Could not react to current screen as discord is disabled.");
+            }
+        }
+
+        public async Task LookAtWhatISee(string prompt = "")
+        {
+            var reactionPrompt = prompt;
+
+            if (string.IsNullOrEmpty(prompt))
+            {
+                reactionPrompt = Prompts.Reactions.Random();
+            }
+
+            if (DiscordBot.IsEnabled() && TobiiEyeTracker.IsEnabled())
+            {
+                var img = Server.Instance.eyetracker.CaptureLatestVisionArea();
+                var fileUrl = await Server.Instance.UploadImage(img);
                 ReactToImage(fileUrl, reactionPrompt);
             }
             else
