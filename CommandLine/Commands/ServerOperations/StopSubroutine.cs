@@ -8,6 +8,7 @@
         {
             ComponentsNeedingShutdown.Add("assistant", Server.Instance.Assistant.StopAI);
             ComponentsNeedingShutdown.Add("scraper", Server.Instance.screen.StopScraper);
+            ComponentsNeedingShutdown.Add("brain", Server.Instance.brain.Stop);
         }
 
         public override void Handle(Server server, string command)

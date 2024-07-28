@@ -5,47 +5,64 @@ namespace TwitchBot.EEG
 {
     public class MuseMonitor
     {
-        const long TICKS_PER_SECOND = 10_000_000L;
-
         private readonly static Logger log = new("Muse");
         private readonly OscReceiver Receiver;
         private readonly Task MonitorTask;
+        private readonly Task BrainStatePoller;
         private readonly IPAddress IP_Address = IPAddress.Parse("192.168.1.197");
         private readonly int Port = 5000;
-        private readonly long ProfilingLength = TICKS_PER_SECOND * 20; // 60 seconds
-        private bool Profiling = false;
-        private long ProfileTime = 0;
-        private Dictionary<string, List<MindMonitorPacket>> Profiler = new();
-        private Dictionary<string, MindMonitorPacket> LastReadings = new();
-        private Dictionary<string, MindMonitorProfilerResult> LastMinuteAverages = new();
 
+        private static bool Enabled = false;
 
-        private static readonly string GAMMA = "/muse/elements/gamma_absolute"; // heightened perception, peak state
-        private static readonly string BETA = "/muse/elements/beta_absolute"; // decision making, task solving, learning
-        private static readonly string ALPHA = "/muse/elements/alpha_absolute"; // relaxation, creativity
-        private static readonly string THETA = "/muse/elements/theta_absolute"; // detached dreaming, autopilot, repetitive tasks
-        private static readonly string DELTA = "/muse/elements/delta_absolute"; // active dreaming, loss of awareness
-
-
-        public MuseMonitor(bool Enabled = true)
+        private readonly Dictionary<BrainWave, Queue<float>> BrainWaves = new()
         {
+            { BrainWave.Alpha, new() },
+            { BrainWave.Beta, new() },
+            { BrainWave.Delta, new() },
+            { BrainWave.Gamma, new() },
+            { BrainWave.Theta, new() },
+        };
+
+
+        private const string ALPHA = "/muse/elements/alpha_absolute"; // relaxation, creativity
+        private const string BETA = "/muse/elements/beta_absolute"; // decision making, task solving, learning
+        private const string DELTA = "/muse/elements/delta_absolute"; // active dreaming, loss of awareness
+        private const string GAMMA = "/muse/elements/gamma_absolute"; // heightened perception, peak state
+        private const string THETA = "/muse/elements/theta_absolute"; // detached dreaming, autopilot, repetitive tasks
+
+        private string CurrentState = "None";
+
+        public MuseMonitor(bool enabled = true)
+        {
+            Enabled = enabled;
             Receiver = new(IP_Address, Port);
             MonitorTask = new(ListenLoop);
+            BrainStatePoller = new(PollingLoop);
             if (!Enabled) { return; }
-
             Start();
         }
 
-        public void Start()
+        public static bool IsEnabled()
         {
-            Receiver.Connect();
-            MonitorTask.Start();
+            return Enabled;
         }
 
-        public void Stop()
+        public Task Start()
+        {
+            Receiver.Connect();
+            log.Info($"Receiver is {Receiver.State}");
+            MonitorTask.Start();
+            BrainStatePoller.Start();
+            return Task.CompletedTask;
+            // If this is not receiving, make sure MindMonitor is on the right network
+        }
+
+        public Task Stop()
         {
             Receiver.Close();
             MonitorTask.Dispose();
+            BrainStatePoller.Dispose();
+            return Task.CompletedTask;
         }
 
         private void ListenLoop()
@@ -55,7 +72,6 @@ namespace TwitchBot.EEG
             {
                 while (Receiver.State != OscSocketState.Closed)
                 {
-                    // if we are in a state to recieve
                     if (Receiver.State == OscSocketState.Connected)
                     {
                         OscPacket packet;
@@ -63,38 +79,13 @@ namespace TwitchBot.EEG
                         {
                             var info = packet.ToString();
                             var info2 = (OscBundle)packet;
-                            var data = Parse(packet);
-
-                            if (!LastReadings.ContainsKey(data.Path))
-                            {
-                                LastReadings.Add(data.Path, data);
-                            } 
-                            else
-                            {
-                                LastReadings[data.Path] = data;
-                            }
-
-                            if (data.Path.Contains("blink"))
-                            {
-                                //log.Info($"Blinked at {data.TimeStamp}");
-                            } 
-                            else if (data.Path.Contains("jaw_clench"))
-                            {
-                                //log.Info($"Clenched at {data.TimeStamp}");
-                            }
-
-                            if (Profiling)
-                            {
-                                Profile(data);
-                            }
+                            Parse(packet);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                // if the socket was connected when this happens
-                // then tell the user
                 if (Receiver.State == OscSocketState.Connected)
                 {
                     Console.WriteLine("Exception in listen loop");
@@ -103,88 +94,19 @@ namespace TwitchBot.EEG
             }
         }
 
-        public void StartProfiling()
+        private async void PollingLoop()
         {
-            ProfileTime = DateTime.UtcNow.Ticks;
-            Profiler.Clear();
-            Profiling = true;
-            log.Info("Profiling started.");
-        }
-
-        public void StopProfiling()
-        {
-            Profiling = false;
-            log.Info("Profiling stopped.");
-            GetProfilerResults();
-            Profiler.Clear();
-        }
-
-        public void DumpProfile(string filename)
-        {
-            
-        }
-
-        private void Profile(MindMonitorPacket Packet)
-        {
-            if (DateTime.UtcNow.Ticks <= (ProfileTime + ProfilingLength))
+            log.Info("Polling started.");
+            do
             {
-                if (Profiler.ContainsKey(Packet.Path))
+                await Task.Delay(15_000);
+                var newState = CurrentBrainWaveState();
+                if (newState != CurrentState)
                 {
-                    Profiler[Packet.Path].Add(Packet);
+                    log.Info($"Moving from {CurrentState} to {newState}");
+                    CurrentState = newState;
                 }
-                else
-                {
-                    Profiler.Add(Packet.Path, new() { Packet });
-                }
-
-            }
-            else
-            {
-                StopProfiling();
-            }
-        }
-
-        private void GetProfilerResults()
-        {
-            LastMinuteAverages.Clear();
-            foreach (var kvp in Profiler)
-            {
-                List<float> avgs = new();
-                float min = 0;
-                float max = 0;
-
-                if (kvp.Value.First().Path.Contains("blink") || kvp.Value.First().Path.Contains("jaw_clench"))
-                {
-                    int numSamples = kvp.Value.Count;
-                    avgs.Add(numSamples / 60f);
-                    min = 0;
-                    max = 1;
-                }
-                else
-                {
-                    for (int x = 0; x < kvp.Value.First().Args.Count; x++)
-                    {
-                        float avg = kvp.Value.Average(it => it.Args[x]);
-                        avgs.Add(avg);
-
-                        min = kvp.Value.Min(it => it.Args[x]);
-                        max = kvp.Value.Max(it => it.Args[x]);
-
-                    }
-                }
-
-                MindMonitorPacket averages = new(kvp.Value.First().TimeStamp, kvp.Value.First().Path, avgs);
-                MindMonitorProfilerResult result = new(
-                    Path: kvp.Key,
-                    Count: kvp.Value.Count,
-                    Min: min,
-                    Max: max,
-                    Averages: avgs
-                    );
-
-                LastMinuteAverages.Add(averages.Path, result);
-                log.Info($"{averages.Path}: [{string.Join(',', averages.Args)}]");
-            }
+            } while (Receiver.State != OscSocketState.Closed);
         }
 
         private MindMonitorPacket Parse(OscPacket packet)
@@ -192,31 +114,36 @@ namespace TwitchBot.EEG
             var data = packet.ToString();
             var dataChunks = data?.Split(",", 3);
 
-            if (dataChunks?.Length != 3) {
+            if (dataChunks?.Length != 3)
+            {
                 log.Error($"Could not parse {data} as we received {dataChunks?.Length} args");
                 return new MindMonitorPacket("oh", "no", new List<float> { 0f });
-            } 
+            }
             else
             {
                 var timestamp = dataChunks[1];
                 var packetData = dataChunks[2].Trim(new char[] { ' ', '{', '}' }).Split(',');
                 var path = packetData[0];
-                float maybeArg = 0f;
                 List<float> maybeArgs = new();
-                for (int x = 1; x < packetData.Length; x++)
-                {
-                    var arg = float.TryParse(packetData[x].Trim('f'), out maybeArg);
-                    if (arg)
-                    {
-                        maybeArgs.Add(maybeArg);
-                    }
-                    else
-                    {
-                        log.Error("oh no");
-                    }
-                }
 
-                //var args = float.TryParse(packetData[1], out maybeArg);
+                switch (path)
+                {
+                    case ALPHA:
+                        ParseBrainWave(BrainWave.Alpha, packetData[1]);
+                        break;
+                    case BETA:
+                        ParseBrainWave(BrainWave.Beta, packetData[1]);
+                        break;
+                    case GAMMA:
+                        ParseBrainWave(BrainWave.Gamma, packetData[1]);
+                        break;
+                    case DELTA:
+                        ParseBrainWave(BrainWave.Delta, packetData[1]);
+                        break;
+                    case THETA:
+                        ParseBrainWave(BrainWave.Theta, packetData[1]);
+                        break;
+                }
 
                 return new MindMonitorPacket(
                     TimeStamp: timestamp,
@@ -225,19 +152,92 @@ namespace TwitchBot.EEG
                );
             }
         }
-    }
 
-    public record MindMonitorPacket(
+        internal float GetCurrentAverage(BrainWave waveType)
+        {
+            return BrainWaves[waveType].Average();
+        }
+
+        public void PrintAverages()
+        {
+            foreach (var kvp in BrainWaves)
+            {
+                log.Info($"{kvp.Key}: {kvp.Value.Average()}");
+            }
+        }
+
+        public string CurrentBrainWaveState()
+        {
+            if (!Enabled) { return ""; }
+
+            float highestAverage = 0f;
+            BrainWave highestState = BrainWave.None;
+            foreach (var kvp in BrainWaves)
+            {
+                if (kvp.Value.Count > 0)
+                {
+                    var thisAverage = kvp.Value.Average();
+                    if (thisAverage > highestAverage)
+                    {
+                        highestAverage = thisAverage;
+                        highestState = kvp.Key;
+                    }
+                }
+            }
+
+            return GetWaveStateDefinition(highestState);
+        }
+
+        private bool ParseBrainWave(BrainWave waveType, string value)
+        {
+            if (float.TryParse(value.Trim('f'), out var maybeArg))
+            {
+                if (BrainWaves[waveType].Count >= 100)
+                {
+                    BrainWaves[waveType].Dequeue();
+                }
+                BrainWaves[waveType].Enqueue(maybeArg);
+                return true;
+            }
+
+            return false;
+        }
+
+        private string GetWaveStateDefinition(BrainWave waveState)
+        {
+            if (Enabled)
+            {
+                switch (waveState)
+                {
+                    case BrainWave.Alpha:
+                        return "calm";
+                    case BrainWave.Beta:
+                        return "alert";
+                    case BrainWave.Delta:
+                        return "relaxed";
+                    case BrainWave.Gamma:
+                        return "very focused";
+                    case BrainWave.Theta:
+                        return "introspective";
+                }
+            }
+
+            return "";
+        }
+    }
+}
+    internal record MindMonitorPacket(
         string TimeStamp,
         string Path,
         List<float> Args
      );
 
-    public record MindMonitorProfilerResult(
-        string Path,
-        int Count,
-        float Min,
-        float Max,
-        List<float> Averages
-    );
-}
+    internal enum BrainWave
+    {
+        None = 0,
+        Alpha,
+        Beta,
+        Delta,
+        Gamma,
+        Theta
+    }
