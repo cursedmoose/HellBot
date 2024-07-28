@@ -4,6 +4,7 @@ using TwitchBot.Assistant.AI;
 using TwitchBot.Assistant.Polls;
 using TwitchBot.ChatGpt;
 using TwitchBot.Discord;
+using TwitchBot.EEG;
 using TwitchBot.ElevenLabs;
 using TwitchBot.EyeTracking;
 using TwitchBot.OBS.Scene;
@@ -269,22 +270,26 @@ namespace TwitchBot.Assistant
 
         public async Task LookAtWhatISee(string prompt = "")
         {
-            var reactionPrompt = prompt;
-
-            if (string.IsNullOrEmpty(prompt))
-            {
-                reactionPrompt = Prompts.Reactions.Random();
-            }
-
             if (DiscordBot.IsEnabled() && TobiiEyeTracker.IsEnabled())
             {
+                var reactionPrompt = prompt;
+                if (string.IsNullOrEmpty(prompt))
+                {
+                    reactionPrompt = Prompts.Reactions.Random();
+
+                    if (MuseMonitor.IsEnabled()) 
+                    { 
+                        var currentBrain = Server.Instance.brain.CurrentBrainWaveState();
+                        reactionPrompt = $"{reactionPrompt}. I am currently feeling {currentBrain}.";
+                    }
+                }
                 var img = Server.Instance.eyetracker.CaptureLatestVisionArea();
                 var fileUrl = await Server.Instance.UploadImage(img);
                 ReactToImage(fileUrl, reactionPrompt);
             }
             else
             {
-                log.Error("Could not react to current screen as discord is disabled.");
+                log.Error("Could not react to current mental state as discord is disabled.");
             }
         }
 
