@@ -23,6 +23,8 @@ using TwitchBot.EEG;
 using TwitchBot.AWS;
 using TwitchBot.Elgato;
 using TwitchBot.Steam;
+using TwitchBot.Ollama;
+using TwitchBot.CommandLine.Commands.Ollama;
 
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
@@ -59,7 +61,10 @@ List<ServerCommand> Commands = new()
     new ChatGptGeneration(),
     #endregion
     #region OBS Commands
-    new PrintSources()
+    new PrintSources(),
+    #endregion
+    #region Ollama Commands
+    new OllamaChat(),
     #endregion
 };
 ServerCommand.ValidateCommandList(Commands);
@@ -116,6 +121,7 @@ public class ServerConfig
     public static readonly bool ElevenLabs = PRODUCTION;
     public static readonly bool Discord = PRODUCTION;
     public static readonly bool ChatGpt = PRODUCTION;
+    public static readonly bool Ollama = DEVELOPMENT;
     public static readonly bool Obs = PRODUCTION;
     public static readonly bool Speech = PRODUCTION;
     public static readonly bool StreamDeck = PRODUCTION;
@@ -160,6 +166,7 @@ public class Server
     public MuseMonitor brain = new(ServerConfig.BrainTracker);
     public StreamDeck streamDeck = new(ServerConfig.StreamDeck);
     public SteamClient steam = new(ServerConfig.Steam);
+    public Ollama ollama = new(ServerConfig.Ollama);
 
     public HttpClient web = new();
     public FileGenerator file = new();
