@@ -18,5 +18,6 @@
         Commemorate,
         RequestNarration,
         ReactToSteamContext,
+        ReadMind,
     }
 }

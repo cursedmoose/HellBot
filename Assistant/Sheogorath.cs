@@ -28,6 +28,7 @@ namespace TwitchBot.Assistant
             Mayhem[Actions.None] = () => { return Task.CompletedTask; };
             Mayhem[Actions.Chat] = Chatter;
             Mayhem[Actions.ReactToScreen] = ReactToCurrentScreen;
+            Mayhem[Actions.ReadMind] = async () => { await LookAtWhatISee(""); };
         }
 
         private static DateTime LastPollTime = DateTime.MinValue;
@@ -226,7 +227,9 @@ namespace TwitchBot.Assistant
 
         private async Task<bool> DeleteAllRewards()
         {
-            if (rewardsCreated.Count > 0)
+            var numberOfExistingRewards = rewardsCreated.Count;
+            log.Info($"Deleting {numberOfExistingRewards} rewards");
+            if (numberOfExistingRewards > 0)
             {
                 foreach (var reward in rewardsCreated)
                 {
@@ -234,6 +237,7 @@ namespace TwitchBot.Assistant
                     if (deleted)
                     {
                         rewardsCreated.Remove(reward.Key);
+                        log.Info($"Deleted {reward.Key}. {rewardsCreated.Count} rewards remaining.");
                     }
                 }
             }
