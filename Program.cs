@@ -112,7 +112,7 @@ public class ServerConfig
     public static readonly bool DISABLED = false;
 
     public static readonly bool PRODUCTION = true;
-    public static readonly bool DEVELOPMENT = true;
+    public static readonly bool DEVELOPMENT = false;
     public static readonly bool EXPERIMENTAL = false;
 
     public static readonly bool Aws = ENABLED;
@@ -123,11 +123,11 @@ public class ServerConfig
     public static readonly bool ChatGpt = PRODUCTION;
     public static readonly bool Ollama = DEVELOPMENT;
     public static readonly bool Obs = PRODUCTION;
-    public static readonly bool Speech = PRODUCTION;
+    public static readonly bool Speech = EXPERIMENTAL;
     public static readonly bool StreamDeck = PRODUCTION;
     public static readonly bool Steam = PRODUCTION;
 
-    public static readonly bool EyeTracker = DEVELOPMENT;
+    public static readonly bool EyeTracker = PRODUCTION;
     // Experimental
     public static readonly bool BrainTracker = EXPERIMENTAL;
 }

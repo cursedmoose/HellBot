@@ -25,10 +25,15 @@ namespace TwitchBot.ScreenCapture
 
         private Bitmap CaptureScreen()
         {
-            Bitmap bmp = new(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+            var scaling = 1.0f;
+            var actualW = (int)(Screen.PrimaryScreen.Bounds.Width * scaling);
+            var actualH = (int)(Screen.PrimaryScreen.Bounds.Height * scaling);
+            var actualSize = new Size(actualW, actualH);
+
+            Bitmap bmp = new(actualW, actualH);
             using (Graphics g = Graphics.FromImage(bmp))
             {
-                g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
+                g.CopyFromScreen(0, 0, 0, 0, actualSize);
             }
             return bmp;
         }

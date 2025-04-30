@@ -14,9 +14,9 @@ namespace TwitchBot.Assistant
                 sceneId: ObsScenes.Sheogorath
             )
         {
-            Mischief[Actions.RunPoll] = TryRunPoll;
+            // Mischief[Actions.RunPoll] = TryRunPoll;
             Mischief[Actions.CreateReward] = TryCreateReward;
-            Mischief[Actions.PaintPicture] = PaintPicture;
+            // Mischief[Actions.PaintPicture] = PaintPicture;
             Mischief[Actions.ReactToScreen] = ReactToCurrentScreen;
             Mischief[Actions.ReactToSteamContext] = ReactToSteamContext;
             Mischief[Actions.RequestNarration] = async () =>

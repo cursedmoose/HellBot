@@ -1,15 +1,14 @@
 ﻿namespace TwitchBot.CommandLine.Commands
 {
     // Generally for testing new functionality
-    internal class TestCommand : ServerCommand
+    internal class Screenshot : ServerCommand
     {
-        public TestCommand() : base("test")
+        public Screenshot() : base("screenshot")
         {
         }
         public override async void Handle(Server server, string command)
         {
-            Log.Info("Using Test Command. Please consider creating a new command instead of relying on this one.");
-
+            await Server.Instance.TakeAndUploadScreenshot();
         }
     }
 }
