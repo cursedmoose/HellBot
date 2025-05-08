@@ -26,6 +26,10 @@ using TwitchBot.Steam;
 using TwitchBot.Ollama;
 using TwitchBot.CommandLine.Commands.Ollama;
 
+Directory.CreateDirectory("logs");
+Directory.CreateDirectory("images/screenshots");
+Directory.CreateDirectory("etc");
+
 var multiOut = new MultiWriter(Console.Out, $"logs/{DateTime.Now:yyyy-MM-dd}.txt");
 Console.SetOut(multiOut);
 var log = new Logger("MAIN");
@@ -46,6 +50,7 @@ List<ServerCommand> Commands = new()
     new StartSubroutine(),
     new StopSubroutine(),
     new TestCommand(),
+    new Screenshot(),
     #endregion
     #region Assistant Commands
     new CleanUpAssistant(),
