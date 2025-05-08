@@ -26,7 +26,7 @@ namespace TwitchBot.OBS
                 log.Info("Connecting to OBS...");
                 try
                 {
-                    obs.ConnectAsync("ws://localhost:4455/", null);
+                    Connect();
                 }
                 catch (Exception ex)
                 {
@@ -38,6 +38,11 @@ namespace TwitchBot.OBS
         public void OnSceneChange(object? sender, SceneItemEnableStateChangedEventArgs e)
         {
             log.Info($"[Scene Changed] {e.SceneName}:{e.SceneItemId} = {e.SceneItemEnabled}");
+        }
+
+        public void Connect()
+        {
+            obs.ConnectAsync("ws://localhost:4455/", null);
         }
 
         public void Disconnect()
@@ -59,6 +64,7 @@ namespace TwitchBot.OBS
         private void OnDisconnect(object? sender, ObsDisconnectionInfo e)
         {
             log.Info($"Disconnected due to {e.DisconnectReason}");
+            Connect();
         }
 
         public void GetActiveSource()
