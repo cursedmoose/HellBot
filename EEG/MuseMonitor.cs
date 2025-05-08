@@ -60,8 +60,22 @@ namespace TwitchBot.EEG
         public Task Stop()
         {
             Receiver.Close();
-            MonitorTask.Dispose();
-            BrainStatePoller.Dispose();
+            try
+            {
+                MonitorTask.Dispose();
+            }
+            catch (InvalidOperationException _)
+            {
+                log.Info("MonitorTask not running");
+            }
+            try
+            {
+                BrainStatePoller.Dispose();
+            }
+            catch (InvalidOperationException _)
+            {
+                log.Info("BrainStatePoller not running");
+            }
             return Task.CompletedTask;
         }
 
@@ -226,18 +240,18 @@ namespace TwitchBot.EEG
         }
     }
 }
-    internal record MindMonitorPacket(
-        string TimeStamp,
-        string Path,
-        List<float> Args
-     );
+internal record MindMonitorPacket(
+    string TimeStamp,
+    string Path,
+    List<float> Args
+ );
 
-    internal enum BrainWave
-    {
-        None = 0,
-        Alpha,
-        Beta,
-        Delta,
-        Gamma,
-        Theta
-    }
+internal enum BrainWave
+{
+    None = 0,
+    Alpha,
+    Beta,
+    Delta,
+    Gamma,
+    Theta
+}
