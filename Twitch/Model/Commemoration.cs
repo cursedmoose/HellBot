@@ -1,5 +1,4 @@
-﻿using OpenAI.Threads;
-using TwitchBot.OBS.Scene;
+﻿using TwitchBot.OBS.Scene;
 
 namespace TwitchBot.Twitch.Model
 {

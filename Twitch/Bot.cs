@@ -642,6 +642,50 @@ namespace TwitchBot.Twitch
             }
         }
 
+        public async Task<bool> Commemorate(string organizer, string occasion)
+        {
+            CurrentCommemoration = new(occasion, new(organizer, AccountInfo.CHANNEL));
+            var started = await StartCommemoration();
+            var ended = false;
+            if (started)
+            {
+                await Task.Delay(90 * 1_000);
+                ended = await EndCommemoration();
+                if (!ended)
+                {
+                    log.Error($"Couldn't stop commemoration of {CurrentCommemoration.Event}");
+                }
+            }
+
+            return started && ended;
+        }
+
+        public async Task<bool> StartCommemoration()
+        {
+            if (CurrentCommemoration != null)
+            {
+                CurrentCommemoration.Start();
+                client.SendMessage(AccountInfo.CHANNEL, $"{CurrentCommemoration.Organizer.UserName} is commemorating \"{CurrentCommemoration.Event}\"! Join in the ceremony by typing !commemorate");
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<bool> EndCommemoration()
+        {
+            if (CurrentCommemoration != null && CurrentCommemoration.InProgress())
+            {
+                client.SendMessage(AccountInfo.CHANNEL, $"{CurrentCommemoration.Organizer.UserName}'s commemoration of \"{CurrentCommemoration.Event}\" is over!");
+                CurrentCommemoration.Stop();
+                await Server.Instance.Assistant.Commemorate(CurrentCommemoration.Event, CurrentCommemoration.Organizer, CurrentCommemoration.Observers);
+                CurrentCommemoration = null;
+                return true;
+            }
+
+            return false;
+        }
+
         #endregion API Hooks
 
         #region EventSub Handlers
@@ -834,6 +878,8 @@ namespace TwitchBot.Twitch
             }
             else if (eventData.Reward.Title == "Commemorate")
             {
+                log.Info($"{eventData.UserName} is commemorating {eventData.UserInput}");
+
                 CurrentCommemoration = new(eventData.UserInput, new(eventData.UserName, AccountInfo.CHANNEL));
                 CurrentCommemoration.Start();
                 client.SendMessage(AccountInfo.CHANNEL, $"{eventData.UserName} is commemorating \"{eventData.UserInput}\"! Join in the ceremony by typing !commemorate");
