@@ -211,7 +211,7 @@ namespace TwitchBot.Assistant
         public async Task Chatter()
         {
             var options = new ChatGptOptions(1.33, 2, 2);
-            await Server.Instance.chatgpt.GetResponse(Persona, "say anything", options);
+            await Server.Instance.chatgpt.GetResponse(Persona, "say something interesting", options);
             return;
         }
 
