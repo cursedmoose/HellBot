@@ -13,6 +13,24 @@ namespace TwitchBot.ScreenCapture
             new(0, 0, 0, 0)
         };
 
+        private ImageCodecInfo encoder = GetEncoder(ImageFormat.Jpeg);
+        private EncoderParameters encoderParams = new(1);
+        
+        private static ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
+
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+
+            return null;
+        }
+
         public int SelectedRegionArea(int regionIndex)
         {
             return screenRegions[regionIndex].Height * screenRegions[regionIndex].Width;
@@ -21,6 +39,7 @@ namespace TwitchBot.ScreenCapture
         public ScreenCapturer()
         {
             scraper = new(CaptureScreen());
+            encoderParams.Param[0] = new(Encoder.Quality, 50L);
         }
 
         private Bitmap CaptureScreen()
@@ -70,7 +89,7 @@ namespace TwitchBot.ScreenCapture
             // If this is erroring, you're probably calling it twice.
             using (var fs = new FileStream(filePath, FileMode.Create))
             {
-                img.Save(fs, ImageFormat.Png);
+                img.Save(fs, encoder, encoderParams);
             }
             return filePath;
         }
@@ -81,7 +100,7 @@ namespace TwitchBot.ScreenCapture
             var img = CaptureScreenRegion(regionIndex);
             using (var fs = new FileStream(filePath, FileMode.Create))
             {
-                img.Save(fs, ImageFormat.Png);
+                img.Save(fs, encoder, encoderParams);
             }
             return filePath;
         }
@@ -92,7 +111,7 @@ namespace TwitchBot.ScreenCapture
             var img = CaptureScreenRegion(rectangle);
             using (var fs = new FileStream(filePath, FileMode.Create))
             {
-                img.Save(fs, ImageFormat.Png);
+                img.Save(fs, encoder, encoderParams);
             }
             return filePath;
         }
