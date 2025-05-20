@@ -87,10 +87,7 @@ namespace TwitchBot.ScreenCapture
             var filePath = "images/screenshots/latest.png";
             var img = CaptureScreen();
             // If this is erroring, you're probably calling it twice.
-            using (var fs = new FileStream(filePath, FileMode.Create))
-            {
-                img.Save(fs, encoder, encoderParams);
-            }
+            SaveImage(filePath, img);
             return filePath;
         }
 
@@ -98,10 +95,7 @@ namespace TwitchBot.ScreenCapture
         {
             var filePath = "images/screenshots/region.png";
             var img = CaptureScreenRegion(regionIndex);
-            using (var fs = new FileStream(filePath, FileMode.Create))
-            {
-                img.Save(fs, encoder, encoderParams);
-            }
+            SaveImage(filePath, img);
             return filePath;
         }
 
@@ -109,11 +103,24 @@ namespace TwitchBot.ScreenCapture
         {
             var filePath = $"images/screenshots/{fileName}.png";
             var img = CaptureScreenRegion(rectangle);
-            using (var fs = new FileStream(filePath, FileMode.Create))
-            {
-                img.Save(fs, encoder, encoderParams);
-            }
+            SaveImage(filePath, img);
             return filePath;
+        }
+
+        private bool SaveImage(string filePath, Image image)
+        {
+            try
+            {
+                using (var fs = new FileStream(filePath, FileMode.Create))
+                {
+                    image.Save(fs, encoder, encoderParams);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
         public Bitmap GetScreenRegion(int regionIndex)
