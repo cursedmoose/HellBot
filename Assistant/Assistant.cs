@@ -344,6 +344,7 @@ namespace TwitchBot.Assistant
 
         protected virtual async Task AI_On_Stop()
         {
+            await CleanUp();
             await Server.Instance.chatgpt.GetResponse(
                 chatPrompt: $"goodbye",
                 persona: Persona

@@ -43,6 +43,7 @@ namespace TwitchBot.Assistant
 
         public override async Task CleanUp()
         {
+            log.Info($"Deleting {rewardsCreated.Count} rewards...");
             await DeleteAllRewards();
         }
         protected override async Task AI()

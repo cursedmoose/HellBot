@@ -12,7 +12,7 @@
         {
             new ShutdownServer().Handle(server, command);
 
-            server.Assistant.CleanUp();
+            server.Assistant.StopAI();
             server.twitch.Stop();
             server.web.Dispose();
             server.obs.Disconnect();
