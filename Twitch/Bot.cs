@@ -88,7 +88,8 @@ namespace TwitchBot.Twitch
                 "channel:manage:redemptions",
                 "channel:manage:broadcast",
                 "channel:read:ads",
-                "channel:edit:commercial"
+                "channel:edit:commercial",
+                "clips:edit"
             };
 
             if (enabled)
@@ -684,6 +685,17 @@ namespace TwitchBot.Twitch
             }
 
             return false;
+        }
+
+        public async Task<bool> CreateClip()
+        {
+            var clips = await API.Clips.CreateClipAsync(AccountInfo.CHANNEL_ID);
+            log.Info($"Created {clips.CreatedClips.Length} clips.");
+            foreach ( var clip in clips.CreatedClips )
+            {
+                log.Info($"Clip {clip.Id} created. Edit at {clip.EditUrl}");
+            }
+            return true;
         }
 
         #endregion API Hooks
