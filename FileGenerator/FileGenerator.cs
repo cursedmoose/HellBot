@@ -6,7 +6,8 @@ namespace TwitchBot.FileGenerator
 {
     public class FileGenerator
     {
-        private const string WSL_PATH = @"\\wsl.localhost\Ubuntu\home\cursedmoose\app\website\cursedmoose.github.io\";
+        private const string WEBSITE_ROOT = @"C:\Users\jimdu\source\repos\cursedmoose.github.io\";
+
         private const string ASSETS = "assets";
         private const string IMAGES = "images";
         private const string CONFIG = "config";
@@ -49,7 +50,7 @@ namespace TwitchBot.FileGenerator
 
         private void CopyPostToJekyll(string origin)
         {
-            var copyTo = Path.Combine(@"\\wsl.localhost\Ubuntu\home\cursedmoose\app\website\cursedmoose.github.io\", origin);
+            var copyTo = Path.Combine(WEBSITE_ROOT, origin);
             log.Info($"Copying file {origin}");
 
             File.Copy(origin, copyTo, true);
@@ -62,10 +63,7 @@ namespace TwitchBot.FileGenerator
 
         private void CopyImageToJekyll(Agent agent, string origin)
         {
-            var directoryPath = Path.Combine(WSL_PATH, ASSETS, IMAGES, agent.Type, agent.Name.ToLower());
-            Directory.CreateDirectory(directoryPath);
-            log.Info($"Creating directory at {directoryPath}");
-            var copyTo = Path.Combine(@"\\wsl.localhost\Ubuntu\home\cursedmoose\app\website\cursedmoose.github.io\assets", origin);
+            var copyTo = Path.Combine(WEBSITE_ROOT, ASSETS, origin);
             log.Info($"Copying file {origin}");
             File.Copy(origin, copyTo, true);
         }
