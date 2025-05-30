@@ -128,6 +128,7 @@ public class ServerConfig
     public static readonly bool ChatGpt = PRODUCTION;
     public static readonly bool Ollama = DEVELOPMENT;
     public static readonly bool Obs = PRODUCTION;
+    public static readonly bool Microphone = EXPERIMENTAL;
     public static readonly bool Speech = EXPERIMENTAL;
     public static readonly bool StreamDeck = PRODUCTION;
     public static readonly bool Steam = PRODUCTION;
@@ -165,6 +166,7 @@ public class Server
     public ChatGpt chatgpt = new(ServerConfig.ChatGpt);
     public ObsClient obs = new(ServerConfig.Obs);
     public SpeechToText speech = new(ServerConfig.Speech);
+    public MicrophoneListener micListener = new(ServerConfig.Microphone);
     public ImageTextReader imageText = new TesseractImageReader();
     // public ImageTextReader imageText = new OpenAIImageReader(new());
     public TobiiEyeTracker eyetracker = new(ServerConfig.EyeTracker);
