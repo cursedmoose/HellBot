@@ -814,7 +814,7 @@ namespace TwitchBot.Twitch
                 var subscribedEvents = await API.EventSub.GetEventSubSubscriptionsAsync();
                 foreach(var subbedEvent in subscribedEvents.Subscriptions)
                 {
-                    log.Info($"Subscribed to {subbedEvent.Type} ({subbedEvent.Cost})");
+                    log.Debug($"Subscribed to {subbedEvent.Type} ({subbedEvent.Cost})");
                 }
                 log.Info($"Total: {subscribedEvents.Total} ({subscribedEvents.TotalCost})");
             }
