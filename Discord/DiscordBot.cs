@@ -38,7 +38,7 @@ namespace TwitchBot.Discord
             Enabled = enabled;
             DiscordSocketConfig config = new()
             {
-                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildPresences,
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildPresences | GatewayIntents.GuildMembers,
                 AlwaysDownloadUsers = true
             };
             client = new DiscordSocketClient(config);
