@@ -113,30 +113,23 @@ while (true)
 
 public class ServerConfig
 {
+    public static ServerMode CurrentServerMode = ServerMode.PRODUCTION;
+
+    public static bool PRODUCTION { get { return (CurrentServerMode & ServerMode.PRODUCTION) == ServerMode.PRODUCTION; } }
+    public static bool DEVELOPMENT { get { return (CurrentServerMode & ServerMode.DEVELOPMENT) == ServerMode.DEVELOPMENT; } }
+    public static bool EXPERIMENTAL { get { return (CurrentServerMode & ServerMode.EXPERIMENTAL) == ServerMode.EXPERIMENTAL; } }
+
     public static readonly bool ENABLED = true;
     public static readonly bool DISABLED = false;
-
-    public static readonly bool PRODUCTION = true;
-    public static readonly bool DEVELOPMENT = false;
-    public static readonly bool EXPERIMENTAL = false;
-
-    public static readonly bool Aws = ENABLED;
-
-    public static readonly bool Twitch = PRODUCTION;
-    public static readonly bool ElevenLabs = PRODUCTION;
-    public static readonly bool Discord = PRODUCTION;
-    public static readonly bool ChatGpt = PRODUCTION;
-    public static readonly bool Ollama = DEVELOPMENT;
-    public static readonly bool Obs = PRODUCTION;
-    public static readonly bool Microphone = EXPERIMENTAL;
-    public static readonly bool Speech = EXPERIMENTAL;
-    public static readonly bool StreamDeck = PRODUCTION;
-    public static readonly bool Steam = PRODUCTION;
-
-    public static readonly bool EyeTracker = PRODUCTION;
-    // Experimental
-    public static readonly bool BrainTracker = EXPERIMENTAL;
 }
+
+public enum ServerMode
+{
+    NONE = 0,
+    EXPERIMENTAL = 1,
+    DEVELOPMENT = 2,
+    PRODUCTION = 4
+};
 
 public class Server
 {
@@ -159,25 +152,27 @@ public class Server
         God
     };
 
-    public AwsClient aws = new(ServerConfig.Aws);
-    public TwitchIrcBot twitch = new(ServerConfig.Twitch);
-    public ElevenLabs elevenlabs = new(ServerConfig.ElevenLabs);
-    public DiscordBot discord = new(ServerConfig.Discord);
-    public ChatGpt chatgpt = new(ServerConfig.ChatGpt);
-    public ObsClient obs = new(ServerConfig.Obs);
-    public SpeechToText speech = new(ServerConfig.Speech);
-    public MicrophoneListener micListener = new(ServerConfig.Microphone);
-    public ImageTextReader imageText = new TesseractImageReader();
-    // public ImageTextReader imageText = new OpenAIImageReader(new());
-    public TobiiEyeTracker eyetracker = new(ServerConfig.EyeTracker);
-    public MuseMonitor brain = new(ServerConfig.BrainTracker);
-    public StreamDeck streamDeck = new(ServerConfig.StreamDeck);
-    public SteamClient steam = new(ServerConfig.Steam);
-    public Ollama ollama = new(ServerConfig.Ollama);
+    public AwsClient aws = new(ServerConfig.ENABLED);
+    public ChatGpt chatgpt = new(ServerConfig.PRODUCTION);
+    public DiscordBot discord = new(ServerConfig.PRODUCTION);
+    public ElevenLabs elevenlabs = new(ServerConfig.PRODUCTION);
+    public ObsClient obs = new(ServerConfig.PRODUCTION);
+    public SteamClient steam = new(ServerConfig.PRODUCTION);
+    public StreamDeck streamDeck = new(ServerConfig.PRODUCTION);
+    public TobiiEyeTracker eyetracker = new(ServerConfig.PRODUCTION);
+    public TwitchIrcBot twitch = new(ServerConfig.PRODUCTION);
+
+    public Ollama ollama = new(ServerConfig.DEVELOPMENT);
+
+    public MicrophoneListener micListener = new(ServerConfig.EXPERIMENTAL);
+    public MuseMonitor brain = new(ServerConfig.EXPERIMENTAL);
+    public SpeechToText speech = new(ServerConfig.EXPERIMENTAL);
 
     public HttpClient web = new();
     public FileGenerator file = new();
     public ScreenCapturer screen = new();
+    public Subtitles subtitles = new();
+    public ImageTextReader imageText = new TesseractImageReader();
 
     private static readonly Lazy<Server> lazy = new(() => new Server());
     public static Server Instance { get { return lazy.Value; } }
