@@ -46,9 +46,49 @@ namespace TwitchBot.SpeechToText
                 else
                 {
                     Log.Error($"Could not parse timestamps from {fileName}:{i}");
-                }
+                }                    
+            }
 
-                    
+
+            return subtitles;
+        }
+
+        public List<Subtitle> FromFile(string fileName)
+        {
+            var fileText = File.ReadAllLines(fileName);
+            var subtitles = new List<Subtitle>();
+
+            if (fileText.Length % 3 != 0)
+            {
+                Log.Error("Missing subtitle info?");
+            }
+
+            for (int i = 0; i < fileText.Length; i += 3)
+            {
+                var timeMatch = Regex.Match(fileText[i + 1], @"(?<start>\d{2}:\d{2}:\d{2},\d{3}) --> (?<end>\d{2}:\d{2}:\d{2},\d{3})");
+                var speakerMatch = Regex.Match(fileText[i + 2], @"(?<speaker><v.*?>)(?<dialog>)");
+
+                if (timeMatch.Success && speakerMatch.Success)
+                {
+                    var start = TimeSpan.ParseExact(timeMatch.Groups["start"].Value, @"hh\:mm\:ss\.fff", null);
+                    var end = TimeSpan.ParseExact(timeMatch.Groups["end"].Value, @"hh\:mm\:ss\.fff", null);
+                    var text = speakerMatch.Groups["speaker"].Value;
+                    var speaker = speakerMatch.Groups["dialog"].Value;
+
+                    var subtitle = new Subtitle()
+                    {
+                        StartTime = start,
+                        EndTime = end,
+                        Line = text,
+                        Speaker = speaker
+                    };
+
+                    subtitles.Add(subtitle);
+                }
+                else
+                {
+                    Log.Error($"Could not parse timestamps from {fileName}:{i}");
+                }
             }
 
 
