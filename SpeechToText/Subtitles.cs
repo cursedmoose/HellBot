@@ -4,12 +4,14 @@ namespace TwitchBot.SpeechToText
 {
     public class Subtitles
     {
-        Logger Log = new("Subtitles");
+        public static readonly string SubtitlePath = @"subtitles/";
+        public static readonly string ArchivePath = Path.Combine(SubtitlePath, "Archive");
+        
+        private static Logger Log = new("Subtitles");
+
         public readonly string FileName;
         private readonly string FilePath;
-        public static readonly string SubtitlePath = @"subtitles/";
-        string ArchivePath = Path.Combine(SubtitlePath, "Archive");
-
+        public readonly List<Subtitle> subtitles = new();
 
         public Subtitles(string fileName)
         {
@@ -18,13 +20,22 @@ namespace TwitchBot.SpeechToText
             FilePath = Path.Combine(SubtitlePath, fileName);
         }
 
+        public Subtitles(string fileName, List<Subtitle> subs)
+        {
+            Directory.CreateDirectory(SubtitlePath);
+            FileName = fileName;
+            FilePath = Path.Combine(SubtitlePath, fileName);
+            subtitles.AddRange(subs);
+        }
+
         public void Record(Subtitle subtitle)
         {
+            subtitles.Add(subtitle);
             var spaced_text = subtitle.ToString() + "\n\n";
             File.AppendAllTextAsync(FilePath, spaced_text);
         }
 
-        public string ArchiveFiles()
+        public static string ArchiveFiles()
         {
             var allFiles = Directory.GetFiles(SubtitlePath);
             var numberOfFiles = allFiles.Length;
@@ -36,20 +47,21 @@ namespace TwitchBot.SpeechToText
             var archiveFileName = $"archive-{numberOfArchives}.vtt";
             var archiveFilePath = Path.Combine(currentArchivePath, archiveFileName);
 
-            List<Subtitle> subtitles = new List<Subtitle>();
+            Subtitles subs = new Subtitles(archiveFilePath);
+            List<Subtitle> subtitles = subs.subtitles;
             foreach (var file in allFiles)
             {
                 if (file.EndsWith(".srt"))
                 {
                     Log.Info($"Archiving {file}");
                     var fileName = Path.GetFileNameWithoutExtension(file);
-                    subtitles.AddRange(FromSrtFile(file, fileName));
+                    subtitles.AddRange(FromSrtFile(file, fileName).subtitles);
                     File.Delete(file);
                 }
                 else if (file.EndsWith(".vtt"))
                 {
                     Log.Info($"Archiving {file}");
-                    subtitles.AddRange(FromFile(file));
+                    subtitles.AddRange(FromFile(file).subtitles);
                     File.Delete(file);
                 }
                 else
@@ -58,21 +70,21 @@ namespace TwitchBot.SpeechToText
                 }
             }
 
-            ToFile(subtitles, archiveFilePath);
+            subs.ToFile(subtitles);
 
 
             return archiveFilePath;
         }
 
 
-        public List<Subtitle> FromSrtFile(string fileName, string speaker = "")
+        public static Subtitles FromSrtFile(string fileName, string speaker = "")
         {
             var fileText = File.ReadAllLines(fileName);
             var subtitles = new List<Subtitle>();
 
             if (fileText.Length % 3 != 0)
             {
-                Console.WriteLine("Missing subtitle info?");
+                Log.Info("Missing subtitle info?");
             }
 
             for (int i = 0; i < fileText.Length; i += 3)
@@ -97,15 +109,15 @@ namespace TwitchBot.SpeechToText
                 }
                 else
                 {
-                    Console.WriteLine($"Could not parse timestamps from {fileName}:{i}");
+                    Log.Info($"Could not parse timestamps from {fileName}:{i}");
                 }                    
             }
 
 
-            return subtitles;
+            return new(fileName, subtitles);
         }
 
-        public List<Subtitle> FromFile(string fileName)
+        public static Subtitles FromFile(string fileName)
         {
             var fileText = File.ReadAllLines(fileName);
             var subtitles = new List<Subtitle>();
@@ -139,22 +151,21 @@ namespace TwitchBot.SpeechToText
                 }
                 else
                 {
-                    Console.WriteLine($"Could not parse timestamps from {fileName}:{i}");
+                    Log.Info($"Could not parse timestamps from {fileName}:{i}");
                 }
             }
 
-
-            return subtitles;
+            return new(fileName, subtitles);
         }
 
-        public string ToFile(Subtitle subtitle, string filePath)
+        public string ToFile(Subtitle subtitle)
         {
-            return ToFile(new List<Subtitle>{ subtitle }, filePath);
+            return ToFile(new List<Subtitle>{ subtitle });
         }
 
-        public string ToFile(List<Subtitle> subtitles, string filePath)
+        public string ToFile(List<Subtitle> subtitles)
         {
-            using var file = new StreamWriter(filePath);
+            using var file = new StreamWriter(FilePath);
             subtitles.Sort();
 
             foreach (var subtitle in subtitles)
@@ -163,7 +174,7 @@ namespace TwitchBot.SpeechToText
                 file.WriteLine();
             }
 
-            return filePath;
+            return FilePath;
         }
     }
 
