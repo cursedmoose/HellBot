@@ -171,7 +171,6 @@ public class Server
     public HttpClient web = new();
     public FileGenerator file = new();
     public ScreenCapturer screen = new();
-    public Subtitles subtitles = new();
     public ImageTextReader imageText = new TesseractImageReader();
 
     private static readonly Lazy<Server> lazy = new(() => new Server());
