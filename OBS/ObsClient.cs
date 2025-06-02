@@ -63,7 +63,7 @@ namespace TwitchBot.OBS
 
         private void OnDisconnect(object? sender, ObsDisconnectionInfo e)
         {
-            log.Info($"Disconnected due to {e.DisconnectReason}");
+            log.Info($"Disconnected due to {e.DisconnectReason ?? "OBS is not running."}");
             Connect();
         }
 
