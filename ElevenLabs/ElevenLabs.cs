@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
+using Steam.Models.Utilities;
 using TwitchBot.OBS.Scene;
+using TwitchBot.SpeechToText;
 using static TwitchBot.Config.ElevenLabsConfig;
 
 namespace TwitchBot.ElevenLabs
@@ -48,6 +50,8 @@ namespace TwitchBot.ElevenLabs
         public static long CharactersUsed { get; private set; } = 0;
         public readonly bool Enabled = true;
         readonly Logger log = new("ElevenLabs");
+
+        public Subtitles Subtitles = new("tts.vtt");
 
         public ElevenLabs(bool enabled = true)
         {
@@ -162,10 +166,20 @@ namespace TwitchBot.ElevenLabs
             await Server.Instance.Assistant.WaitForSilence();
             lock (Assistant.Assistant.TtsLock)
             {
+                var startTime = DateTime.UtcNow.ToUnixTimeStamp();
                 obs?.Enable();
                 process.Start();
                 process.WaitForExit();
                 obs?.Disable();
+                var endTime = DateTime.UtcNow.ToUnixTimeStamp();
+
+                Subtitles.Record(new()
+                {
+                    Speaker = profile.Voice.VoiceName,
+                    Line = tts,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                });
             }
         }
 
